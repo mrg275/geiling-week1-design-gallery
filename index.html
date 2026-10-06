@@ -43,6 +43,8 @@
 
   * { box-sizing: border-box; }
 
+  html { background: var(--bg); }
+
   body {
     margin: 0;
     background: var(--bg);
@@ -270,7 +272,7 @@
       a.className = 'slot';
       a.href = id + '/index.html';
       a.innerHTML = `
-        <div class="thumb"><iframe src="${id}/index.html" tabindex="-1" loading="lazy" scrolling="no" title="Preview of ${id}"></iframe></div>
+        <div class="thumb" data-src="${id}/index.html" data-title="Preview of ${id}"></div>
         <div class="caption">
           <div class="vlabel">${id}</div>
           <div class="note">${v.note}</div>
@@ -288,17 +290,35 @@
 
   document.getElementById('count-done').textContent = VERSIONS.length;
 
-  // Scale each iframe so a 1280px-wide page fits the thumbnail
-  function scaleThumbs() {
-    document.querySelectorAll('.thumb iframe').forEach(f => {
-      const w = f.parentElement.clientWidth;
-      const s = w / 1280;
-      f.style.transform = `scale(${s})`;
-      f.style.height = (f.parentElement.clientHeight / s) + 'px';
-    });
+  // Scale an iframe so its 1280px-wide page fits the thumbnail
+  function scaleThumb(f) {
+    const w = f.parentElement.clientWidth;
+    const s = w / 1280;
+    f.style.transform = `scale(${s})`;
+    f.style.height = (f.parentElement.clientHeight / s) + 'px';
   }
-  scaleThumbs();
-  addEventListener('resize', scaleThumbs);
+  addEventListener('resize', () => document.querySelectorAll('.thumb iframe').forEach(scaleThumb));
+
+  // Mount live previews only near the viewport; unmount when scrolled far away.
+  // 25 simultaneous live apps (several are heavy 3D scenes) overwhelm the page otherwise.
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      const thumb = e.target;
+      const existing = thumb.querySelector('iframe');
+      if (e.isIntersecting && !existing) {
+        const f = document.createElement('iframe');
+        f.src = thumb.dataset.src;
+        f.tabIndex = -1;
+        f.scrolling = 'no';
+        f.title = thumb.dataset.title;
+        thumb.appendChild(f);
+        scaleThumb(f);
+      } else if (!e.isIntersecting && existing) {
+        existing.remove();
+      }
+    });
+  }, { rootMargin: '500px 0px' });
+  document.querySelectorAll('.thumb[data-src]').forEach(t => io.observe(t));
 </script>
 </body>
 </html>
