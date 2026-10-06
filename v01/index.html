@@ -1,0 +1,1306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Memory Library — v01</title>
+<style>
+  :root {
+    --wood-1: #3a2a1c;
+    --wood-2: #553b24;
+    --wood-3: #6b4a2b;
+    --paper: #f3ead6;
+    --paper-2: #e9ddc2;
+    --ink: #2c2318;
+    --ink-soft: #7a6a52;
+    --glow: #ffb95e;
+    --book-c: #e0b15e;
+    --essay-c: #8fb6dd;
+    --article-c: #a8d08d;
+    --podcast-c: #d49ae0;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(1200px 700px at 50% 30%, #4a3521 0%, #2b1d10 55%, #17100a 100%);
+    color: var(--paper);
+    font-family: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ───────────── HUD ───────────── */
+  #hud {
+    position: fixed; inset: 0 0 auto 0;
+    display: flex; align-items: center; gap: 18px;
+    padding: 14px 22px;
+    z-index: 50;
+    background: linear-gradient(rgba(14,9,4,.85), rgba(14,9,4,0));
+  }
+  #hud a.back {
+    color: var(--glow); text-decoration: none; font-size: 14px;
+    letter-spacing: .02em;
+  }
+  #hud a.back:hover { text-decoration: underline; }
+  .hud-title { font-size: 17px; letter-spacing: .04em; }
+  .hud-title em { font-style: normal; opacity: .5; font-size: 12px; margin-left: 8px; }
+  #hud nav { margin-left: auto; display: flex; gap: 8px; }
+  #hud nav button {
+    font-family: inherit; font-size: 13px;
+    color: var(--paper); background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 7px 14px; cursor: pointer;
+  }
+  #hud nav button:hover { background: rgba(255,185,94,.18); border-color: var(--glow); }
+  #dueBadge {
+    font-style: normal; background: #c0392b; color: #fff;
+    border-radius: 999px; font-size: 11px; padding: 1px 7px; margin-left: 5px;
+  }
+  #dueBadge:empty { display: none; }
+
+  #hint {
+    position: fixed; left: 22px; bottom: 16px; z-index: 50;
+    font-size: 12.5px; color: rgba(243,234,214,.55); font-style: italic;
+  }
+
+  /* ───────────── 3D scene ───────────── */
+  #scene {
+    position: absolute; inset: 0;
+    perspective: 1500px;
+    perspective-origin: 50% 42%;
+    overflow: hidden;
+  }
+  #world {
+    position: absolute; inset: 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* bookcase */
+  #bookcase {
+    position: absolute; left: 50%; top: 76px;
+    width: 920px; margin-left: -460px;
+    transform-style: preserve-3d;
+    background: linear-gradient(175deg, var(--wood-2), var(--wood-1));
+    border: 14px solid #241709;
+    border-radius: 6px;
+    box-shadow: 0 40px 80px rgba(0,0,0,.55), inset 0 0 60px rgba(0,0,0,.5);
+    padding: 10px 16px 0;
+  }
+  .shelf {
+    position: relative;
+    display: flex; align-items: flex-end; gap: 5px;
+    padding: 0 14px;
+    border-bottom: 13px solid #241709;
+    box-shadow: inset 0 -18px 24px rgba(0,0,0,.35);
+    transform-style: preserve-3d;
+  }
+  .shelf-label {
+    position: absolute; right: 10px; top: 10px;
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    color: rgba(243,234,214,.4);
+    pointer-events: none;
+  }
+
+  /* books */
+  .book {
+    position: relative;
+    transform-style: preserve-3d;
+    cursor: pointer;
+    transition: transform .45s cubic-bezier(.2,.7,.3,1.1);
+    flex: 0 0 auto;
+  }
+  .book:hover { transform: translateZ(26px); }
+  .book.pulled { transform: translateZ(95px) rotateY(-30deg); z-index: 5; }
+  .spine {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 9px;
+    border-radius: 2px 3px 3px 2px;
+    box-shadow: inset -4px 0 7px rgba(0,0,0,.45), inset 2px 0 4px rgba(255,255,255,.18);
+    backface-visibility: hidden;
+  }
+  .spine .t {
+    writing-mode: vertical-rl;
+    font-size: 12.5px; letter-spacing: .03em;
+    max-height: 72%; overflow: hidden;
+    color: rgba(255,250,235,.92);
+    text-shadow: 0 1px 2px rgba(0,0,0,.5);
+  }
+  .spine .a {
+    writing-mode: vertical-rl;
+    font-size: 9px; color: rgba(255,250,235,.55);
+    max-height: 20%; overflow: hidden;
+  }
+  .pages {
+    position: absolute; top: 2px; left: 100%; width: 110px; height: calc(100% - 4px);
+    transform-origin: left center;
+    transform: rotateY(90deg);
+    background: repeating-linear-gradient(90deg, #efe6cf 0 2px, #ddd0b0 2px 4px);
+    opacity: 0; transition: opacity .3s;
+  }
+  .book:hover .pages, .book.pulled .pages { opacity: 1; }
+
+  /* decor on sparse shelves */
+  .decor { flex: 0 0 auto; pointer-events: none; position: relative; }
+  .bookend {
+    width: 16px; height: 70px;
+    background: linear-gradient(#5a5a60, #2e2e33);
+    border-radius: 2px 2px 0 0;
+  }
+  .plant-pot {
+    width: 42px; height: 58px;
+  }
+  .plant-pot::before {
+    content: ''; position: absolute; bottom: 0; left: 6px;
+    width: 30px; height: 24px;
+    background: linear-gradient(#a0522d, #6e3517);
+    border-radius: 3px 3px 8px 8px;
+  }
+  .plant-pot::after {
+    content: ''; position: absolute; bottom: 18px; left: 2px;
+    width: 38px; height: 38px;
+    background:
+      radial-gradient(10px 16px at 30% 60%, #4e7a3a 60%, transparent 61%),
+      radial-gradient(10px 18px at 55% 45%, #5e8f46 60%, transparent 61%),
+      radial-gradient(9px 15px at 75% 62%, #44683a 60%, transparent 61%);
+  }
+  .spacer { flex: 1 1 auto; }
+
+  /* wall frame → knowledge graph */
+  #wallframe {
+    position: absolute; left: 50%; top: 120px; margin-left: 500px;
+    width: 190px; padding: 12px;
+    background: linear-gradient(#241709, #3a2512);
+    border: 6px solid #120b05;
+    border-radius: 4px;
+    box-shadow: 0 24px 40px rgba(0,0,0,.5);
+    cursor: pointer;
+    transition: transform .3s;
+  }
+  #wallframe:hover { transform: translateZ(30px) scale(1.04); }
+  #wallframe svg { display: block; width: 100%; background: #16222b; border-radius: 2px; }
+  #wallframe .fl {
+    text-align: center; font-size: 11px; letter-spacing: .18em;
+    text-transform: uppercase; color: rgba(243,234,214,.6); margin-top: 8px;
+  }
+
+  /* lamp on the left wall for serendipity */
+  #lamp {
+    position: absolute; left: 50%; top: 150px; margin-left: -690px;
+    width: 150px; cursor: pointer; transition: transform .3s;
+    text-align: center;
+  }
+  #lamp:hover { transform: translateZ(30px) scale(1.04); }
+  .orb {
+    width: 92px; height: 92px; margin: 0 auto;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #ffe9c2, var(--glow) 45%, #995c14 100%);
+    box-shadow: 0 0 55px 12px rgba(255,185,94,.45), inset 0 -10px 24px rgba(120,60,0,.5);
+  }
+  .orb-base {
+    width: 64px; height: 18px; margin: -6px auto 0;
+    background: linear-gradient(#241709, #120b05);
+    border-radius: 50%;
+  }
+  #lamp .fl {
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: rgba(243,234,214,.6); margin-top: 10px;
+  }
+
+  /* desk + stations */
+  #desk {
+    position: absolute; left: 50%; bottom: -170px; margin-left: -760px;
+    width: 1520px; height: 420px;
+    transform-origin: bottom center;
+    transform: rotateX(62deg);
+    transform-style: preserve-3d;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.08) 0 3px, transparent 3px 90px),
+      linear-gradient(#7a5530, #4a3119);
+    border-top: 8px solid #2c1c0d;
+    box-shadow: 0 -20px 60px rgba(0,0,0,.4);
+  }
+  .station {
+    position: absolute; bottom: 58%;
+    transform-origin: bottom center;
+    transform: rotateX(-62deg);
+    transform-style: preserve-3d;
+    cursor: pointer;
+    text-align: center;
+    transition: filter .2s;
+  }
+  .station:hover { filter: brightness(1.18); }
+  .station .fl {
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: rgba(243,234,214,.75); margin-top: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,.6);
+  }
+  .station::before {
+    content: ''; position: absolute; left: 50%; bottom: -12px;
+    width: 120px; height: 26px; margin-left: -60px;
+    background: radial-gradient(closest-side, rgba(0,0,0,.45), transparent);
+    transform: rotateX(62deg);
+  }
+  /* card box */
+  .cardstack { position: relative; width: 110px; height: 78px; margin: 0 auto; }
+  .cardstack i {
+    position: absolute; left: 0; right: 0; height: 64px; border-radius: 6px;
+    background: linear-gradient(#fdf8ea, #e8dcbd);
+    border: 1px solid #b7a67f;
+    box-shadow: 0 3px 8px rgba(0,0,0,.35);
+  }
+  .cardstack i:nth-child(1) { top: 14px; transform: rotate(-4deg); }
+  .cardstack i:nth-child(2) { top: 8px;  transform: rotate(2deg); }
+  .cardstack i:nth-child(3) { top: 0; }
+  .cardstack i:nth-child(3)::after {
+    content: 'Q'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font: 700 26px Georgia, serif; color: #8a764e;
+  }
+  /* clipboard */
+  .clipboard {
+    position: relative; width: 84px; height: 108px; margin: 0 auto;
+    background: linear-gradient(#8a5a2e, #6e441f);
+    border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,.4);
+    padding: 12px 8px 8px;
+  }
+  .clipboard::before {
+    content: ''; position: absolute; top: -7px; left: 50%; margin-left: -16px;
+    width: 32px; height: 12px; border-radius: 4px;
+    background: linear-gradient(#cfcfd4, #8e8e96);
+  }
+  .clipboard .sheet {
+    height: 100%; border-radius: 2px;
+    background:
+      repeating-linear-gradient(transparent 0 11px, rgba(90,70,40,.35) 11px 12px),
+      #f6efdd;
+  }
+  /* journal */
+  .journal { position: relative; width: 128px; height: 84px; margin: 0 auto; }
+  .journal::before, .journal::after {
+    content: ''; position: absolute; top: 0; bottom: 0; width: 50%;
+    background:
+      repeating-linear-gradient(transparent 0 10px, rgba(90,70,40,.3) 10px 11px),
+      linear-gradient(100deg, #fbf5e6, #ece0c2);
+    border: 1px solid #b7a67f;
+  }
+  .journal::before { left: 0; border-radius: 8px 2px 2px 8px; transform: perspective(300px) rotateY(18deg); transform-origin: right; }
+  .journal::after  { right: 0; border-radius: 2px 8px 8px 2px; transform: perspective(300px) rotateY(-18deg); transform-origin: left; }
+
+  /* ───────────── overlay panels ───────────── */
+  #overlay {
+    position: fixed; inset: 0; z-index: 100;
+    display: none;
+    align-items: center; justify-content: center;
+    background: rgba(10,6,2,.66);
+    backdrop-filter: blur(3px);
+    padding: 48px 16px 28px;
+  }
+  #overlay.on { display: flex; }
+  #panel {
+    position: relative;
+    width: min(820px, 96vw); max-height: 88vh;
+    overflow: auto;
+    background:
+      radial-gradient(900px 300px at 50% -80px, rgba(255,220,160,.35), transparent),
+      linear-gradient(var(--paper), var(--paper-2));
+    color: var(--ink);
+    border-radius: 10px;
+    border: 1px solid #c9b88f;
+    box-shadow: 0 40px 90px rgba(0,0,0,.6);
+    padding: 30px 34px 34px;
+  }
+  #closeBtn {
+    position: sticky; top: 0; float: right; margin: -16px -18px 0 0;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px solid #c9b88f; background: #fffdf4; color: var(--ink);
+    font-size: 15px; cursor: pointer; z-index: 2;
+  }
+  #closeBtn:hover { background: #f0e3c2; }
+
+  #panel h2 { font-size: 26px; margin: 0 0 4px; letter-spacing: -.01em; }
+  #panel h3 {
+    font-size: 13px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--ink-soft); margin: 30px 0 10px;
+    border-bottom: 1px solid #d8c9a3; padding-bottom: 6px;
+  }
+  #panel p { line-height: 1.6; }
+  .muted { color: var(--ink-soft); }
+  .small { font-size: 13px; }
+
+  .chip {
+    display: inline-block; font-size: 12px;
+    border: 1px solid #c3b088; border-radius: 999px;
+    padding: 3px 10px; margin: 0 5px 5px 0; color: #6a5833;
+    background: rgba(255,255,255,.45);
+  }
+  .typechip {
+    display: inline-block; font-size: 11px; letter-spacing: .14em;
+    text-transform: uppercase; border-radius: 4px; padding: 3px 8px;
+    color: #2c2318; font-weight: bold; font-family: Verdana, sans-serif; font-size: 10px;
+  }
+
+  .btn {
+    font-family: Georgia, serif; font-size: 14px;
+    background: #3c2d18; color: var(--paper);
+    border: 0; border-radius: 7px; padding: 9px 16px;
+    cursor: pointer;
+  }
+  .btn:hover { background: #57421f; }
+  .btn.ghost {
+    background: transparent; color: #3c2d18;
+    border: 1px solid #b4a071;
+  }
+  .btn.ghost:hover { background: rgba(60,45,24,.08); }
+  .btn:disabled { opacity: .45; cursor: default; }
+
+  textarea, select, input[type=text] {
+    font-family: Georgia, serif; font-size: 14.5px; color: var(--ink);
+    width: 100%; background: #fffdf4;
+    border: 1px solid #c9b88f; border-radius: 7px; padding: 10px 12px;
+  }
+  textarea { min-height: 110px; resize: vertical; line-height: 1.55; }
+  select { width: auto; }
+
+  .detail-head { display: flex; gap: 22px; }
+  .cover {
+    flex: 0 0 120px; height: 168px; border-radius: 4px 10px 10px 4px;
+    box-shadow: 8px 10px 24px rgba(0,0,0,.3), inset 6px 0 10px rgba(255,255,255,.22), inset -4px 0 8px rgba(0,0,0,.3);
+    display: flex; align-items: center; justify-content: center;
+    padding: 12px; text-align: center;
+    color: rgba(255,250,235,.95); font-size: 14px; line-height: 1.35;
+    text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  }
+  .metaline { margin: 3px 0; font-size: 14px; }
+  .metaline b { font-weight: normal; color: var(--ink-soft); display: inline-block; width: 110px; font-size: 12.5px; }
+
+  .note {
+    background: rgba(255,255,255,.5); border: 1px solid #ddcda6;
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 10px;
+  }
+  .note .nd { font-size: 12px; color: var(--ink-soft); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .note .nd button {
+    background: none; border: 0; cursor: pointer; color: #8a6d3b;
+    font-family: Georgia, serif; font-size: 12px; text-decoration: underline;
+  }
+  .note p { margin: 0; font-size: 14.5px; }
+
+  .cardrow {
+    display: flex; justify-content: space-between; gap: 14px;
+    border-bottom: 1px dashed #d4c49c; padding: 9px 2px; font-size: 14px;
+  }
+  .cardrow .due { white-space: nowrap; font-size: 12px; color: var(--ink-soft); }
+  .cardrow .due.now { color: #a33224; font-weight: bold; }
+
+  /* flashcard flip */
+  .flashwrap { perspective: 1100px; margin: 18px auto 14px; width: min(560px, 100%); }
+  .flash {
+    position: relative; height: 270px; cursor: pointer;
+    transform-style: preserve-3d; transition: transform .55s cubic-bezier(.3,.9,.35,1);
+  }
+  .flash.flipped { transform: rotateY(180deg); }
+  .flash .face {
+    position: absolute; inset: 0; backface-visibility: hidden;
+    border-radius: 12px; border: 1px solid #c9b88f;
+    background: linear-gradient(#fffdf4, #f1e7cc);
+    box-shadow: 0 14px 30px rgba(0,0,0,.18);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 26px 30px; text-align: center;
+  }
+  .flash .face.back { transform: rotateY(180deg); background: linear-gradient(#fdf6e2, #ecdfbd); }
+  .flash .q { font-size: 19px; line-height: 1.45; }
+  .flash .src { position: absolute; bottom: 12px; font-size: 12px; color: var(--ink-soft); }
+  .flash .cue { position: absolute; top: 12px; font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: #b09c6d; }
+  .gradebar { display: flex; gap: 10px; justify-content: center; margin-top: 16px; flex-wrap: wrap; }
+  .gradebar .btn { min-width: 92px; }
+  .g-again { background: #8c2f23; } .g-again:hover { background: #a33a2c; }
+  .g-hard  { background: #8a6d3b; } .g-hard:hover  { background: #a1813f; }
+  .g-good  { background: #3e6b3a; } .g-good:hover  { background: #4b8046; }
+  .g-easy  { background: #2c5d7c; } .g-easy:hover  { background: #357094; }
+  .sessionmeta { text-align: center; font-size: 13px; color: var(--ink-soft); }
+
+  #graphcanvas { width: 100%; height: 480px; background: #1b2731; border-radius: 10px; display: block; cursor: crosshair; }
+  .legend { display: flex; gap: 16px; margin-top: 10px; font-size: 12.5px; color: var(--ink-soft); flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; }
+
+  /* serendipity toast */
+  #toast {
+    position: fixed; right: 22px; bottom: 22px; z-index: 90;
+    width: 330px; display: none;
+    background: linear-gradient(#fffbee, #f0e5c8);
+    color: var(--ink);
+    border: 1px solid #c9b88f; border-radius: 12px;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5), 0 0 40px rgba(255,185,94,.25);
+    padding: 16px 18px;
+  }
+  #toast.on { display: block; animation: rise .5s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(16px); } }
+  #toast .tt { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: #a3812f; margin-bottom: 8px; }
+  #toast .tx { font-size: 14px; line-height: 1.5; font-style: italic; }
+  #toast .ts { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+  #toast .ta { display: flex; gap: 12px; margin-top: 10px; }
+  #toast .ta button {
+    background: none; border: 0; padding: 0; cursor: pointer;
+    font-family: Georgia, serif; font-size: 13px; color: #6a4f17; text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<header id="hud">
+  <a class="back" href="../index.html">← Gallery</a>
+  <div class="hud-title">The Memory Library <em>v01 · 3D shelf concept</em></div>
+  <nav>
+    <button data-view="flash">Flashcards<em id="dueBadge"></em></button>
+    <button data-view="recall">Recall Test</button>
+    <button data-view="reflect">Reflect</button>
+    <button data-view="graph">Graph</button>
+  </nav>
+</header>
+
+<div id="scene">
+  <div id="world">
+    <div id="bookcase"></div>
+
+    <div id="wallframe" data-view="graph" title="Open the knowledge graph">
+      <svg viewBox="0 0 160 110">
+        <g stroke="#4f7b96" stroke-width="1" opacity=".8">
+          <line x1="22" y1="30" x2="60" y2="18"/><line x1="60" y1="18" x2="98" y2="42"/>
+          <line x1="98" y1="42" x2="138" y2="24"/><line x1="98" y1="42" x2="76" y2="82"/>
+          <line x1="76" y1="82" x2="30" y2="70"/><line x1="30" y1="70" x2="22" y2="30"/>
+          <line x1="76" y1="82" x2="126" y2="88"/>
+        </g>
+        <g fill="#ffd98f">
+          <circle cx="22" cy="30" r="4"/><circle cx="60" cy="18" r="3"/>
+          <circle cx="98" cy="42" r="5"/><circle cx="138" cy="24" r="3"/>
+          <circle cx="76" cy="82" r="4"/><circle cx="30" cy="70" r="3"/>
+          <circle cx="126" cy="88" r="3"/>
+        </g>
+      </svg>
+      <div class="fl">Knowledge Graph</div>
+    </div>
+
+    <div id="lamp" title="Surface a forgotten note">
+      <div class="orb"></div>
+      <div class="orb-base"></div>
+      <div class="fl">Serendipity</div>
+    </div>
+
+    <div id="desk">
+      <div class="station" style="left: 24%;" data-view="flash">
+        <div class="cardstack"><i></i><i></i><i></i></div>
+        <div class="fl">Flashcards</div>
+      </div>
+      <div class="station" style="left: 44%;" data-view="recall">
+        <div class="clipboard"><div class="sheet"></div></div>
+        <div class="fl">Recall Test</div>
+      </div>
+      <div class="station" style="left: 63%;" data-view="reflect">
+        <div class="journal"></div>
+        <div class="fl">Reflection</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="hint">Move your mouse to look around · click a spine to pull a book · objects on the desk open each practice</div>
+
+<div id="overlay">
+  <div id="panel">
+    <button id="closeBtn" title="Close">✕</button>
+    <div id="panelBody"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+
+/* ════════════════ MOCK DATA ════════════════ */
+const TYPES = {
+  book:    { label: 'Books',    color: '#e0b15e' },
+  essay:   { label: 'Essays',   color: '#8fb6dd' },
+  article: { label: 'Articles', color: '#a8d08d' },
+  podcast: { label: 'Podcasts', color: '#d49ae0' },
+};
+
+const CONTENT = [
+  {
+    id: 'c1', type: 'book', title: 'Thinking, Fast and Slow', author: 'Daniel Kahneman',
+    published: '2011', consumed: '2025-11-02', color: '#7b3b3b', h: 184, w: 40,
+    tags: ['psychology', 'decision-making', 'cognition'],
+    notes: [
+      { id: 'c1n1', date: '2025-11-02', text: 'System 1 is fast, automatic, and emotional; System 2 is slow, deliberate, and lazy. Most errors come from System 2 rubber-stamping System 1.' },
+      { id: 'c1n2', date: '2025-11-05', text: 'Anchoring works even when the anchor is obviously random — the wheel-of-fortune experiment moved estimates of African UN membership.' },
+    ],
+    quotes: [
+      'Nothing in life is as important as you think it is, while you are thinking about it.',
+      'A reliable way to make people believe in falsehoods is frequent repetition.',
+    ],
+    cards: [
+      { id: 'c1k1', q: 'What distinguishes System 1 from System 2 thinking?', a: 'System 1 is fast, automatic, intuitive, and always on; System 2 is slow, effortful, and deliberate — and tends to accept System 1’s suggestions unless mobilized.' },
+      { id: 'c1k2', q: 'What is the anchoring effect?', a: 'Estimates are biased toward a previously seen number, even when that number is irrelevant or random.' },
+      { id: 'c1k3', q: 'What is WYSIATI?', a: '“What You See Is All There Is” — the mind builds confident stories from available evidence and ignores what it doesn’t know.' },
+    ],
+  },
+  {
+    id: 'c2', type: 'book', title: 'Atomic Habits', author: 'James Clear',
+    published: '2018', consumed: '2026-01-18', color: '#2f5d50', h: 168, w: 34,
+    tags: ['habits', 'behavior', 'systems'],
+    notes: [
+      { id: 'c2n1', date: '2026-01-18', text: 'Identity-based habits: decide who you want to be, then prove it with small wins. "Every action is a vote for the type of person you wish to become."' },
+      { id: 'c2n2', date: '2026-01-22', text: 'The four laws: make it obvious, attractive, easy, satisfying. Invert them to break a bad habit.' },
+    ],
+    quotes: [
+      'You do not rise to the level of your goals. You fall to the level of your systems.',
+      'Habits are the compound interest of self-improvement.',
+    ],
+    cards: [
+      { id: 'c2k1', q: 'What are the four laws of behavior change?', a: 'Make it obvious, make it attractive, make it easy, make it satisfying — inverted, they break bad habits.' },
+      { id: 'c2k2', q: 'Why does Clear argue systems beat goals?', a: 'Goals set direction but systems produce outcomes; you fall to the level of your systems, not rise to the level of your goals.' },
+    ],
+  },
+  {
+    id: 'c3', type: 'book', title: 'Deep Work', author: 'Cal Newport',
+    published: '2016', consumed: '2025-09-20', color: '#1f3a5f', h: 172, w: 32,
+    tags: ['focus', 'attention', 'productivity'],
+    notes: [
+      { id: 'c3n1', date: '2025-09-20', text: 'Deep work = professional activity in a distraction-free state that pushes cognitive limits. It’s both rare and increasingly valuable.' },
+      { id: 'c3n2', date: '2025-09-24', text: 'Attention residue: switching tasks leaves part of your attention stuck on the old task. Blocks of unbroken time matter more than total hours.' },
+    ],
+    quotes: [
+      'Clarity about what matters provides clarity about what does not.',
+      'Who you are, what you think, feel, and do, what you love — is the sum of what you focus on.',
+    ],
+    cards: [
+      { id: 'c3k1', q: 'What is attention residue?', a: 'When switching tasks, part of your attention remains on the previous task, degrading performance on the next one — an argument for long, unbroken focus blocks.' },
+      { id: 'c3k2', q: 'Why does Newport call deep work "rare and valuable"?', a: 'The economy rewards hard-to-replicate skilled output, but constant connectivity makes sustained concentration increasingly uncommon.' },
+    ],
+  },
+  {
+    id: 'c4', type: 'book', title: 'Make It Stick', author: 'Brown, Roediger & McDaniel',
+    published: '2014', consumed: '2026-02-07', color: '#8a6d3b', h: 164, w: 36,
+    tags: ['learning', 'memory', 'education'],
+    notes: [
+      { id: 'c4n1', date: '2026-02-07', text: 'Retrieval practice beats rereading. The feeling of fluency from rereading is an illusion of mastery.' },
+      { id: 'c4n2', date: '2026-02-11', text: 'Desirable difficulties — spacing, interleaving, variation — slow apparent learning but deepen retention. Basically the thesis behind this whole app.' },
+    ],
+    quotes: [
+      'Learning is deeper and more durable when it’s effortful.',
+      'Rereading text and massed practice are among the least productive study strategies.',
+    ],
+    cards: [
+      { id: 'c4k1', q: 'Why is retrieval practice superior to rereading?', a: 'The effort of recalling strengthens memory traces and reveals gaps; rereading creates fluency that masquerades as mastery.' },
+      { id: 'c4k2', q: 'What are "desirable difficulties"?', a: 'Conditions like spacing, interleaving, and variation that make learning feel harder and slower but produce stronger, more durable retention.' },
+    ],
+  },
+  {
+    id: 'c5', type: 'book', title: 'The Design of Everyday Things', author: 'Don Norman',
+    published: '1988', consumed: '2025-12-12', color: '#b5541f', h: 176, w: 38,
+    tags: ['design', 'psychology', 'systems'],
+    notes: [
+      { id: 'c5n1', date: '2025-12-12', text: 'Affordances tell you what actions are possible; signifiers tell you where the action happens. Bad doors = bad signifiers, not bad users.' },
+    ],
+    quotes: [
+      'Good design is actually a lot harder to notice than poor design.',
+      'When people have trouble with technology, the fault lies in the design, not in the people.',
+    ],
+    cards: [
+      { id: 'c5k1', q: 'Affordance vs. signifier?', a: 'An affordance is a possible action an object allows; a signifier is the perceivable cue indicating where/how that action can happen.' },
+      { id: 'c5k2', q: 'What is Norman’s stance on "human error"?', a: 'Most human error is really design error — systems should be designed for how people actually behave, not how designers wish they behaved.' },
+    ],
+  },
+  {
+    id: 'c6', type: 'book', title: 'Meditations', author: 'Marcus Aurelius',
+    published: 'c. 180 AD', consumed: '2026-03-15', color: '#4a3b63', h: 158, w: 30,
+    tags: ['philosophy', 'stoicism', 'habits'],
+    notes: [
+      { id: 'c6n1', date: '2026-03-15', text: 'The obstacle becomes the way: "The impediment to action advances action. What stands in the way becomes the way."' },
+    ],
+    quotes: [
+      'You have power over your mind — not outside events. Realize this, and you will find strength.',
+      'The soul becomes dyed with the color of its thoughts.',
+    ],
+    cards: [
+      { id: 'c6k1', q: 'What is the Stoic "dichotomy of control"?', a: 'Distinguish what is up to you (judgments, intentions, responses) from what is not (events, others’ opinions) — and invest effort only in the former.' },
+    ],
+  },
+
+  {
+    id: 'c7', type: 'essay', title: 'How to Do Great Work', author: 'Paul Graham',
+    published: '2023', consumed: '2026-04-02', color: '#5b7a99', h: 138, w: 24,
+    tags: ['creativity', 'curiosity', 'career'],
+    notes: [
+      { id: 'c7n1', date: '2026-04-02', text: 'The recipe: work on something you have a natural aptitude for and deep interest in; get to the frontier; notice gaps; explore them.' },
+    ],
+    quotes: [
+      'Curiosity is the key to all four steps: it chooses the field, gets you to the frontier, points out the gaps, and drives you to explore them.',
+    ],
+    cards: [
+      { id: 'c7k1', q: 'What four steps does Graham give for doing great work?', a: 'Choose a field matching aptitude and interest, learn enough to reach the frontier, notice the gaps others overlook, and explore the promising ones.' },
+    ],
+  },
+  {
+    id: 'c8', type: 'essay', title: 'As We May Think', author: 'Vannevar Bush',
+    published: '1945', consumed: '2026-05-11', color: '#3f6a6a', h: 142, w: 26,
+    tags: ['knowledge', 'technology', 'memory'],
+    notes: [
+      { id: 'c8n1', date: '2026-05-11', text: 'The memex: a device storing all one’s books and records, navigable by associative trails — basically predicted hypertext and personal knowledge bases in 1945.' },
+    ],
+    quotes: [
+      'The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested.',
+    ],
+    cards: [
+      { id: 'c8k1', q: 'What was the "memex"?', a: 'Bush’s 1945 concept of a personal device storing all one’s information, linked by associative trails — a forerunner of hypertext and PKM tools.' },
+    ],
+  },
+  {
+    id: 'c9', type: 'essay', title: 'Self-Reliance', author: 'Ralph Waldo Emerson',
+    published: '1841', consumed: '2026-01-30', color: '#6e5a3a', h: 134, w: 22,
+    tags: ['philosophy', 'individuality', 'creativity'],
+    notes: [
+      { id: 'c9n1', date: '2026-01-30', text: 'Trust the integrity of your own mind. Society rewards conformity; genius is believing your private thought is universally true.' },
+    ],
+    quotes: [
+      'A foolish consistency is the hobgoblin of little minds.',
+      'In every work of genius we recognize our own rejected thoughts; they come back to us with a certain alienated majesty.',
+    ],
+    cards: [
+      { id: 'c9k1', q: 'What does Emerson mean by "a foolish consistency is the hobgoblin of little minds"?', a: 'Clinging to past positions merely to appear consistent blocks growth; the self-reliant mind may contradict yesterday’s view when today’s insight demands it.' },
+    ],
+  },
+
+  {
+    id: 'c10', type: 'article', title: 'Why Books Don’t Work', author: 'Andy Matuschak',
+    published: '2019', consumed: '2026-06-08', color: '#4f7a4f', h: 128, w: 24,
+    tags: ['learning', 'reading', 'memory'],
+    notes: [
+      { id: 'c10n1', date: '2026-06-08', text: 'Books assume transmissionism — that people absorb what they read. Readers retain shockingly little. Understanding requires the reader to do cognitive work the medium doesn’t prompt.' },
+    ],
+    quotes: [
+      'Readers must learn specific reflective strategies... books don’t suggest them, and most readers don’t deploy them.',
+    ],
+    cards: [
+      { id: 'c10a1', q: 'Why does Matuschak claim books "don’t work"?', a: 'They rely on an implicit transmissionist model of learning; without embedded prompts for retrieval and reflection, readers forget most of what they read.' },
+    ],
+  },
+  {
+    id: 'c11', type: 'article', title: 'Augmenting Long-term Memory', author: 'Michael Nielsen',
+    published: '2018', consumed: '2026-06-21', color: '#3a6b5a', h: 132, w: 26,
+    tags: ['memory', 'spaced-repetition', 'learning'],
+    notes: [
+      { id: 'c11n1', date: '2026-06-21', text: 'Anki makes memory a choice. Nielsen’s rule of thumb: if remembering something is worth 10 minutes of future time, it’s worth making a card.' },
+      { id: 'c11n2', date: '2026-06-23', text: 'Cards should be atomic — one fact each. Most "bad at memory" feelings are really bad encoding and no review schedule.' },
+    ],
+    quotes: [
+      'Memory systems make memory into a choice, rather than an event left up to chance.',
+    ],
+    cards: [
+      { id: 'c11a1', q: 'What is Nielsen’s rule for deciding when to make a flashcard?', a: 'If the fact would save you ~10 minutes in the future, the ~5 minutes of lifetime review cost is worth it — memorize it.' },
+      { id: 'c11a2', q: 'Why should flashcards be atomic?', a: 'One fact per card isolates what you’re retrieving, making grading honest and scheduling precise; compound cards hide partial forgetting.' },
+    ],
+  },
+
+  {
+    id: 'c12', type: 'podcast', title: 'Huberman Lab: Understanding & Improving Memory', author: 'Andrew Huberman',
+    published: '2022', consumed: '2026-07-04', color: '#7b4a8a', h: 108, w: 46,
+    tags: ['memory', 'neuroscience', 'habits'],
+    notes: [
+      { id: 'c12n1', date: '2026-07-04', text: 'Emotionally salient events get tagged by adrenaline — you can leverage this by pairing study with mild arousal spikes (cold, exercise) right after encoding.' },
+    ],
+    quotes: [
+      'Repetition works, but what the nervous system really responds to is the intensity and salience of an experience.',
+    ],
+    cards: [
+      { id: 'c12p1', q: 'How does emotional salience affect memory, per Huberman?', a: 'Adrenaline released during or right after an experience tags it for stronger consolidation — intensity, not just repetition, drives encoding.' },
+    ],
+  },
+  {
+    id: 'c13', type: 'podcast', title: 'The Knowledge Project: Mental Models', author: 'Shane Parrish',
+    published: '2021', consumed: '2026-08-19', color: '#5a4a8a', h: 104, w: 44,
+    tags: ['mental-models', 'decision-making', 'systems'],
+    notes: [
+      { id: 'c13n1', date: '2026-08-19', text: 'A latticework of models from many disciplines beats depth in one. Inversion: instead of asking how to succeed, ask how to guarantee failure and avoid that.' },
+    ],
+    quotes: [
+      'The person with the fewest blind spots wins.',
+    ],
+    cards: [
+      { id: 'c13p1', q: 'What is "inversion" as a mental model?', a: 'Approach problems backward: identify what would guarantee failure and systematically avoid it, rather than only chasing what produces success.' },
+    ],
+  },
+];
+
+const byId = {};
+CONTENT.forEach(c => byId[c.id] = c);
+const ALL_CARDS = [];
+CONTENT.forEach(c => c.cards.forEach(k => ALL_CARDS.push({ ...k, cid: c.id })));
+
+/* reflections (seeded) */
+const reflections = [
+  { date: '2026-06-25', quote: 'Memory systems make memory into a choice, rather than an event left up to chance.', source: 'Augmenting Long-term Memory',
+    text: 'This reframes forgetting as a scheduling failure, not a character flaw. If I treat review as calendar infrastructure, "being good at remembering" stops being an identity question entirely.' },
+  { date: '2026-03-20', quote: 'The soul becomes dyed with the color of its thoughts.', source: 'Meditations',
+    text: 'Aurelius and James Clear are saying the same thing nineteen centuries apart — repeated attention is identity formation. What I review is literally who I become.' },
+];
+
+/* ════════════════ SRS (SM-2 style, in-memory) ════════════════ */
+const DAY = 86400000;
+const now = () => new Date();
+const SRS = {};
+ALL_CARDS.forEach((k, i) => {
+  // Seed a believable spread: ~half due now, rest scheduled out.
+  const r = (i * 7919) % 10;
+  if (r < 5) SRS[k.id] = { ease: 2.5, interval: r === 0 ? 0 : r, due: new Date(Date.now() - (r + 1) * DAY), reps: r };
+  else SRS[k.id] = { ease: 2.3 + (r / 20), interval: r, due: new Date(Date.now() + (r - 4) * DAY), reps: 3 };
+});
+
+function dueCards() { return ALL_CARDS.filter(k => SRS[k.id].due <= now()); }
+
+function gradeCard(id, g) { // 0 again · 1 hard · 2 good · 3 easy
+  const s = SRS[id];
+  if (g === 0) {
+    s.ease = Math.max(1.3, s.ease - 0.2);
+    s.interval = 0;
+    s.due = new Date(Date.now() + 60000); // back in this session's queue
+  } else {
+    if (g === 1) { s.ease = Math.max(1.3, s.ease - 0.15); s.interval = Math.max(1, s.interval * 1.2); }
+    if (g === 2) { s.interval = s.interval === 0 ? 1 : s.interval * s.ease; }
+    if (g === 3) { s.ease += 0.1; s.interval = (s.interval === 0 ? 2 : s.interval * s.ease) * 1.3; }
+    s.interval = Math.round(s.interval * 10) / 10;
+    s.due = new Date(Date.now() + s.interval * DAY);
+  }
+  s.reps++;
+  updateDueBadge();
+}
+
+function fmtDue(d) {
+  const days = Math.ceil((d - now()) / DAY);
+  if (days <= 0) return 'due now';
+  if (days === 1) return 'due tomorrow';
+  return 'due in ' + days + 'd';
+}
+function fmtDate(iso) {
+  return new Date(iso + 'T12:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+function updateDueBadge() {
+  const n = dueCards().length;
+  document.getElementById('dueBadge').textContent = n > 0 ? n : '';
+}
+
+/* ════════════════ BUILD SHELVES ════════════════ */
+const bookcase = document.getElementById('bookcase');
+const SHELF_ORDER = ['book', 'essay', 'article', 'podcast'];
+const SHELF_H = { book: 208, essay: 166, article: 158, podcast: 138 };
+
+SHELF_ORDER.forEach(type => {
+  const shelf = document.createElement('div');
+  shelf.className = 'shelf';
+  shelf.style.height = SHELF_H[type] + 'px';
+  shelf.innerHTML = '<span class="shelf-label">' + TYPES[type].label + '</span>';
+
+  const items = CONTENT.filter(c => c.type === type);
+  items.forEach(c => {
+    const b = document.createElement('div');
+    b.className = 'book';
+    b.dataset.id = c.id;
+    b.style.width = c.w + 'px';
+    b.style.height = c.h + 'px';
+    b.title = c.title + ' — ' + c.author;
+    b.innerHTML =
+      '<div class="spine" style="background: linear-gradient(90deg, ' + c.color + ', ' + shade(c.color, -28) + ')">' +
+        '<span class="t">' + esc(c.title) + '</span>' +
+        '<span class="a">' + esc(c.author.split(',')[0]) + '</span>' +
+      '</div>' +
+      '<div class="pages"></div>';
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.book.pulled').forEach(x => x.classList.remove('pulled'));
+      b.classList.add('pulled');
+      setTimeout(() => openView('detail', c.id), 420);
+    });
+    shelf.appendChild(b);
+  });
+
+  // decorate sparse shelves
+  if (items.length <= 3) {
+    shelf.insertAdjacentHTML('beforeend', '<div class="spacer"></div><div class="decor plant-pot"></div>');
+  }
+  if (type === 'book') {
+    shelf.insertAdjacentHTML('beforeend', '<div class="spacer"></div><div class="decor bookend"></div>');
+  }
+  if (type === 'podcast') {
+    shelf.insertAdjacentHTML('beforeend', '<div class="spacer"></div><div class="decor bookend"></div>');
+  }
+  bookcase.appendChild(shelf);
+});
+
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = Math.min(255, Math.max(0, (n >> 16) + amt));
+  const g = Math.min(255, Math.max(0, ((n >> 8) & 255) + amt));
+  const b = Math.min(255, Math.max(0, (n & 255) + amt));
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+/* ════════════════ CAMERA PARALLAX ════════════════ */
+const world = document.getElementById('world');
+let tx = 0, ty = 0, cx = 0, cy = 0, zoom = 0, tzoom = 0;
+addEventListener('pointermove', e => {
+  tx = (e.clientX / innerWidth - 0.5) * 9;   // deg Y
+  ty = -(e.clientY / innerHeight - 0.5) * 5; // deg X
+});
+addEventListener('wheel', e => {
+  tzoom = Math.min(220, Math.max(-120, tzoom - e.deltaY * 0.4));
+}, { passive: true });
+(function cam() {
+  cx += (tx - cx) * 0.06;
+  cy += (ty - cy) * 0.06;
+  zoom += (tzoom - zoom) * 0.08;
+  world.style.transform = 'translateZ(' + zoom + 'px) rotateX(' + cy + 'deg) rotateY(' + cx + 'deg)';
+  requestAnimationFrame(cam);
+})();
+
+/* ════════════════ OVERLAY SHELL ════════════════ */
+const overlay = document.getElementById('overlay');
+const panelBody = document.getElementById('panelBody');
+
+function openPanel(html) {
+  panelBody.innerHTML = html;
+  overlay.classList.add('on');
+  document.getElementById('panel').scrollTop = 0;
+}
+function closePanel() {
+  overlay.classList.remove('on');
+  panelBody.innerHTML = '';
+  document.querySelectorAll('.book.pulled').forEach(x => x.classList.remove('pulled'));
+}
+document.getElementById('closeBtn').addEventListener('click', closePanel);
+overlay.addEventListener('click', e => { if (e.target === overlay) closePanel(); });
+addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+document.querySelectorAll('[data-view]').forEach(el =>
+  el.addEventListener('click', () => openView(el.dataset.view)));
+document.getElementById('lamp').addEventListener('click', showSerendipity);
+
+function openView(view, arg) {
+  if (view === 'detail') return viewDetail(arg);
+  if (view === 'flash') return viewFlash(arg || null);
+  if (view === 'recall') return viewRecall(arg || null);
+  if (view === 'reflect') return viewReflect();
+  if (view === 'graph') return viewGraph();
+}
+
+function typeChip(type) {
+  return '<span class="typechip" style="background:' + TYPES[type].color + '">' + TYPES[type].label.replace(/s$/, '') + '</span>';
+}
+
+/* ════════════════ VIEW: CONTENT DETAIL ════════════════ */
+function viewDetail(cid) {
+  const c = byId[cid];
+  const dueN = c.cards.filter(k => SRS[k.id].due <= now()).length;
+
+  let html =
+    '<div class="detail-head">' +
+      '<div class="cover" style="background: linear-gradient(145deg, ' + c.color + ', ' + shade(c.color, -40) + ')">' + esc(c.title) + '</div>' +
+      '<div>' +
+        typeChip(c.type) +
+        '<h2>' + esc(c.title) + '</h2>' +
+        '<div class="metaline"><b>Author</b>' + esc(c.author) + '</div>' +
+        '<div class="metaline"><b>Published</b>' + esc(c.published) + '</div>' +
+        '<div class="metaline"><b>Consumed</b>' + fmtDate(c.consumed) + '</div>' +
+        '<div style="margin-top:10px">' + c.tags.map(t => '<span class="chip">' + t + '</span>').join('') + '</div>' +
+        '<div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap">' +
+          '<button class="btn" id="d-flash">Review cards' + (dueN ? ' (' + dueN + ' due)' : '') + '</button>' +
+          '<button class="btn ghost" id="d-recall">Test my recall</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  html += '<h3>My notes (' + c.notes.length + ')</h3><div id="d-notes"></div>' +
+          '<button class="btn ghost" id="d-addnote">+ Add a note</button>';
+
+  html += '<h3>Flashcards from this ' + c.type + '</h3>';
+  c.cards.forEach(k => {
+    const s = SRS[k.id];
+    const due = s.due <= now();
+    html += '<div class="cardrow"><span>' + esc(k.q) + '</span><span class="due' + (due ? ' now' : '') + '">' + fmtDue(s.due) + '</span></div>';
+  });
+
+  html += '<h3>Marked passages</h3>';
+  c.quotes.forEach(q => { html += '<p class="small" style="font-style:italic">“' + esc(q) + '”</p>'; });
+
+  openPanel(html);
+  renderNotes(c);
+  document.getElementById('d-flash').addEventListener('click', () => viewFlash(c.id));
+  document.getElementById('d-recall').addEventListener('click', () => viewRecall(c.id));
+  document.getElementById('d-addnote').addEventListener('click', () => {
+    c.notes.unshift({ id: 'n' + Date.now(), date: new Date().toISOString().slice(0, 10), text: '', editing: true });
+    renderNotes(c);
+  });
+}
+
+function renderNotes(c) {
+  const box = document.getElementById('d-notes');
+  if (!box) return;
+  box.innerHTML = '';
+  c.notes.forEach(n => {
+    const div = document.createElement('div');
+    div.className = 'note';
+    if (n.editing) {
+      div.innerHTML =
+        '<textarea>' + esc(n.text) + '</textarea>' +
+        '<div style="margin-top:8px; display:flex; gap:10px">' +
+          '<button class="btn" data-act="save">Save note</button>' +
+          '<button class="btn ghost" data-act="cancel">Cancel</button>' +
+        '</div>';
+      div.querySelector('[data-act=save]').addEventListener('click', () => {
+        const v = div.querySelector('textarea').value.trim();
+        if (!v) { c.notes = c.notes.filter(x => x !== n); } else { n.text = v; delete n.editing; }
+        renderNotes(c);
+      });
+      div.querySelector('[data-act=cancel]').addEventListener('click', () => {
+        if (!n.text) c.notes = c.notes.filter(x => x !== n);
+        else delete n.editing;
+        renderNotes(c);
+      });
+      box.appendChild(div);
+      div.querySelector('textarea').focus();
+    } else {
+      div.innerHTML =
+        '<div class="nd"><span>' + fmtDate(n.date) + '</span><button>edit</button></div>' +
+        '<p>' + esc(n.text) + '</p>';
+      div.querySelector('button').addEventListener('click', () => { n.editing = true; renderNotes(c); });
+      box.appendChild(div);
+    }
+  });
+  if (!c.notes.length) box.innerHTML = '<p class="muted small">No notes yet — add your first thought below.</p>';
+}
+
+/* ════════════════ VIEW: FLASHCARDS (SRS) ════════════════ */
+let session = null;
+
+function viewFlash(cid) {
+  let pool = cid ? ALL_CARDS.filter(k => k.cid === cid) : ALL_CARDS.slice();
+  let queue = pool.filter(k => SRS[k.id].due <= now());
+  const practicing = queue.length === 0;
+  if (practicing) queue = pool.slice();
+  queue.sort(() => Math.random() - 0.5);
+
+  session = { queue, i: 0, done: 0, grades: [0, 0, 0, 0], scope: cid ? byId[cid].title : 'All content', practicing };
+  renderFlashCard();
+}
+
+function renderFlashCard() {
+  const s = session;
+  if (s.i >= s.queue.length) {
+    openPanel(
+      '<h2>Session complete</h2>' +
+      '<p class="muted">' + s.scope + '</p>' +
+      '<p>You reviewed <b>' + s.done + '</b> card' + (s.done === 1 ? '' : 's') + '. ' +
+      'Again: ' + s.grades[0] + ' · Hard: ' + s.grades[1] + ' · Good: ' + s.grades[2] + ' · Easy: ' + s.grades[3] + '.</p>' +
+      '<p class="muted small">Intervals updated — tougher cards will resurface sooner, easy ones drift out along the forgetting curve.</p>' +
+      '<div style="display:flex; gap:10px; margin-top:10px">' +
+        '<button class="btn" id="f-again">Review everything again</button>' +
+        '<button class="btn ghost" id="f-close">Back to the library</button>' +
+      '</div>');
+    document.getElementById('f-again').addEventListener('click', () => viewFlash(null));
+    document.getElementById('f-close').addEventListener('click', closePanel);
+    return;
+  }
+
+  const k = s.queue[s.i];
+  const src = byId[k.cid];
+  openPanel(
+    '<h2>Flashcards</h2>' +
+    '<p class="sessionmeta">' + s.scope + ' · card ' + (s.i + 1) + ' of ' + s.queue.length +
+    (s.practicing ? ' · <i>nothing due — practicing ahead</i>' : ' · spaced repetition queue') + '</p>' +
+    '<div class="flashwrap"><div class="flash" id="flash">' +
+      '<div class="face"><span class="cue">Prompt — click to flip</span><div class="q">' + esc(k.q) + '</div><span class="src">' + esc(src.title) + '</span></div>' +
+      '<div class="face back"><span class="cue">Answer</span><div class="q" style="font-size:16px">' + esc(k.a) + '</div><span class="src">' + esc(src.title) + '</span></div>' +
+    '</div></div>' +
+    '<div class="gradebar" id="grades" style="visibility:hidden">' +
+      '<button class="btn g-again" data-g="0">Again</button>' +
+      '<button class="btn g-hard" data-g="1">Hard</button>' +
+      '<button class="btn g-good" data-g="2">Good</button>' +
+      '<button class="btn g-easy" data-g="3">Easy</button>' +
+    '</div>' +
+    '<p class="sessionmeta small" style="margin-top:12px">How easily did it come back? Your answer sets the next review date.</p>');
+
+  const flash = document.getElementById('flash');
+  flash.addEventListener('click', () => {
+    flash.classList.toggle('flipped');
+    document.getElementById('grades').style.visibility = 'visible';
+  });
+  document.querySelectorAll('#grades .btn').forEach(b => b.addEventListener('click', () => {
+    const g = +b.dataset.g;
+    gradeCard(k.id, g);
+    s.grades[g]++; s.done++;
+    if (g === 0) s.queue.push(k); // failed cards come back this session
+    s.i++;
+    renderFlashCard();
+  }));
+}
+
+/* ════════════════ VIEW: ACTIVE RECALL TEST ════════════════ */
+const allTags = [...new Set(CONTENT.flatMap(c => c.tags))].sort();
+let recall = null;
+
+function viewRecall(cid) {
+  if (cid) return startRecall(ALL_CARDS.filter(k => k.cid === cid), byId[cid].title);
+  openPanel(
+    '<h2>Active Recall Test</h2>' +
+    '<p class="muted">Pick a single work or a broader subject. You’ll write what you remember before seeing the answer — honest retrieval, no recognition shortcuts.</p>' +
+    '<h3>Test one work</h3>' +
+    '<select id="r-content">' + CONTENT.map(c => '<option value="' + c.id + '">' + esc(c.title) + '</option>').join('') + '</select> ' +
+    '<button class="btn" id="r-go-c" style="margin-left:8px">Begin</button>' +
+    '<h3>Test a subject</h3>' +
+    '<select id="r-tag">' + allTags.map(t => '<option>' + t + '</option>').join('') + '</select> ' +
+    '<button class="btn" id="r-go-t" style="margin-left:8px">Begin</button>');
+  document.getElementById('r-go-c').addEventListener('click', () => {
+    const id = document.getElementById('r-content').value;
+    startRecall(ALL_CARDS.filter(k => k.cid === id), byId[id].title);
+  });
+  document.getElementById('r-go-t').addEventListener('click', () => {
+    const t = document.getElementById('r-tag').value;
+    const ids = CONTENT.filter(c => c.tags.includes(t)).map(c => c.id);
+    startRecall(ALL_CARDS.filter(k => ids.includes(k.cid)), 'Subject: ' + t);
+  });
+}
+
+function startRecall(cards, scope) {
+  const queue = cards.slice().sort(() => Math.random() - 0.5);
+  recall = { queue, i: 0, grades: [0, 0, 0], scope };
+  renderRecall();
+}
+
+function renderRecall() {
+  const r = recall;
+  if (r.i >= r.queue.length) {
+    const total = r.queue.length;
+    openPanel(
+      '<h2>Recall test complete</h2>' +
+      '<p class="muted">' + esc(r.scope) + '</p>' +
+      '<p><b>' + r.grades[2] + '</b> recalled cleanly · <b>' + r.grades[1] + '</b> partial · <b>' + r.grades[0] + '</b> missed, of ' + total + '.</p>' +
+      '<p class="muted small">Misses were rescheduled to resurface soon in your flashcard queue.</p>' +
+      '<div style="display:flex; gap:10px; margin-top:10px">' +
+        '<button class="btn" id="r-redo">Test something else</button>' +
+        '<button class="btn ghost" id="r-close">Done</button>' +
+      '</div>');
+    document.getElementById('r-redo').addEventListener('click', () => viewRecall(null));
+    document.getElementById('r-close').addEventListener('click', closePanel);
+    return;
+  }
+
+  const k = r.queue[r.i];
+  const src = byId[k.cid];
+  openPanel(
+    '<h2>Active Recall</h2>' +
+    '<p class="sessionmeta">' + esc(r.scope) + ' · ' + (r.i + 1) + ' of ' + r.queue.length + '</p>' +
+    '<h3>Prompt</h3>' +
+    '<p style="font-size:17px">' + esc(k.q) + ' <span class="muted small">(' + esc(src.title) + ')</span></p>' +
+    '<h3>Write what you remember</h3>' +
+    '<textarea id="r-answer" placeholder="Retrieve it from memory before peeking…"></textarea>' +
+    '<div style="margin-top:12px"><button class="btn" id="r-reveal">Reveal answer</button></div>' +
+    '<div id="r-result" style="display:none">' +
+      '<h3>The answer</h3><p>' + esc(k.a) + '</p>' +
+      '<h3>How did you do?</h3>' +
+      '<div class="gradebar" style="justify-content:flex-start">' +
+        '<button class="btn g-again" data-g="0">Missed it</button>' +
+        '<button class="btn g-hard" data-g="1">Partial</button>' +
+        '<button class="btn g-good" data-g="2">Got it</button>' +
+      '</div>' +
+    '</div>');
+
+  document.getElementById('r-reveal').addEventListener('click', () => {
+    document.getElementById('r-result').style.display = 'block';
+    document.getElementById('r-reveal').disabled = true;
+  });
+  document.querySelectorAll('#r-result .btn').forEach(b => b.addEventListener('click', () => {
+    const g = +b.dataset.g;
+    gradeCard(k.id, g); // 0 again, 1 hard, 2 good — feeds the same SRS
+    r.grades[g]++;
+    r.i++;
+    renderRecall();
+  }));
+}
+
+/* ════════════════ VIEW: REFLECTION ENGINE ════════════════ */
+function randomQuote() {
+  const c = CONTENT[Math.floor(Math.random() * CONTENT.length)];
+  const q = c.quotes[Math.floor(Math.random() * c.quotes.length)];
+  return { q, c };
+}
+
+function viewReflect() {
+  const pick = randomQuote();
+  let html =
+    '<h2>Reflection Engine</h2>' +
+    '<p class="muted">Sit with one idea. Write until it’s yours.</p>' +
+    '<h3>Today’s surfaced passage</h3>' +
+    '<p style="font-size:18px; font-style:italic; line-height:1.6">“' + esc(pick.q) + '”</p>' +
+    '<p class="muted small">— ' + esc(pick.c.author) + ', <i>' + esc(pick.c.title) + '</i></p>' +
+    '<div style="margin:6px 0 14px"><button class="btn ghost" id="rf-another">Surface a different passage</button></div>' +
+    '<textarea id="rf-text" placeholder="What does this mean in your own words? Where have you seen it play out? What does it change?" style="min-height:150px"></textarea>' +
+    '<div style="margin-top:12px"><button class="btn" id="rf-save">Save reflection</button> <span id="rf-saved" class="muted small"></span></div>' +
+    '<h3>Past reflections (' + reflections.length + ')</h3><div id="rf-list"></div>';
+  openPanel(html);
+
+  function renderList() {
+    document.getElementById('rf-list').innerHTML = reflections.map(r =>
+      '<div class="note"><div class="nd"><span>' + fmtDate(r.date) + ' · on <i>' + esc(r.source) + '</i></span></div>' +
+      '<p class="small muted" style="font-style:italic; margin-bottom:6px">“' + esc(r.quote) + '”</p>' +
+      '<p>' + esc(r.text) + '</p></div>').join('');
+  }
+  renderList();
+
+  document.getElementById('rf-another').addEventListener('click', viewReflect);
+  document.getElementById('rf-save').addEventListener('click', () => {
+    const v = document.getElementById('rf-text').value.trim();
+    if (!v) return;
+    reflections.unshift({ date: new Date().toISOString().slice(0, 10), quote: pick.q, source: pick.c.title, text: v });
+    document.getElementById('rf-text').value = '';
+    document.getElementById('rf-saved').textContent = 'Saved ✓';
+    renderList();
+  });
+}
+
+/* ════════════════ VIEW: KNOWLEDGE GRAPH ════════════════ */
+function viewGraph() {
+  openPanel(
+    '<h2>Knowledge Graph</h2>' +
+    '<p class="muted small">Works connect through shared themes. Hover to inspect, click a work to open it.</p>' +
+    '<canvas id="graphcanvas"></canvas>' +
+    '<div class="legend">' +
+      Object.keys(TYPES).map(t => '<span><i style="background:' + TYPES[t].color + '"></i>' + TYPES[t].label + '</span>').join('') +
+      '<span><i style="background:#8aa0b0"></i>Theme</span>' +
+    '</div>');
+
+  const canvas = document.getElementById('graphcanvas');
+  const W = canvas.clientWidth || 740, H = 480;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  // nodes: content + tags
+  const nodes = [];
+  CONTENT.forEach(c => nodes.push({ id: c.id, label: c.title, kind: 'content', type: c.type, r: 11 }));
+  allTags.forEach(t => nodes.push({ id: 't:' + t, label: t, kind: 'tag', r: 5 }));
+  const idx = {}; nodes.forEach((n, i) => idx[n.id] = i);
+  const edges = [];
+  CONTENT.forEach(c => c.tags.forEach(t => edges.push([idx[c.id], idx['t:' + t]])));
+
+  // simple force layout
+  nodes.forEach((n, i) => {
+    const a = (i / nodes.length) * Math.PI * 2;
+    n.x = W / 2 + Math.cos(a) * (n.kind === 'tag' ? 130 : 205) + (Math.random() - 0.5) * 30;
+    n.y = H / 2 + Math.sin(a) * (n.kind === 'tag' ? 100 : 165) + (Math.random() - 0.5) * 30;
+  });
+  for (let it = 0; it < 220; it++) {
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      let d2 = dx * dx + dy * dy || 1, d = Math.sqrt(d2);
+      const f = Math.min(12, 2600 / d2);
+      dx /= d; dy /= d;
+      a.x -= dx * f; a.y -= dy * f; b.x += dx * f; b.y += dy * f;
+    }
+    edges.forEach(([i, j]) => {
+      const a = nodes[i], b = nodes[j];
+      let dx = b.x - a.x, dy = b.y - a.y;
+      const d = Math.sqrt(dx * dx + dy * dy) || 1;
+      const f = (d - 86) * 0.018;
+      dx /= d; dy /= d;
+      a.x += dx * f; a.y += dy * f; b.x -= dx * f; b.y -= dy * f;
+    });
+    nodes.forEach(n => {
+      n.x = Math.max(30, Math.min(W - 30, n.x + (W / 2 - n.x) * 0.004));
+      n.y = Math.max(24, Math.min(H - 24, n.y + (H / 2 - n.y) * 0.004));
+    });
+  }
+
+  let hover = null;
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = 'rgba(140,170,195,.28)';
+    ctx.lineWidth = 1;
+    edges.forEach(([i, j]) => {
+      const hi = hover !== null && (i === hover || j === hover);
+      ctx.strokeStyle = hi ? 'rgba(255,217,143,.9)' : 'rgba(140,170,195,.25)';
+      ctx.beginPath(); ctx.moveTo(nodes[i].x, nodes[i].y); ctx.lineTo(nodes[j].x, nodes[j].y); ctx.stroke();
+    });
+    nodes.forEach((n, i) => {
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, n.r + (i === hover ? 3 : 0), 0, 7);
+      ctx.fillStyle = n.kind === 'tag' ? '#8aa0b0' : TYPES[n.type].color;
+      ctx.fill();
+      if (n.kind === 'content' || i === hover) {
+        ctx.fillStyle = i === hover ? '#ffe9bd' : 'rgba(230,238,245,.78)';
+        ctx.font = (i === hover ? 'bold ' : '') + '11px Georgia';
+        ctx.textAlign = 'center';
+        const label = n.label.length > 26 && i !== hover ? n.label.slice(0, 24) + '…' : n.label;
+        ctx.fillText(label, n.x, n.y - n.r - 6);
+      }
+    });
+  }
+  draw();
+
+  function hit(e) {
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    for (let i = 0; i < nodes.length; i++) {
+      const n = nodes[i];
+      if ((mx - n.x) ** 2 + (my - n.y) ** 2 < (n.r + 5) ** 2) return i;
+    }
+    return null;
+  }
+  canvas.addEventListener('mousemove', e => {
+    const h = hit(e);
+    if (h !== hover) { hover = h; draw(); }
+    canvas.style.cursor = h !== null && nodes[h].kind === 'content' ? 'pointer' : 'crosshair';
+  });
+  canvas.addEventListener('click', e => {
+    const h = hit(e);
+    if (h !== null && nodes[h].kind === 'content') viewDetail(nodes[h].id);
+  });
+}
+
+/* ════════════════ SERENDIPITY ENGINE ════════════════ */
+const toast = document.getElementById('toast');
+
+function showSerendipity() {
+  const pool = [];
+  CONTENT.forEach(c => c.notes.forEach(n => n.text && pool.push({ kind: 'note', text: n.text, src: c.title, date: n.date, cid: c.id })));
+  reflections.forEach(r => pool.push({ kind: 'reflection', text: r.text, src: r.source, date: r.date }));
+  pool.sort((a, b) => a.date < b.date ? -1 : 1);
+  const pick = pool[Math.floor(Math.random() * Math.min(pool.length, 6))]; // bias to the oldest few
+
+  toast.innerHTML =
+    '<div class="tt">✨ From your archive</div>' +
+    '<div class="tx">“' + esc(pick.text.length > 170 ? pick.text.slice(0, 168) + '…' : pick.text) + '”</div>' +
+    '<div class="ts">' + (pick.kind === 'reflection' ? 'Your reflection on' : 'Your note on') + ' <i>' + esc(pick.src) + '</i> · ' + fmtDate(pick.date) + '</div>' +
+    '<div class="ta">' +
+      (pick.cid ? '<button id="to-open">Revisit it</button>' : '') +
+      '<button id="to-more">Another</button>' +
+      '<button id="to-x">Dismiss</button>' +
+    '</div>';
+  toast.classList.add('on');
+  const openB = document.getElementById('to-open');
+  if (openB) openB.addEventListener('click', () => { toast.classList.remove('on'); viewDetail(pick.cid); });
+  document.getElementById('to-more').addEventListener('click', showSerendipity);
+  document.getElementById('to-x').addEventListener('click', () => toast.classList.remove('on'));
+}
+
+/* boot */
+updateDueBadge();
+if (window.self === window.top) setTimeout(showSerendipity, 2800);
+</script>
+</body>
+</html>

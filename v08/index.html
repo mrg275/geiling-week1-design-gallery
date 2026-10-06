@@ -1,0 +1,1483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Clubhouse — v08</title>
+<style>
+  :root{
+    --blue:#002D72;
+    --blue-deep:#001A44;
+    --blue-mid:#0A3D8F;
+    --orange:#FF5910;
+    --orange-dk:#D94400;
+    --white:#FFFFFF;
+    --cream:#F5F2EC;
+    --warm-gray:#E8E4DC;
+    --ink:#1B2330;
+    --ink-soft:#4A5366;
+    --stitch:#C8102E;
+    --line:#D8D2C6;
+    --radius:10px;
+    --shadow:0 2px 6px rgba(0,20,60,.10), 0 10px 28px rgba(0,20,60,.08);
+    --cond:'Arial Narrow','Helvetica Neue',Arial,sans-serif;
+    --mono:'Menlo','Consolas','Courier New',monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.55;
+    min-width:320px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important;}
+  }
+
+  /* ---------- top strip ---------- */
+  .topstrip{
+    background:var(--blue-deep);
+    color:#BFD0EA;
+    font-family:var(--cond);
+    font-size:13px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:8px 24px;
+    display:flex;justify-content:space-between;align-items:center;gap:16px;
+  }
+  .topstrip a{color:#fff;text-decoration:none;font-weight:bold;letter-spacing:.1em;}
+  .topstrip a:hover{color:var(--orange);}
+  .topstrip .disclaimer{font-size:11px;letter-spacing:.08em;opacity:.75;text-align:right;}
+
+  /* ---------- scoreboard header ---------- */
+  header.scoreboard{
+    background:linear-gradient(180deg,var(--blue) 0%, var(--blue-deep) 100%);
+    color:#fff;
+    padding:36px 24px 30px;
+    border-bottom:6px solid var(--orange);
+  }
+  .sb-inner{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between;}
+  .sb-title h1{
+    font-family:var(--cond);
+    font-weight:bold;
+    font-size:46px;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+    line-height:1.02;
+  }
+  .sb-title h1 .num{color:var(--orange);font-family:var(--mono);font-size:.82em;vertical-align:4px;margin-left:8px;}
+  .sb-title p{
+    font-family:var(--cond);
+    letter-spacing:.22em;text-transform:uppercase;
+    font-size:13px;color:#A9BEDF;margin-top:8px;
+  }
+  .sb-panel{
+    background:#061024;
+    border:2px solid #16315F;
+    border-radius:8px;
+    padding:14px 18px;
+    display:flex;gap:0;align-items:stretch;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.04), 0 6px 18px rgba(0,0,0,.35);
+  }
+  .sb-cell{padding:4px 20px;text-align:center;border-right:1px solid #16315F;}
+  .sb-cell:last-child{border-right:none;}
+  .sb-cell .label{
+    font-family:var(--cond);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#7E93B8;margin-bottom:4px;
+  }
+  .sb-cell .digit{
+    font-family:var(--mono);
+    font-size:34px;font-weight:bold;
+    color:var(--orange);
+    text-shadow:0 0 12px rgba(255,89,16,.45);
+    line-height:1;
+    min-width:52px;display:inline-block;
+  }
+  .sb-cell .sub{font-family:var(--cond);font-size:10px;letter-spacing:.14em;color:#5F749A;text-transform:uppercase;margin-top:5px;}
+  .sb-line{
+    margin-top:10px;font-family:var(--mono);font-size:12px;color:#7E93B8;text-align:right;letter-spacing:.1em;
+  }
+  .sb-line span{color:#fff;}
+
+  /* ---------- nav ---------- */
+  nav.tabs{
+    background:var(--white);
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:50;
+    box-shadow:0 2px 8px rgba(0,20,60,.06);
+  }
+  .tabs-inner{max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:4px;padding:0 16px;}
+  .tabs button{
+    appearance:none;background:none;border:none;cursor:pointer;
+    font-family:var(--cond);font-weight:bold;font-size:16px;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--ink-soft);
+    padding:16px 18px 13px;
+    border-bottom:4px solid transparent;
+    transition:color .15s,border-color .15s;
+  }
+  .tabs button:hover{color:var(--blue);}
+  .tabs button.active{color:var(--blue);border-bottom-color:var(--orange);}
+  .tabs button .pill{
+    display:inline-block;background:var(--orange);color:#fff;
+    font-family:var(--mono);font-size:11px;border-radius:20px;padding:1px 7px;margin-left:6px;vertical-align:2px;
+  }
+
+  /* ---------- layout ---------- */
+  main{max-width:1180px;margin:0 auto;padding:44px 24px 110px;}
+  section.view{display:none;}
+  section.view.active{display:block;}
+  .view-head{margin-bottom:30px;}
+  .view-head h2{
+    font-family:var(--cond);font-size:32px;letter-spacing:.08em;text-transform:uppercase;color:var(--blue);
+  }
+  .view-head h2 em{font-style:normal;color:var(--orange);}
+  .view-head p{color:var(--ink-soft);max-width:640px;margin-top:6px;font-size:15px;}
+  .rule{height:4px;width:72px;background:var(--orange);margin:12px 0 0;border-radius:2px;}
+
+  /* ---------- pennant tags ---------- */
+  .pennant{
+    display:inline-block;
+    font-family:var(--cond);font-weight:bold;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+    color:#fff;background:var(--blue);
+    padding:3px 18px 3px 10px;
+    clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+    margin:2px 2px 2px 0;
+  }
+  .pennant.alt{background:var(--orange-dk);}
+
+  /* ---------- library (lineup card grid) ---------- */
+  .lineup-bar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px;
+  }
+  .lineup-bar .chip{
+    appearance:none;border:1.5px solid var(--blue);background:#fff;color:var(--blue);
+    font-family:var(--cond);font-weight:bold;font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+    padding:7px 16px;border-radius:30px;cursor:pointer;transition:background .15s,color .15s;
+  }
+  .lineup-bar .chip:hover{background:#EAF0FA;}
+  .lineup-bar .chip.on{background:var(--blue);color:#fff;}
+  .card-grid{
+    display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:22px;
+  }
+  .tcard{
+    background:#fff;border-radius:var(--radius);
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    overflow:hidden;cursor:pointer;
+    display:flex;flex-direction:column;
+    transition:transform .15s, box-shadow .15s;
+    text-align:left;padding:0;font:inherit;color:inherit;appearance:none;
+  }
+  .tcard:hover{transform:translateY(-3px);box-shadow:0 6px 14px rgba(0,20,60,.14),0 16px 40px rgba(0,20,60,.12);}
+  .tcard:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+  .tcard-top{
+    background:var(--blue);color:#fff;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:10px 14px;
+  }
+  .pos-badge{
+    font-family:var(--cond);font-weight:bold;font-size:13px;letter-spacing:.14em;
+    background:var(--orange);color:#fff;border-radius:4px;padding:2px 8px;
+  }
+  .jersey{font-family:var(--mono);font-weight:bold;font-size:17px;color:#fff;opacity:.9;}
+  .tcard-body{padding:16px 16px 14px;flex:1;display:flex;flex-direction:column;gap:8px;}
+  .tcard-body h3{
+    font-family:var(--cond);font-size:20px;line-height:1.15;letter-spacing:.02em;color:var(--blue);text-transform:uppercase;
+  }
+  .tcard-body .byline{font-size:13px;color:var(--ink-soft);}
+  .tcard-tags{margin-top:2px;}
+  .tcard-stats{
+    border-top:1px dashed var(--line);
+    margin-top:auto;padding-top:10px;
+    display:flex;gap:14px;
+    font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+  }
+  .tcard-stats b{color:var(--blue);font-size:14px;display:block;}
+  .tcard-stats .due-flag{color:var(--orange-dk);font-weight:bold;}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    appearance:none;cursor:pointer;border:none;border-radius:6px;
+    font-family:var(--cond);font-weight:bold;letter-spacing:.12em;text-transform:uppercase;
+    font-size:14px;padding:11px 22px;
+    transition:transform .12s, background .15s, color .15s, box-shadow .15s;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+  .btn-blue{background:var(--blue);color:#fff;}
+  .btn-blue:hover{background:var(--blue-mid);}
+  .btn-orange{background:var(--orange);color:#fff;}
+  .btn-orange:hover{background:var(--orange-dk);}
+  .btn-ghost{background:transparent;color:var(--blue);border:1.5px solid var(--blue);}
+  .btn-ghost:hover{background:#EAF0FA;}
+  .btn-sm{font-size:12px;padding:7px 14px;}
+
+  /* ---------- flashcards ---------- */
+  .deck-wrap{display:grid;grid-template-columns:1fr 290px;gap:34px;align-items:start;}
+  .fc-scene{perspective:1400px;max-width:620px;}
+  .fc-card{
+    position:relative;width:100%;min-height:330px;
+    transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.4,.1,.2,1);
+    cursor:pointer;
+  }
+  .fc-card.flipped{transform:rotateY(180deg);}
+  .fc-face{
+    position:absolute;inset:0;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:#fff;border-radius:16px;
+    border:1px solid var(--line);
+    box-shadow:var(--shadow);
+    padding:38px 56px;
+    display:flex;flex-direction:column;justify-content:center;gap:14px;
+    overflow:hidden;
+  }
+  .fc-face.back{transform:rotateY(180deg);background:#FDFBF7;}
+  .fc-face::before,.fc-face::after{
+    content:'';position:absolute;top:50%;width:300px;height:300px;border-radius:50%;
+    border:3px dashed rgba(200,16,46,.4);
+    transform:translateY(-50%);
+    pointer-events:none;
+  }
+  .fc-face::before{left:-240px;}
+  .fc-face::after{right:-240px;}
+  .fc-kicker{
+    font-family:var(--cond);font-size:12px;font-weight:bold;letter-spacing:.22em;text-transform:uppercase;color:var(--orange-dk);
+    text-align:center;
+  }
+  .fc-text{font-size:21px;line-height:1.45;text-align:center;color:var(--ink);font-weight:500;}
+  .fc-src{font-family:var(--cond);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);text-align:center;}
+  .fc-hint{text-align:center;font-size:12px;color:#9AA3B5;margin-top:12px;font-family:var(--cond);letter-spacing:.14em;text-transform:uppercase;}
+  .grade-row{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:22px;max-width:620px;
+  }
+  .grade-btn{
+    appearance:none;cursor:pointer;border-radius:8px;padding:12px 6px 10px;
+    border:1.5px solid var(--line);background:#fff;
+    font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;
+    transition:transform .12s, box-shadow .15s, border-color .15s;
+  }
+  .grade-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow);}
+  .grade-btn:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+  .grade-btn .out{display:block;font-weight:bold;font-size:15px;}
+  .grade-btn .srs{display:block;font-size:10px;letter-spacing:.18em;color:var(--ink-soft);margin-top:3px;}
+  .grade-btn.g-again{border-color:#C8102E;}  .grade-btn.g-again .out{color:#C8102E;}
+  .grade-btn.g-hard{border-color:var(--orange-dk);} .grade-btn.g-hard .out{color:var(--orange-dk);}
+  .grade-btn.g-good{border-color:var(--blue-mid);} .grade-btn.g-good .out{color:var(--blue-mid);}
+  .grade-btn.g-easy{border-color:var(--blue);} .grade-btn.g-easy .out{color:var(--blue);}
+  .deck-side{
+    background:var(--blue);color:#fff;border-radius:var(--radius);
+    padding:22px 22px 24px;box-shadow:var(--shadow);
+  }
+  .deck-side h3{font-family:var(--cond);font-size:16px;letter-spacing:.18em;text-transform:uppercase;color:var(--orange);margin-bottom:14px;}
+  .deck-stat{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.14);font-size:14px;}
+  .deck-stat:last-of-type{border-bottom:none;}
+  .deck-stat b{font-family:var(--mono);}
+  .retired{
+    background:#fff;border:1px dashed var(--line);border-radius:16px;
+    padding:60px 30px;text-align:center;max-width:620px;
+  }
+  .retired h3{font-family:var(--cond);letter-spacing:.14em;text-transform:uppercase;color:var(--blue);font-size:22px;margin-bottom:8px;}
+  .retired p{color:var(--ink-soft);margin-bottom:20px;}
+
+  /* ---------- at bat (recall) ---------- */
+  .atbat-setup{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;max-width:720px;margin-bottom:30px;}
+  .atbat-setup .row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end;}
+  .field-group label{display:block;font-family:var(--cond);font-size:12px;font-weight:bold;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;}
+  select,textarea,input[type=text]{
+    font-family:inherit;font-size:15px;color:var(--ink);
+    border:1.5px solid var(--line);border-radius:6px;background:#fff;
+    padding:10px 12px;
+  }
+  select:focus,textarea:focus,input[type=text]:focus{outline:2px solid var(--blue);border-color:var(--blue);}
+  textarea{width:100%;resize:vertical;line-height:1.55;}
+  .vs{font-family:var(--cond);font-weight:bold;letter-spacing:.2em;color:var(--orange-dk);text-transform:uppercase;font-size:13px;padding-bottom:12px;}
+  .atbat-box{display:grid;grid-template-columns:1fr 250px;gap:30px;align-items:start;max-width:980px;}
+  .plate{
+    background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:30px 34px;
+  }
+  .plate .fc-kicker{text-align:left;}
+  .plate .prompt{font-size:20px;line-height:1.5;margin:10px 0 4px;font-weight:500;}
+  .plate .src{font-family:var(--cond);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:18px;}
+  .answer-reveal{
+    background:#F2F6FC;border-left:4px solid var(--blue);border-radius:0 8px 8px 0;
+    padding:16px 18px;margin:18px 0 6px;font-size:16px;
+  }
+  .count-board{
+    background:#061024;border-radius:10px;color:#fff;padding:20px;
+    font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;
+  }
+  .count-board h4{font-size:12px;color:#7E93B8;letter-spacing:.24em;margin-bottom:12px;}
+  .count-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .count-row .lbl{width:64px;font-size:13px;font-weight:bold;}
+  .dot{width:16px;height:16px;border-radius:50%;background:#1A2C4E;display:inline-block;border:1px solid #2C4575;}
+  .dot.on-b{background:#3FA34D;box-shadow:0 0 8px rgba(63,163,77,.7);}
+  .dot.on-s{background:var(--orange);box-shadow:0 0 8px rgba(255,89,16,.7);}
+  .count-line{border-top:1px solid #16315F;margin-top:10px;padding-top:12px;font-family:var(--mono);font-size:13px;color:#A9BEDF;display:flex;justify-content:space-between;}
+  .count-line b{color:var(--orange);}
+
+  /* ---------- dugout journal ---------- */
+  .journal-grid{display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start;}
+  .pitch-card{
+    background:var(--blue);color:#fff;border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:30px 32px;position:relative;overflow:hidden;
+  }
+  .pitch-card::after{
+    content:'';position:absolute;right:-90px;top:-90px;width:240px;height:240px;border-radius:50%;
+    border:3px dashed rgba(255,255,255,.15);
+  }
+  .pitch-card .fc-kicker{color:var(--orange);text-align:left;}
+  .pitch-quote{font-size:20px;line-height:1.5;font-weight:500;margin:14px 0 12px;font-style:italic;}
+  .pitch-attr{font-family:var(--cond);font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#A9BEDF;}
+  .pitch-actions{margin-top:22px;display:flex;gap:10px;}
+  .journal-compose{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;}
+  .journal-compose h3{font-family:var(--cond);font-size:16px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:12px;}
+  .journal-list{margin-top:44px;}
+  .journal-list h3{font-family:var(--cond);font-size:18px;letter-spacing:.14em;text-transform:uppercase;color:var(--blue);margin-bottom:18px;}
+  .j-entry{
+    background:#fff;border:1px solid var(--line);border-left:5px solid var(--orange);
+    border-radius:8px;box-shadow:var(--shadow);
+    padding:18px 22px;margin-bottom:14px;
+  }
+  .j-entry .meta{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:6px;letter-spacing:.06em;}
+  .j-entry .ref{font-family:var(--cond);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);margin-bottom:8px;}
+  .j-entry p.body{font-size:15px;}
+
+  /* ---------- field map ---------- */
+  .graph-wrap{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;overflow:hidden;}
+  .graph-wrap svg{width:100%;height:auto;display:block;}
+  .gnode{cursor:pointer;}
+  .gnode circle{transition:r .15s, fill .15s;}
+  .gnode text{
+    font-family:var(--cond);font-size:14px;font-weight:bold;letter-spacing:.04em;fill:var(--ink);
+    pointer-events:none;text-transform:uppercase;
+  }
+  .gedge{stroke:var(--blue);stroke-opacity:.14;transition:stroke-opacity .15s, stroke .15s;}
+  svg.hovering .gedge{stroke-opacity:.05;}
+  svg.hovering .gedge.hot{stroke:var(--orange-dk);stroke-opacity:.85;}
+  svg.hovering .gnode{opacity:.3;}
+  svg.hovering .gnode.hot{opacity:1;}
+  .graph-legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px;padding:0 6px;font-family:var(--cond);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);}
+  .lg-dot{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:6px;vertical-align:-1px;}
+
+  /* ---------- detail modal ---------- */
+  .modal{
+    position:fixed;inset:0;z-index:200;
+    background:rgba(0,16,42,.62);
+    display:flex;align-items:flex-start;justify-content:center;
+    padding:5vh 20px 40px;overflow-y:auto;
+  }
+  .modal.hidden{display:none;}
+  .modal-card{
+    background:var(--cream);border-radius:14px;max-width:780px;width:100%;
+    box-shadow:0 30px 80px rgba(0,0,0,.4);overflow:hidden;
+  }
+  .modal-head{
+    background:var(--blue);color:#fff;padding:26px 32px 22px;position:relative;
+    border-bottom:5px solid var(--orange);
+  }
+  .modal-head .pos-badge{position:static;margin-bottom:10px;display:inline-block;}
+  .modal-head h2{font-family:var(--cond);font-size:30px;letter-spacing:.04em;text-transform:uppercase;line-height:1.1;}
+  .modal-head .byline{color:#A9BEDF;margin-top:6px;font-size:14px;}
+  .modal-close{
+    position:absolute;top:16px;right:16px;appearance:none;border:none;cursor:pointer;
+    background:rgba(255,255,255,.12);color:#fff;border-radius:50%;width:36px;height:36px;
+    font-size:18px;line-height:1;transition:background .15s;
+  }
+  .modal-close:hover{background:var(--orange);}
+  .modal-body{padding:28px 32px 36px;}
+  .meta-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;
+  }
+  .meta-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:12px 14px;}
+  .meta-box .k{font-family:var(--cond);font-size:11px;font-weight:bold;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);}
+  .meta-box .v{font-size:15px;color:var(--ink);margin-top:3px;font-weight:600;}
+  .d-sec{margin-top:28px;}
+  .d-sec > h3{
+    font-family:var(--cond);font-size:15px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);
+    border-bottom:2px solid var(--warm-gray);padding-bottom:8px;margin-bottom:14px;
+  }
+  .d-sec > h3 .cnt{color:var(--orange-dk);font-family:var(--mono);font-size:13px;margin-left:6px;}
+  blockquote.q{
+    border-left:4px solid var(--orange);background:#fff;border-radius:0 8px 8px 0;
+    padding:14px 18px;margin-bottom:10px;font-style:italic;font-size:15px;color:var(--ink);
+  }
+  .note-item{background:#fff;border:1px solid var(--line);border-radius:8px;padding:14px 16px;margin-bottom:10px;}
+  .note-item .n-meta{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-bottom:5px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .note-item p{font-size:15px;}
+  .note-item textarea{margin-top:6px;}
+  .note-edit-actions{margin-top:8px;display:flex;gap:8px;}
+  .add-note{margin-top:14px;}
+  .add-note textarea{margin-bottom:10px;}
+  .mini-card{background:#fff;border:1px solid var(--line);border-radius:8px;padding:13px 16px;margin-bottom:10px;}
+  .mini-card .mq{font-weight:600;font-size:14px;}
+  .mini-card .ma{font-size:14px;color:var(--ink-soft);margin-top:5px;}
+  .mini-card .mdue{font-family:var(--mono);font-size:11px;margin-top:7px;color:var(--ink-soft);}
+  .mini-card .mdue.due-now{color:var(--orange-dk);font-weight:bold;}
+
+  /* ---------- serendipity toast ---------- */
+  .toast{
+    position:fixed;right:24px;bottom:24px;z-index:300;
+    width:min(380px, calc(100vw - 48px));
+    background:var(--blue-deep);color:#fff;border-radius:12px;
+    border:1px solid #27406F;border-top:4px solid var(--orange);
+    box-shadow:0 18px 50px rgba(0,0,0,.45);
+    padding:20px 22px 18px;
+    transform:translateY(16px);opacity:0;pointer-events:none;
+    transition:transform .3s,opacity .3s;
+  }
+  .toast.show{transform:translateY(0);opacity:1;pointer-events:auto;}
+  .toast h4{font-family:var(--cond);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--orange);margin-bottom:10px;}
+  .toast .t-text{font-size:14px;line-height:1.5;color:#E8EDF6;}
+  .toast .t-src{font-family:var(--mono);font-size:11px;color:#8FA3C6;margin-top:10px;}
+  .toast .t-actions{display:flex;gap:8px;margin-top:14px;}
+  .toast .t-close{position:absolute;top:10px;right:12px;background:none;border:none;color:#8FA3C6;font-size:16px;cursor:pointer;padding:4px;}
+  .toast .t-close:hover{color:#fff;}
+
+  footer{
+    background:var(--blue-deep);color:#7E93B8;text-align:center;
+    font-family:var(--cond);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    padding:26px 20px;margin-top:40px;border-top:4px solid var(--orange);
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 980px){
+    .deck-wrap,.atbat-box{grid-template-columns:1fr;}
+    .journal-grid{grid-template-columns:1fr;}
+    .sb-inner{justify-content:center;text-align:center;}
+    .sb-line{text-align:center;}
+  }
+  @media (max-width: 768px){
+    .sb-title h1{font-size:34px;}
+    .sb-cell{padding:4px 12px;}
+    .sb-cell .digit{font-size:26px;min-width:40px;}
+    main{padding:32px 16px 90px;}
+    .fc-face{padding:30px 34px;}
+    .grade-row{grid-template-columns:repeat(2,1fr);}
+    .meta-grid{grid-template-columns:1fr;}
+    .modal-body{padding:22px 20px 30px;}
+    .modal-head{padding:22px 20px 18px;}
+    .topstrip{flex-direction:column;gap:4px;text-align:center;}
+    .topstrip .disclaimer{text-align:center;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topstrip">
+  <a href="../index.html">&larr; Gallery</a>
+  <span class="disclaimer">Fan-made colorway concept &middot; no official league or club marks</span>
+</div>
+
+<header class="scoreboard">
+  <div class="sb-inner">
+    <div class="sb-title">
+      <h1>The Clubhouse<span class="num">v08</span></h1>
+      <p>Matthew Geiling &middot; Personal Knowledge Ballclub &middot; Queens Colorway &middot; Est. 2025</p>
+    </div>
+    <div>
+      <div class="sb-panel" role="status" aria-label="Scoreboard">
+        <div class="sb-cell">
+          <div class="label">Due</div>
+          <div class="digit" id="sbDue">0</div>
+          <div class="sub">Cards up</div>
+        </div>
+        <div class="sb-cell">
+          <div class="label">Streak</div>
+          <div class="digit" id="sbStreak">11</div>
+          <div class="sub">Day run</div>
+        </div>
+        <div class="sb-cell">
+          <div class="label">Inning</div>
+          <div class="digit" id="sbInning">1</div>
+          <div class="sub">of 9 today</div>
+        </div>
+      </div>
+      <div class="sb-line">R <span id="sbR">0</span> &nbsp; H <span id="sbH">0</span> &nbsp; E <span id="sbE">0</span> &nbsp;&middot;&nbsp; session line</div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-inner">
+    <button data-view="library" class="active">Lineup</button>
+    <button data-view="deck">Flashcards <span class="pill" id="tabDue">0</span></button>
+    <button data-view="recall">At Bat</button>
+    <button data-view="journal">Dugout Journal</button>
+    <button data-view="graph">Field Map</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ============ LIBRARY ============ -->
+  <section class="view active" id="view-library">
+    <div class="view-head">
+      <h2>Tonight&rsquo;s <em>Lineup</em></h2>
+      <div class="rule"></div>
+      <p>Every book, essay, article, and podcast on the roster. Tap a card for the full scouting report &mdash; notes, quotes, and flashcards.</p>
+    </div>
+    <div class="lineup-bar" id="typeFilters">
+      <button class="chip on" data-type="all">Full roster</button>
+      <button class="chip" data-type="book">SP &middot; Books</button>
+      <button class="chip" data-type="essay">RP &middot; Essays</button>
+      <button class="chip" data-type="article">CF &middot; Articles</button>
+      <button class="chip" data-type="podcast">DH &middot; Podcasts</button>
+    </div>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section class="view" id="view-deck">
+    <div class="view-head">
+      <h2>Flashcard <em>Batting Practice</em></h2>
+      <div class="rule"></div>
+      <p>Cards from across the whole roster, served by the spaced-repetition scheduler. Flip the ball, then call the outcome.</p>
+    </div>
+    <div class="deck-wrap">
+      <div id="deckArea"></div>
+      <aside class="deck-side">
+        <h3>Bullpen Report</h3>
+        <div class="deck-stat"><span>Cards due now</span><b id="dsDue">0</b></div>
+        <div class="deck-stat"><span>Total cards</span><b id="dsTotal">0</b></div>
+        <div class="deck-stat"><span>Reviewed today</span><b id="dsReviewed">0</b></div>
+        <div class="deck-stat"><span>Avg ease factor</span><b id="dsEase">2.50</b></div>
+        <div class="deck-stat"><span>Next card due</span><b id="dsNext">&ndash;</b></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ RECALL ============ -->
+  <section class="view" id="view-recall">
+    <div class="view-head">
+      <h2>Step Up <em>To the Plate</em></h2>
+      <div class="rule"></div>
+      <p>Active recall at-bats: pick one work or one subject, type your answer from memory, then check the tape and call it honestly.</p>
+    </div>
+    <div class="atbat-setup">
+      <div class="row">
+        <div class="field-group">
+          <label for="selWork">Facing one work</label>
+          <select id="selWork"><option value="">&mdash; choose a work &mdash;</option></select>
+        </div>
+        <div class="vs">&mdash; or &mdash;</div>
+        <div class="field-group">
+          <label for="selTag">Facing a subject</label>
+          <select id="selTag"><option value="">&mdash; choose a subject &mdash;</option></select>
+        </div>
+        <button class="btn btn-orange" id="btnStartAtBat">Play ball</button>
+      </div>
+    </div>
+    <div class="atbat-box" id="atbatBox" hidden>
+      <div class="plate" id="plateArea"></div>
+      <aside class="count-board">
+        <h4>The Count</h4>
+        <div class="count-row"><span class="lbl">Balls</span><span id="ballDots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></span></div>
+        <div class="count-row"><span class="lbl">Strikes</span><span id="strikeDots"><span class="dot"></span><span class="dot"></span></span></div>
+        <div class="count-line"><span>Hits <b id="abHits">0</b></span><span>K&rsquo;s <b id="abKs">0</b></span></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ JOURNAL ============ -->
+  <section class="view" id="view-journal">
+    <div class="view-head">
+      <h2>The <em>Dugout Journal</em></h2>
+      <div class="rule"></div>
+      <p>A pitch comes in &mdash; one line from the library. Sit with it, swing at it in writing, and log the reflection.</p>
+    </div>
+    <div class="journal-grid">
+      <div class="pitch-card">
+        <div class="fc-kicker">Pitch of the day</div>
+        <p class="pitch-quote" id="pitchQuote"></p>
+        <p class="pitch-attr" id="pitchAttr"></p>
+        <div class="pitch-actions">
+          <button class="btn btn-orange btn-sm" id="btnNewPitch">New pitch</button>
+        </div>
+      </div>
+      <div class="journal-compose">
+        <h3>Your swing</h3>
+        <textarea id="reflectionText" rows="7" placeholder="What does this connect to? Where have you seen it play out? Write it in your own words&hellip;"></textarea>
+        <div style="margin-top:12px;display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-blue" id="btnSaveReflection">Log reflection</button>
+          <span id="reflectMsg" style="font-family:var(--cond);font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--orange-dk);"></span>
+        </div>
+      </div>
+    </div>
+    <div class="journal-list">
+      <h3>Past entries <span style="color:var(--orange-dk);font-family:var(--mono);font-size:14px;" id="jCount"></span></h3>
+      <div id="journalEntries"></div>
+    </div>
+  </section>
+
+  <!-- ============ GRAPH ============ -->
+  <section class="view" id="view-graph">
+    <div class="view-head">
+      <h2>The <em>Field Map</em></h2>
+      <div class="rule"></div>
+      <p>The whole roster laid out on the field. Works that share subjects are wired together &mdash; hover a node to see its connections, click to open its card.</p>
+    </div>
+    <div class="graph-wrap">
+      <svg id="graphSvg" viewBox="0 0 1000 640" role="img" aria-label="Knowledge graph of library content connected by shared tags"></svg>
+      <div class="graph-legend">
+        <span><span class="lg-dot" style="background:#002D72"></span>Book &middot; SP</span>
+        <span><span class="lg-dot" style="background:#FF5910"></span>Essay &middot; RP</span>
+        <span><span class="lg-dot" style="background:#5E7CB0"></span>Article &middot; CF</span>
+        <span><span class="lg-dot" style="background:#1B2330"></span>Podcast &middot; DH</span>
+        <span style="margin-left:auto;">Line weight = shared subjects</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- detail modal -->
+<div class="modal hidden" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="dmTitle">
+  <div class="modal-card">
+    <div class="modal-head">
+      <span class="pos-badge" id="dmPos">SP</span>
+      <h2 id="dmTitle"></h2>
+      <p class="byline" id="dmByline"></p>
+      <button class="modal-close" id="dmClose" aria-label="Close detail view">&times;</button>
+    </div>
+    <div class="modal-body" id="dmBody"></div>
+  </div>
+</div>
+
+<!-- serendipity toast -->
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <button class="t-close" id="toastClose" aria-label="Dismiss">&times;</button>
+  <h4>Walk-Off Memory</h4>
+  <p class="t-text" id="toastText"></p>
+  <p class="t-src" id="toastSrc"></p>
+  <div class="t-actions">
+    <button class="btn btn-orange btn-sm" id="toastAnother">Another</button>
+    <button class="btn btn-sm" id="toastOpen" style="background:#16315F;color:#fff;">Open</button>
+  </div>
+</div>
+
+<footer>The Clubhouse &middot; a single-seat knowledge park for Matthew Geiling &middot; design exploration v08</footer>
+
+<script>
+'use strict';
+/* =====================================================================
+   MOCK DATA — all in-memory, nothing persisted
+===================================================================== */
+const DAY = 86400000;
+const WORKS = [
+  {
+    id:'tfas', type:'book', num:11, title:'Thinking, Fast and Slow', author:'Daniel Kahneman', pub:'2011', consumed:'2025-02-14',
+    tags:['psychology','decision-making','memory'],
+    notes:[
+      {d:'2025-02-16', t:'System 1 explains why my first take on anything feels so certain. The fix is not trying to feel less certain — it is building checklists and base rates into decisions before the feeling shows up.'},
+      {d:'2025-03-02', t:'The planning fallacy chapter reads like a diary of every side project I have started. Reference-class forecasting: ask how long projects like this take, not how long this one feels like it will take.'}
+    ],
+    quotes:[
+      'Nothing in life is as important as you think it is, while you are thinking about it.',
+      'A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.'
+    ],
+    cards:[
+      {q:'What are System 1 and System 2?', a:'System 1 is fast, automatic, intuitive thinking; System 2 is slow, deliberate, effortful reasoning. Most judgments start in System 1, and System 2 often just rationalizes them.'},
+      {q:'What is the anchoring effect?', a:'Exposure to an initial number biases later estimates toward it, even when the anchor is arbitrary or irrelevant.'},
+      {q:'What is the planning fallacy, and the standard correction for it?', a:'Systematically underestimating time and cost by focusing on the best-case inside view. Correct it with the outside view: base rates from similar past projects.'}
+    ]
+  },
+  {
+    id:'atomic', type:'book', num:4, title:'Atomic Habits', author:'James Clear', pub:'2018', consumed:'2025-01-06',
+    tags:['habits','systems','psychology'],
+    notes:[
+      {d:'2025-01-10', t:'Identity before outcome: "I am someone who reviews his cards daily" beats "I want to remember more." Voting-for-your-identity framing made my morning review stickier than any streak counter.'}
+    ],
+    quotes:[
+      'You do not rise to the level of your goals. You fall to the level of your systems.',
+      'Every action you take is a vote for the type of person you wish to become.'
+    ],
+    cards:[
+      {q:'What are the four laws of behavior change?', a:'Make it obvious, make it attractive, make it easy, make it satisfying — and invert each one to break a bad habit.'},
+      {q:'What is habit stacking?', a:'Anchoring a new habit to an existing one: "After [current habit], I will [new habit]." The old routine becomes the cue.'}
+    ]
+  },
+  {
+    id:'deepwork', type:'book', num:16, title:'Deep Work', author:'Cal Newport', pub:'2016', consumed:'2025-03-21',
+    tags:['focus','habits','systems'],
+    notes:[
+      {d:'2025-03-25', t:'The "any benefit" trap: I keep tools because they help a little, ignoring what they cost in attention. Ran his craftsman approach on my phone — cut four apps, kept two with hard time boxes.'}
+    ],
+    quotes:[
+      'Clarity about what matters provides clarity about what does not.',
+      'Who you are, what you think, feel, and do, what you love — is the sum of what you focus on.'
+    ],
+    cards:[
+      {q:'How does Newport define deep work?', a:'Professional activity performed in a state of distraction-free concentration that pushes cognitive capabilities to their limit, creating new value that is hard to replicate.'},
+      {q:'Name the four deep work scheduling philosophies.', a:'Monastic (near-total seclusion), bimodal (long dedicated blocks), rhythmic (daily fixed habit), and journalistic (slotting it in wherever possible).'}
+    ]
+  },
+  {
+    id:'makeitstick', type:'book', num:24, title:'Make It Stick', author:'Brown, Roediger & McDaniel', pub:'2014', consumed:'2025-04-10',
+    tags:['learning','memory','psychology'],
+    notes:[
+      {d:'2025-04-14', t:'Rereading and highlighting are fluency illusions — they feel like learning because the text gets familiar. This whole app exists because of chapter 1: retrieval practice or it did not happen.'},
+      {d:'2025-04-20', t:'Interleaving felt worse and tested better when I mixed card subjects instead of blocking by book. Desirable difficulty is a real thing; trust the data over the feeling.'}
+    ],
+    quotes:[
+      'Learning is deeper and more durable when it is effortful.',
+      'When retrieval practice is spaced, allowing some forgetting to occur between tests, it leads to stronger long-term retention.'
+    ],
+    cards:[
+      {q:'Why does retrieval practice beat rereading?', a:'The effort of recalling strengthens and reconsolidates the memory trace. Rereading only builds fluency with the text, which is mistaken for mastery.'},
+      {q:'What is a "desirable difficulty"?', a:'A condition that makes learning feel harder and slower — spacing, interleaving, testing — but produces stronger, longer-lasting retention.'},
+      {q:'What is interleaving?', a:'Mixing different topics or problem types within one practice session instead of blocking them, which improves discrimination and transfer.'}
+    ]
+  },
+  {
+    id:'doet', type:'book', num:88, title:'The Design of Everyday Things', author:'Don Norman', pub:'1988', consumed:'2025-05-02',
+    tags:['design','psychology','systems'],
+    notes:[
+      {d:'2025-05-06', t:'"Human error" is almost always design error. Applies to my own systems too: if I keep skipping reviews, redesign the cue and the friction, do not blame willpower.'}
+    ],
+    quotes:[
+      'Design is really an act of communication, which means having a deep understanding of the person with whom the designer is communicating.'
+    ],
+    cards:[
+      {q:'What is an affordance vs. a signifier?', a:'An affordance is a possible action an object allows (a handle affords pulling). A signifier is the perceivable cue that communicates the affordance (a flat plate signaling push).'},
+      {q:'What are the gulfs of execution and evaluation?', a:'Execution: the gap between a user’s goal and knowing what actions to take. Evaluation: the gap between the system’s state and the user understanding what happened.'}
+    ]
+  },
+  {
+    id:'meditations', type:'book', num:2, title:'Meditations', author:'Marcus Aurelius', pub:'c. 180', consumed:'2025-06-18',
+    tags:['philosophy','habits'],
+    notes:[
+      {d:'2025-06-22', t:'It is a private notebook, never meant for readers — basically his dugout journal. The repetition is the point: he is running spaced repetition on his own principles.'}
+    ],
+    quotes:[
+      'You have power over your mind — not outside events. Realize this, and you will find strength.',
+      'Waste no more time arguing about what a good man should be. Be one.'
+    ],
+    cards:[
+      {q:'What is the Stoic "dichotomy of control" as Marcus practices it?', a:'Separate what is up to you (judgments, intentions, responses) from what is not (events, others’ opinions), and spend effort only on the former.'}
+    ]
+  },
+  {
+    id:'greatwork', type:'essay', num:31, title:'How to Do Great Work', author:'Paul Graham', pub:'2023', consumed:'2025-07-09',
+    tags:['creativity','focus','systems'],
+    notes:[
+      {d:'2025-07-11', t:'"Curiosity, delight, and the desire to do something impressive" — his three motives. The compounding argument for working on one thing daily maps exactly onto the SRS curve.'}
+    ],
+    quotes:[
+      'The way to figure out what to work on is by working. If you’re not sure what to work on, guess.',
+      'Great work happens by focusing consistently on something you’re genuinely interested in.'
+    ],
+    cards:[
+      {q:'What loop does Graham say produces great work?', a:'Pick a field that fits your aptitude and interest, learn to the frontier, notice gaps that others overlook, then chase the exciting gap — guided by curiosity rather than a career plan.'},
+      {q:'Why does Graham emphasize working on it every day?', a:'Because knowledge and momentum compound: daily contact keeps the problem loaded in your head, so ideas arrive even off the clock, and small gains multiply.'}
+    ]
+  },
+  {
+    id:'selfreliance', type:'essay', num:41, title:'Self-Reliance', author:'Ralph Waldo Emerson', pub:'1841', consumed:'2025-09-12',
+    tags:['philosophy','creativity'],
+    notes:[
+      {d:'2025-09-15', t:'"Envy is ignorance; imitation is suicide." Reads harsh until you see he means: your reading is wasted unless it passes through your own judgment. Reflection engine, 1841 edition.'}
+    ],
+    quotes:[
+      'A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.',
+      'In every work of genius we recognize our own rejected thoughts: they come back to us with a certain alienated majesty.'
+    ],
+    cards:[
+      {q:'What does Emerson mean by "a foolish consistency is the hobgoblin of little minds"?', a:'Do not cling to past positions just to appear consistent; speak what today’s thinking demands, even if it contradicts yesterday’s.'}
+    ]
+  },
+  {
+    id:'awmt', type:'essay', num:45, title:'As We May Think', author:'Vannevar Bush', pub:'1945', consumed:'2025-08-03',
+    tags:['design','systems','memory'],
+    notes:[
+      {d:'2025-08-05', t:'The memex is this app, sketched 80 years early: personal trails of linked sources that mirror association instead of alphabetical filing. The knowledge graph tab is a direct descendant.'}
+    ],
+    quotes:[
+      'The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.'
+    ],
+    cards:[
+      {q:'What was the memex?', a:'Bush’s hypothetical desk-sized device for storing one’s books and records, consulted with speed and flexibility, with associative "trails" linking items — a blueprint for hypertext and PKM.'},
+      {q:'Why did Bush think association beats indexing?', a:'Because the mind retrieves by linked association, not by alphabetical category — so tools should let users build and retrace trails of connected items.'}
+    ]
+  },
+  {
+    id:'wbdw', type:'article', num:9, title:'Why Books Don’t Work', author:'Andy Matuschak', pub:'2019', consumed:'2025-11-20',
+    tags:['learning','memory','design'],
+    notes:[
+      {d:'2025-11-22', t:'Books assume transmissionism — that reading is absorbing. His receipts: ask me about a book I read last year and I can produce maybe a sentence. The medium needs a cognitive model baked in.'}
+    ],
+    quotes:[
+      'As a medium, books are surprisingly bad at conveying knowledge, and readers mostly don’t realize it.'
+    ],
+    cards:[
+      {q:'What is Matuschak’s core critique of books as a medium?', a:'They are built on an implicit transmissionist model — that people absorb what they read. Absent retrieval, elaboration, and feedback, most detail evaporates within weeks.'},
+      {q:'What does Matuschak propose instead of the traditional book?', a:'"Mnemonic media" — reading environments with embedded spaced-repetition prompts, so remembering is part of the reading experience rather than left to chance.'}
+    ]
+  },
+  {
+    id:'altm', type:'article', num:28, title:'Augmenting Long-term Memory', author:'Michael Nielsen', pub:'2018', consumed:'2026-01-15',
+    tags:['memory','learning','systems'],
+    notes:[
+      {d:'2026-01-18', t:'His rule of thumb: if something is worth 10 minutes of future you’s time, it is worth a card. Also: make cards atomic. My fat multi-part cards keep lapsing; split them.'},
+      {d:'2026-02-01', t:'Anki as "a means of thinking", not a trivia box — he cards ideas, connections, and open questions, then lets review sessions do the synthesis. Stealing this for the reflection engine.'}
+    ],
+    quotes:[
+      'Anki makes memory a choice, rather than a haphazard event, to be left to chance.'
+    ],
+    cards:[
+      {q:'What does Nielsen mean by "memory is a choice"?', a:'With spaced repetition, retaining something is a deliberate decision costing a few minutes over years — so you decide what to keep, instead of leaving retention to chance.'},
+      {q:'Name two of Nielsen’s card-writing principles.', a:'Make cards atomic (one idea each), and prefer understanding-first cards — card ideas, connections, and questions, not just isolated facts.'}
+    ]
+  },
+  {
+    id:'huberman', type:'podcast', num:33, title:'Huberman Lab: Understand & Improve Memory', author:'Andrew Huberman', pub:'2022', consumed:'2026-02-07',
+    tags:['memory','learning','psychology'],
+    notes:[
+      {d:'2026-02-09', t:'Adrenaline AFTER learning helps consolidation — cold shower or hard exercise post-study, not before. Also mental snapshots: deliberately "photographing" a moment improves recall of the sequence around it.'}
+    ],
+    quotes:[
+      'Repetition works, but the research says the key variable is the emotional and chemical state of your brain right after learning.'
+    ],
+    cards:[
+      {q:'Per the episode, when should arousal (adrenaline) occur to boost memory?', a:'Shortly after learning, not before — post-learning spikes in epinephrine/norepinephrine enhance consolidation of what was just studied.'},
+      {q:'What did the episode say about caffeine and study timing?', a:'Stimulants raise alertness, which helps encoding — but the bigger lever is spacing exposures and letting the brain consolidate between sessions, especially with sleep.'}
+    ]
+  },
+  {
+    id:'tkp', type:'podcast', num:21, title:'The Knowledge Project: Mental Models', author:'Shane Parrish', pub:'2021', consumed:'2026-03-11',
+    tags:['decision-making','systems','philosophy'],
+    notes:[
+      {d:'2026-03-13', t:'A latticework beats a pile: models only pay off when they are connected across disciplines, so the graph view should link by idea, not just by source. Inversion remains the cheapest upgrade: ask how to guarantee failure, then avoid it.'}
+    ],
+    quotes:[
+      'You can’t really know anything if you just remember isolated facts. The models have to hang together on a latticework of theory.'
+    ],
+    cards:[
+      {q:'What is a mental model, in Parrish’s framing?', a:'A compressed representation of how something works — gravity, incentives, compounding — used to reason about new situations without recomputing from scratch.'},
+      {q:'What is inversion and why is it powerful?', a:'Solving problems backward: instead of asking how to succeed, ask what would guarantee failure and avoid it. It surfaces risks the forward view hides.'}
+    ]
+  }
+];
+
+const POS = {book:'SP', essay:'RP', article:'CF', podcast:'DH'};
+const TYPE_LABEL = {book:'Book', essay:'Essay', article:'Article', podcast:'Podcast'};
+const TYPE_COLOR = {book:'#002D72', essay:'#FF5910', article:'#5E7CB0', podcast:'#1B2330'};
+
+/* seeded reflections (in-memory journal) */
+const reflections = [
+  {d:'2025-08-20', ref:'Vannevar Bush — As We May Think',
+   t:'Bush imagined trails between sources in 1945; I keep my trails in my head where they rot. If Kahneman’s availability bias decides what I remember, then the graph here has to be the counterweight — deliberately resurfacing the links I would never think to look for.'},
+  {d:'2026-01-28', ref:'James Clear — Atomic Habits',
+   t:'"You fall to the level of your systems" is why my review streak survived a brutal January. The habit was stapled to coffee, not to motivation. Newport would call the morning block a rhythmic philosophy; Clear would call it habit stacking. Same play, two scouting reports.'}
+];
+
+/* =====================================================================
+   SRS — SM-2 style scheduler (ease, interval, due) — in memory only
+===================================================================== */
+const cards = [];
+(function buildCards(){
+  let idx = 0;
+  const now = Date.now();
+  WORKS.forEach(w => {
+    w.cards.forEach(c => {
+      const card = {id:'c'+idx, workId:w.id, q:c.q, a:c.a, ease:2.5, reps:0, interval:0, due:now};
+      // deterministic seeding: ~40% due now, rest spread into the future
+      const s = idx % 5;
+      if (s === 0 || s === 2){               // due now (overdue by 1–3 days)
+        card.reps = 2; card.interval = 3 + (idx % 4); card.ease = 2.3 + (idx % 3) * 0.1;
+        card.due = now - (1 + (idx % 3)) * DAY;
+      } else if (s === 1){                   // young card, due later this week
+        card.reps = 1; card.interval = 1 + (idx % 2); card.ease = 2.5;
+        card.due = now + (1 + (idx % 3)) * DAY;
+      } else {                               // mature, due further out
+        card.reps = 3; card.interval = 8 + (idx % 10); card.ease = 2.4 + (idx % 4) * 0.08;
+        card.due = now + (2 + (idx % 9)) * DAY;
+      }
+      cards.push(card);
+      idx++;
+    });
+  });
+})();
+
+function gradeCard(card, q){ // q: 0 again, 3 hard, 4 good, 5 easy
+  const now = Date.now();
+  if (q < 3){
+    card.reps = 0;
+    card.interval = 0;
+    card.due = now + 10 * 60 * 1000; // back in 10 minutes
+  } else {
+    if (card.reps === 0) card.interval = 1;
+    else if (card.reps === 1) card.interval = 6;
+    else card.interval = Math.max(1, Math.round(card.interval * card.ease));
+    if (q === 3) card.interval = Math.max(1, Math.round(card.interval * 0.8));
+    card.reps += 1;
+    card.ease = Math.max(1.3, card.ease + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+    card.due = now + card.interval * DAY;
+  }
+}
+function dueCards(){ const n = Date.now(); return cards.filter(c => c.due <= n); }
+function workById(id){ return WORKS.find(w => w.id === id); }
+function fmtDate(s){
+  const d = new Date(s + 'T12:00:00');
+  return d.toLocaleDateString('en-US', {year:'numeric', month:'short', day:'numeric'});
+}
+function dueLabel(card){
+  const diff = card.due - Date.now();
+  if (diff <= 0) return 'DUE NOW';
+  const days = Math.ceil(diff / DAY);
+  return days === 1 ? 'due in 1 day' : 'due in ' + days + ' days';
+}
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* session stats */
+const S = {reviews:0, hits:0, errors:0};
+
+function updateScoreboard(){
+  const due = dueCards().length;
+  document.getElementById('sbDue').textContent = due;
+  document.getElementById('tabDue').textContent = due;
+  document.getElementById('sbInning').textContent = Math.min(9, Math.floor(S.reviews / 3) + 1);
+  document.getElementById('sbR').textContent = S.reviews;
+  document.getElementById('sbH').textContent = S.hits;
+  document.getElementById('sbE').textContent = S.errors;
+  // deck sidebar
+  document.getElementById('dsDue').textContent = due;
+  document.getElementById('dsTotal').textContent = cards.length;
+  document.getElementById('dsReviewed').textContent = S.reviews;
+  const avg = cards.reduce((s, c) => s + c.ease, 0) / cards.length;
+  document.getElementById('dsEase').textContent = avg.toFixed(2);
+  const future = cards.filter(c => c.due > Date.now()).sort((a, b) => a.due - b.due)[0];
+  document.getElementById('dsNext').textContent = due > 0 ? 'now' : (future ? Math.max(1, Math.ceil((future.due - Date.now()) / DAY)) + 'd' : '–');
+}
+
+/* =====================================================================
+   NAVIGATION
+===================================================================== */
+const tabButtons = document.querySelectorAll('nav.tabs button');
+function showView(name){
+  tabButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name));
+  document.querySelectorAll('section.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+  if (name === 'deck') renderDeck();
+  if (name === 'graph') { /* static svg already rendered */ }
+}
+tabButtons.forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+
+/* =====================================================================
+   LIBRARY
+===================================================================== */
+let typeFilter = 'all';
+function renderLibrary(){
+  const grid = document.getElementById('cardGrid');
+  const list = WORKS.filter(w => typeFilter === 'all' || w.type === typeFilter);
+  grid.innerHTML = list.map(w => {
+    const wCards = cards.filter(c => c.workId === w.id);
+    const due = wCards.filter(c => c.due <= Date.now()).length;
+    return '<button class="tcard" data-id="' + w.id + '" aria-label="Open ' + esc(w.title) + '">' +
+      '<div class="tcard-top"><span class="pos-badge">' + POS[w.type] + '</span><span class="jersey">#' + w.num + '</span></div>' +
+      '<div class="tcard-body">' +
+        '<h3>' + esc(w.title) + '</h3>' +
+        '<div class="byline">' + esc(w.author) + ' &middot; ' + esc(w.pub) + '</div>' +
+        '<div class="tcard-tags">' + w.tags.map((t, i) => '<span class="pennant' + (i % 2 ? ' alt' : '') + '">' + t + '</span>').join('') + '</div>' +
+        '<div class="tcard-stats">' +
+          '<span><b>' + w.notes.length + '</b>notes</span>' +
+          '<span><b>' + wCards.length + '</b>cards</span>' +
+          '<span><b class="' + (due ? 'due-flag' : '') + '">' + due + '</b>due</span>' +
+          '<span style="margin-left:auto;text-align:right;"><b>' + fmtDate(w.consumed).replace(',', '') + '</b>consumed</span>' +
+        '</div>' +
+      '</div></button>';
+  }).join('');
+  grid.querySelectorAll('.tcard').forEach(el => el.addEventListener('click', () => openDetail(el.dataset.id)));
+}
+document.getElementById('typeFilters').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  typeFilter = chip.dataset.type;
+  document.querySelectorAll('#typeFilters .chip').forEach(c => c.classList.toggle('on', c === chip));
+  renderLibrary();
+});
+
+/* =====================================================================
+   DETAIL MODAL (view / add / edit notes)
+===================================================================== */
+let openWorkId = null;
+function openDetail(id){
+  const w = workById(id);
+  if (!w) return;
+  openWorkId = id;
+  document.getElementById('dmPos').textContent = POS[w.type] + ' · ' + TYPE_LABEL[w.type];
+  document.getElementById('dmTitle').textContent = w.title;
+  document.getElementById('dmByline').textContent = w.author + ' · #' + w.num;
+  renderDetailBody();
+  document.getElementById('detailModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  document.getElementById('dmClose').focus();
+}
+function closeDetail(){
+  document.getElementById('detailModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  openWorkId = null;
+}
+function renderDetailBody(){
+  const w = workById(openWorkId);
+  if (!w) return;
+  const wCards = cards.filter(c => c.workId === w.id);
+  const body = document.getElementById('dmBody');
+  body.innerHTML =
+    '<div class="meta-grid">' +
+      '<div class="meta-box"><div class="k">Author</div><div class="v">' + esc(w.author) + '</div></div>' +
+      '<div class="meta-box"><div class="k">Published</div><div class="v">' + esc(w.pub) + '</div></div>' +
+      '<div class="meta-box"><div class="k">Consumed</div><div class="v">' + fmtDate(w.consumed) + '</div></div>' +
+    '</div>' +
+    '<div>' + w.tags.map((t, i) => '<span class="pennant' + (i % 2 ? ' alt' : '') + '">' + t + '</span>').join('') + '</div>' +
+
+    '<div class="d-sec"><h3>Quotes<span class="cnt">' + w.quotes.length + '</span></h3>' +
+      w.quotes.map(q => '<blockquote class="q">“' + esc(q) + '”</blockquote>').join('') +
+    '</div>' +
+
+    '<div class="d-sec"><h3>Scouting Notes<span class="cnt">' + w.notes.length + '</span></h3>' +
+      '<div id="notesList">' +
+      w.notes.map((n, i) =>
+        '<div class="note-item" data-i="' + i + '">' +
+          '<div class="n-meta"><span>' + fmtDate(n.d) + '</span>' +
+          '<button class="btn btn-ghost btn-sm note-edit-btn" data-i="' + i + '">Edit</button></div>' +
+          '<p>' + esc(n.t) + '</p>' +
+        '</div>').join('') +
+      '</div>' +
+      '<div class="add-note">' +
+        '<textarea id="newNoteText" rows="3" placeholder="Add a new note to this card&hellip;"></textarea>' +
+        '<button class="btn btn-blue btn-sm" id="btnAddNote">Add note</button>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="d-sec"><h3>Flashcards<span class="cnt">' + wCards.length + '</span></h3>' +
+      wCards.map(c =>
+        '<div class="mini-card">' +
+          '<div class="mq">Q &nbsp;' + esc(c.q) + '</div>' +
+          '<div class="ma">A &nbsp;' + esc(c.a) + '</div>' +
+          '<div class="mdue ' + (c.due <= Date.now() ? 'due-now' : '') + '">' + dueLabel(c) +
+            ' · ease ' + c.ease.toFixed(2) + ' · interval ' + c.interval + 'd</div>' +
+        '</div>').join('') +
+    '</div>';
+
+  body.querySelectorAll('.note-edit-btn').forEach(btn => btn.addEventListener('click', () => startNoteEdit(parseInt(btn.dataset.i, 10))));
+  body.querySelector('#btnAddNote').addEventListener('click', addNote);
+}
+function startNoteEdit(i){
+  const w = workById(openWorkId);
+  const item = document.querySelector('#notesList .note-item[data-i="' + i + '"]');
+  if (!w || !item) return;
+  item.innerHTML =
+    '<div class="n-meta"><span>' + fmtDate(w.notes[i].d) + ' · editing</span></div>' +
+    '<textarea rows="4" id="editNoteText">' + esc(w.notes[i].t) + '</textarea>' +
+    '<div class="note-edit-actions">' +
+      '<button class="btn btn-blue btn-sm" id="btnSaveNote">Save</button>' +
+      '<button class="btn btn-ghost btn-sm" id="btnCancelNote">Cancel</button>' +
+    '</div>';
+  item.querySelector('#btnSaveNote').addEventListener('click', () => {
+    const val = item.querySelector('#editNoteText').value.trim();
+    if (val) w.notes[i].t = val;
+    renderDetailBody();
+    renderLibrary();
+  });
+  item.querySelector('#btnCancelNote').addEventListener('click', renderDetailBody);
+  item.querySelector('#editNoteText').focus();
+}
+function addNote(){
+  const w = workById(openWorkId);
+  const ta = document.getElementById('newNoteText');
+  if (!w || !ta) return;
+  const val = ta.value.trim();
+  if (!val) { ta.focus(); return; }
+  const today = new Date();
+  const iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  w.notes.push({d:iso, t:val});
+  renderDetailBody();
+  renderLibrary();
+}
+document.getElementById('dmClose').addEventListener('click', closeDetail);
+document.getElementById('detailModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('detailModal')) closeDetail();
+});
+
+/* =====================================================================
+   FLASHCARD DECK
+===================================================================== */
+let deckQueue = [];
+let deckCard = null;
+let deckPractice = false;
+
+function buildDeckQueue(){
+  const due = dueCards();
+  if (due.length){ deckQueue = shuffle(due); deckPractice = false; }
+  else if (deckPractice){ deckQueue = shuffle(cards); }
+  else deckQueue = [];
+}
+function renderDeck(){
+  if (!deckCard){
+    buildDeckQueue();
+    deckCard = deckQueue.shift() || null;
+  }
+  const area = document.getElementById('deckArea');
+  if (!deckCard){
+    area.innerHTML =
+      '<div class="retired">' +
+        '<h3>Side retired</h3>' +
+        '<p>No cards are due right now. The scheduler will send the next batch when their intervals come up.</p>' +
+        '<button class="btn btn-orange" id="btnPractice">Take extra BP anyway</button>' +
+      '</div>';
+    area.querySelector('#btnPractice').addEventListener('click', () => {
+      deckPractice = true; deckCard = null; buildDeckQueue();
+      deckCard = deckQueue.shift() || null;
+      renderDeck();
+    });
+    updateScoreboard();
+    return;
+  }
+  const w = workById(deckCard.workId);
+  area.innerHTML =
+    '<div class="fc-scene"><div class="fc-card" id="fcCard" tabindex="0" role="button" aria-label="Flip card">' +
+      '<div class="fc-face front">' +
+        '<div class="fc-kicker">Pitch · ' + dueLabel(deckCard) + '</div>' +
+        '<div class="fc-text">' + esc(deckCard.q) + '</div>' +
+        '<div class="fc-src">' + esc(w.title) + ' · ' + esc(w.author) + '</div>' +
+      '</div>' +
+      '<div class="fc-face back">' +
+        '<div class="fc-kicker">The Call</div>' +
+        '<div class="fc-text" style="font-size:18px;">' + esc(deckCard.a) + '</div>' +
+        '<div class="fc-src">' + esc(w.title) + '</div>' +
+      '</div>' +
+    '</div></div>' +
+    '<p class="fc-hint" id="fcHint">Click the ball to flip it</p>' +
+    '<div class="grade-row" id="gradeRow" hidden>' +
+      '<button class="grade-btn g-again" data-q="0"><span class="out">Strikeout</span><span class="srs">Again</span></button>' +
+      '<button class="grade-btn g-hard" data-q="3"><span class="out">Foul ball</span><span class="srs">Hard</span></button>' +
+      '<button class="grade-btn g-good" data-q="4"><span class="out">Base hit</span><span class="srs">Good</span></button>' +
+      '<button class="grade-btn g-easy" data-q="5"><span class="out">Home run</span><span class="srs">Easy</span></button>' +
+    '</div>';
+  const fc = area.querySelector('#fcCard');
+  const flip = () => {
+    fc.classList.toggle('flipped');
+    const flipped = fc.classList.contains('flipped');
+    area.querySelector('#gradeRow').hidden = !flipped;
+    area.querySelector('#fcHint').textContent = flipped ? 'Call the outcome' : 'Click the ball to flip it';
+  };
+  fc.addEventListener('click', flip);
+  fc.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flip(); } });
+  area.querySelectorAll('.grade-btn').forEach(btn => btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const q = parseInt(btn.dataset.q, 10);
+    gradeCard(deckCard, q);
+    S.reviews += 1;
+    if (q >= 4) S.hits += 1;
+    if (q === 0){ S.errors += 1; deckQueue.push(deckCard); }
+    deckCard = deckQueue.shift() || null;
+    if (!deckCard && !deckPractice){
+      buildDeckQueue();
+      deckCard = deckQueue.shift() || null;
+    }
+    updateScoreboard();
+    renderDeck();
+  }));
+  updateScoreboard();
+}
+
+/* =====================================================================
+   AT BAT — active recall
+===================================================================== */
+let abQueue = [];
+let abCard = null;
+let abState = {balls:0, strikes:0, hits:0, ks:0};
+
+function populateRecallSelects(){
+  const selWork = document.getElementById('selWork');
+  WORKS.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w.id; o.textContent = w.title;
+    selWork.appendChild(o);
+  });
+  const tags = [...new Set(WORKS.flatMap(w => w.tags))].sort();
+  const selTag = document.getElementById('selTag');
+  tags.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    selTag.appendChild(o);
+  });
+  selWork.addEventListener('change', () => { if (selWork.value) selTag.value = ''; });
+  selTag.addEventListener('change', () => { if (selTag.value) selWork.value = ''; });
+}
+function startAtBat(){
+  const wId = document.getElementById('selWork').value;
+  const tag = document.getElementById('selTag').value;
+  let pool;
+  if (wId) pool = cards.filter(c => c.workId === wId);
+  else if (tag) pool = cards.filter(c => workById(c.workId).tags.includes(tag));
+  else pool = cards.slice();
+  abQueue = shuffle(pool);
+  abCard = abQueue.shift() || null;
+  abState = {balls:0, strikes:0, hits:0, ks:0};
+  document.getElementById('atbatBox').hidden = false;
+  renderAtBat();
+  updateCountBoard();
+}
+function renderAtBat(){
+  const plate = document.getElementById('plateArea');
+  if (!abCard){
+    plate.innerHTML =
+      '<div class="fc-kicker">Inning over</div>' +
+      '<p class="prompt">That retires the side &mdash; every prompt in this matchup has been taken.</p>' +
+      '<p class="src">Line: ' + abState.hits + ' hits, ' + abState.ks + ' strikeouts</p>' +
+      '<button class="btn btn-orange" id="btnRestartAb">New at-bat series</button>';
+    plate.querySelector('#btnRestartAb').addEventListener('click', startAtBat);
+    return;
+  }
+  const w = workById(abCard.workId);
+  plate.innerHTML =
+    '<div class="fc-kicker">The pitch</div>' +
+    '<p class="prompt">' + esc(abCard.q) + '</p>' +
+    '<p class="src">' + esc(w.title) + ' · ' + esc(w.author) + ' · ' + dueLabel(abCard) + '</p>' +
+    '<label class="field-group" style="display:block;"><span style="display:block;font-family:var(--cond);font-size:12px;font-weight:bold;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;">Your swing (from memory)</span>' +
+    '<textarea id="abAnswer" rows="4" placeholder="Type your answer before checking the tape&hellip;"></textarea></label>' +
+    '<div style="margin-top:14px;"><button class="btn btn-blue" id="btnReveal">Check the tape</button></div>' +
+    '<div id="abRevealZone"></div>';
+  plate.querySelector('#btnReveal').addEventListener('click', () => {
+    const zone = plate.querySelector('#abRevealZone');
+    zone.innerHTML =
+      '<div class="answer-reveal"><strong style="font-family:var(--cond);letter-spacing:.14em;font-size:12px;text-transform:uppercase;color:var(--blue);display:block;margin-bottom:6px;">The tape says</strong>' + esc(abCard.a) + '</div>' +
+      '<p style="font-family:var(--cond);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin:14px 0 8px;">Call it honestly</p>' +
+      '<div class="grade-row">' +
+        '<button class="grade-btn g-again" data-q="0"><span class="out">Strikeout</span><span class="srs">Again</span></button>' +
+        '<button class="grade-btn g-hard" data-q="3"><span class="out">Foul ball</span><span class="srs">Hard</span></button>' +
+        '<button class="grade-btn g-good" data-q="4"><span class="out">Base hit</span><span class="srs">Good</span></button>' +
+        '<button class="grade-btn g-easy" data-q="5"><span class="out">Home run</span><span class="srs">Easy</span></button>' +
+      '</div>';
+    plate.querySelector('#btnReveal').disabled = true;
+    zone.querySelectorAll('.grade-btn').forEach(btn => btn.addEventListener('click', () => {
+      const q = parseInt(btn.dataset.q, 10);
+      gradeCard(abCard, q);
+      S.reviews += 1;
+      if (q >= 4) S.hits += 1;
+      if (q === 0) S.errors += 1;
+      // baseball count logic
+      if (q === 0){ abState.strikes += 1; if (abState.strikes >= 3){ abState.ks += 1; abState.strikes = 0; abState.balls = 0; } }
+      else if (q === 3){ if (abState.strikes < 2) abState.strikes += 1; }
+      else { abState.hits += 1; abState.balls = 0; abState.strikes = 0; }
+      if (q === 0) abQueue.push(abCard);
+      abCard = abQueue.shift() || null;
+      updateCountBoard();
+      updateScoreboard();
+      renderAtBat();
+    }));
+  });
+}
+function updateCountBoard(){
+  const bDots = document.querySelectorAll('#ballDots .dot');
+  const sDots = document.querySelectorAll('#strikeDots .dot');
+  bDots.forEach((d, i) => d.classList.toggle('on-b', i < abState.balls));
+  sDots.forEach((d, i) => d.classList.toggle('on-s', i < abState.strikes));
+  document.getElementById('abHits').textContent = abState.hits;
+  document.getElementById('abKs').textContent = abState.ks;
+}
+document.getElementById('btnStartAtBat').addEventListener('click', startAtBat);
+
+/* =====================================================================
+   DUGOUT JOURNAL — reflection engine
+===================================================================== */
+let currentPitch = null;
+function pickPitch(){
+  const pool = [];
+  WORKS.forEach(w => w.quotes.forEach(q => pool.push({q, w})));
+  let next = pool[Math.floor(Math.random() * pool.length)];
+  if (currentPitch && pool.length > 1){
+    let guard = 0;
+    while (next.q === currentPitch.q && guard < 10){ next = pool[Math.floor(Math.random() * pool.length)]; guard++; }
+  }
+  currentPitch = next;
+  document.getElementById('pitchQuote').textContent = '“' + currentPitch.q + '”';
+  document.getElementById('pitchAttr').textContent = currentPitch.w.author + ' · ' + currentPitch.w.title + ' (' + currentPitch.w.pub + ')';
+}
+function renderJournal(){
+  const box = document.getElementById('journalEntries');
+  const sorted = reflections.slice().sort((a, b) => b.d.localeCompare(a.d));
+  document.getElementById('jCount').textContent = '(' + reflections.length + ')';
+  box.innerHTML = sorted.map(r =>
+    '<div class="j-entry">' +
+      '<div class="meta">' + fmtDate(r.d) + '</div>' +
+      '<div class="ref">On: ' + esc(r.ref) + '</div>' +
+      '<p class="body">' + esc(r.t) + '</p>' +
+    '</div>').join('');
+}
+document.getElementById('btnNewPitch').addEventListener('click', pickPitch);
+document.getElementById('btnSaveReflection').addEventListener('click', () => {
+  const ta = document.getElementById('reflectionText');
+  const val = ta.value.trim();
+  const msg = document.getElementById('reflectMsg');
+  if (!val){ msg.textContent = 'Write something first'; ta.focus(); return; }
+  const today = new Date();
+  const iso = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+  reflections.push({d:iso, ref:currentPitch.w.author + ' — ' + currentPitch.w.title, t:val});
+  ta.value = '';
+  msg.textContent = 'Logged in the book';
+  setTimeout(() => { msg.textContent = ''; }, 2500);
+  renderJournal();
+});
+
+/* =====================================================================
+   FIELD MAP — knowledge graph (SVG)
+===================================================================== */
+const NODE_POS = {
+  tfas:[500,300], atomic:[655,445], deepwork:[345,445], makeitstick:[500,440],
+  doet:[230,330], meditations:[770,330], greatwork:[340,200], awmt:[500,130],
+  selfreliance:[660,200], wbdw:[215,215], altm:[785,215], huberman:[390,112], tkp:[610,112]
+};
+const NODE_LABEL = {
+  tfas:'Kahneman', atomic:'Atomic Habits', deepwork:'Deep Work', makeitstick:'Make It Stick',
+  doet:'Norman', meditations:'Meditations', greatwork:'Great Work', awmt:'As We May Think',
+  selfreliance:'Self-Reliance', wbdw:'Books Don’t Work', altm:'Nielsen', huberman:'Huberman', tkp:'Mental Models'
+};
+function sharedTags(a, b){ return a.tags.filter(t => b.tags.includes(t)); }
+function renderGraph(){
+  const svg = document.getElementById('graphSvg');
+  const NS = 'http://www.w3.org/2000/svg';
+  // field background
+  const field = document.createElementNS(NS, 'path');
+  field.setAttribute('d', 'M500,600 L132,232 A520,520 0 0 1 868,232 Z');
+  field.setAttribute('fill', '#EEF2F8');
+  field.setAttribute('stroke', '#C6D2E6');
+  field.setAttribute('stroke-width', '2');
+  svg.appendChild(field);
+  const diamond = document.createElementNS(NS, 'path');
+  diamond.setAttribute('d', 'M500,600 L660,440 L500,280 L340,440 Z');
+  diamond.setAttribute('fill', '#F7F3EA');
+  diamond.setAttribute('stroke', '#FF5910');
+  diamond.setAttribute('stroke-width', '2');
+  diamond.setAttribute('stroke-dasharray', '7 5');
+  svg.appendChild(diamond);
+  // edges
+  const edgeEls = [];
+  for (let i = 0; i < WORKS.length; i++){
+    for (let j = i + 1; j < WORKS.length; j++){
+      const sh = sharedTags(WORKS[i], WORKS[j]);
+      if (!sh.length) continue;
+      const [x1, y1] = NODE_POS[WORKS[i].id];
+      const [x2, y2] = NODE_POS[WORKS[j].id];
+      const line = document.createElementNS(NS, 'line');
+      line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+      line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+      line.setAttribute('class', 'gedge');
+      line.setAttribute('stroke-width', sh.length * 1.6);
+      svg.appendChild(line);
+      edgeEls.push({el:line, a:WORKS[i].id, b:WORKS[j].id});
+    }
+  }
+  // nodes
+  WORKS.forEach(w => {
+    const [x, y] = NODE_POS[w.id];
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'gnode');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'button');
+    g.setAttribute('aria-label', 'Open ' + w.title);
+    const halo = document.createElementNS(NS, 'circle');
+    halo.setAttribute('cx', x); halo.setAttribute('cy', y); halo.setAttribute('r', 20);
+    halo.setAttribute('fill', '#fff'); halo.setAttribute('stroke', TYPE_COLOR[w.type]);
+    halo.setAttribute('stroke-width', '2');
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('cx', x); dot.setAttribute('cy', y); dot.setAttribute('r', 12);
+    dot.setAttribute('fill', TYPE_COLOR[w.type]);
+    const label = document.createElementNS(NS, 'text');
+    label.setAttribute('x', x); label.setAttribute('y', y + 40);
+    label.setAttribute('text-anchor', 'middle');
+    label.textContent = NODE_LABEL[w.id];
+    g.appendChild(halo); g.appendChild(dot); g.appendChild(label);
+    const hoverOn = () => {
+      svg.classList.add('hovering');
+      const hot = new Set([w.id]);
+      edgeEls.forEach(e => {
+        const isHot = e.a === w.id || e.b === w.id;
+        e.el.classList.toggle('hot', isHot);
+        if (isHot){ hot.add(e.a); hot.add(e.b); }
+      });
+      svg.querySelectorAll('.gnode').forEach(n => n.classList.toggle('hot', hot.has(n.dataset.id)));
+    };
+    const hoverOff = () => {
+      svg.classList.remove('hovering');
+      edgeEls.forEach(e => e.el.classList.remove('hot'));
+      svg.querySelectorAll('.gnode').forEach(n => n.classList.remove('hot'));
+    };
+    g.dataset.id = w.id;
+    g.addEventListener('mouseenter', hoverOn);
+    g.addEventListener('mouseleave', hoverOff);
+    g.addEventListener('focus', hoverOn);
+    g.addEventListener('blur', hoverOff);
+    g.addEventListener('click', () => openDetail(w.id));
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openDetail(w.id); } });
+    svg.appendChild(g);
+  });
+}
+
+/* =====================================================================
+   WALK-OFF MEMORY — serendipity engine
+===================================================================== */
+let toastItem = null;
+function serendipityPool(){
+  const pool = [];
+  WORKS.forEach(w => w.notes.forEach(n => pool.push({kind:'note', text:n.t, src:w.title + ' · ' + w.author, date:n.d, workId:w.id})));
+  reflections.forEach(r => pool.push({kind:'reflection', text:r.t, src:'Dugout Journal · on ' + r.ref, date:r.d, workId:null}));
+  return pool;
+}
+function showSerendipity(){
+  const pool = serendipityPool();
+  let next = pool[Math.floor(Math.random() * pool.length)];
+  if (toastItem && pool.length > 1){
+    let guard = 0;
+    while (next.text === toastItem.text && guard < 10){ next = pool[Math.floor(Math.random() * pool.length)]; guard++; }
+  }
+  toastItem = next;
+  const trimmed = toastItem.text.length > 220 ? toastItem.text.slice(0, 217).trimEnd() + '…' : toastItem.text;
+  document.getElementById('toastText').textContent = '“' + trimmed + '”';
+  document.getElementById('toastSrc').textContent = toastItem.src + ' · ' + fmtDate(toastItem.date);
+  document.getElementById('toast').classList.add('show');
+}
+function hideToast(){ document.getElementById('toast').classList.remove('show'); }
+document.getElementById('toastClose').addEventListener('click', hideToast);
+document.getElementById('toastAnother').addEventListener('click', showSerendipity);
+document.getElementById('toastOpen').addEventListener('click', () => {
+  if (!toastItem) return;
+  hideToast();
+  if (toastItem.workId) openDetail(toastItem.workId);
+  else showView('journal');
+});
+
+/* =====================================================================
+   GLOBAL KEYS + INIT
+===================================================================== */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if (!document.getElementById('detailModal').classList.contains('hidden')) closeDetail();
+    else hideToast();
+  }
+});
+
+renderLibrary();
+populateRecallSelects();
+pickPitch();
+renderJournal();
+renderGraph();
+updateScoreboard();
+
+/* auto walk-off memory a few seconds after load — but not inside the gallery iframe */
+if (window.self === window.top){
+  setTimeout(showSerendipity, 4500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bibliotheca Memoriae — v10</title>
+<style>
+  /* ════════════════════════════ TOKENS ════════════════════════════ */
+  :root{
+    --parch:       #f3e9d2;
+    --parch-deep:  #e8d9b6;
+    --parch-card:  #f7efdc;
+    --ink:         #352612;
+    --ink-soft:    #5d4a2e;
+    --ink-faint:   #8a7452;
+    --gold:        #c9a227;
+    --gold-hi:     #eedc8c;
+    --gold-lo:     #8f6d14;
+    --oxblood:     #7a1f23;
+    --forest:      #2e5339;
+    --rule:        #b49c72;
+    --rule-soft:   #cdb98f;
+    --serif: "Palatino Linotype", Palatino, "Book Antiqua", "Iowan Old Style", Georgia, "Times New Roman", serif;
+  }
+
+  *{ box-sizing:border-box; margin:0; padding:0; }
+
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+    *, *::before, *::after{ animation:none !important; transition:none !important; }
+  }
+
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    line-height:1.62;
+    background-color:var(--parch);
+    background-image:
+      radial-gradient(1100px 700px at 12% 6%,  rgba(201,162,39,.085), transparent 62%),
+      radial-gradient(950px 650px at 88% 94%,  rgba(122,31,35,.055),  transparent 60%),
+      radial-gradient(760px 520px at 72% 18%,  rgba(93,74,46,.075),   transparent 55%),
+      radial-gradient(640px 460px at 25% 80%,  rgba(46,83,57,.045),   transparent 58%),
+      radial-gradient(320px 220px at 50% 40%,  rgba(141,110,56,.05),  transparent 70%),
+      linear-gradient(175deg, #f6eedb 0%, #f0e3c4 48%, #e7d5ac 100%);
+    background-attachment:fixed;
+    min-height:100vh;
+  }
+
+  /* ════════════════════════════ CHROME / FRAME ════════════════════════════ */
+  .folio{
+    max-width:1120px;
+    margin:0 auto;
+    padding:28px 48px 90px;
+  }
+  @media (max-width:900px){ .folio{ padding:20px 22px 70px; } }
+
+  .gallery-link{
+    display:inline-block;
+    font-size:.82rem;
+    font-variant:small-caps;
+    letter-spacing:.14em;
+    color:var(--ink-soft);
+    text-decoration:none;
+    border-bottom:1px dotted var(--rule);
+    margin-bottom:18px;
+  }
+  .gallery-link:hover{ color:var(--oxblood); border-bottom-color:var(--oxblood); }
+
+  header.masthead{ text-align:center; margin-bottom:10px; }
+  .masthead .fleuron-row{ color:var(--gold-lo); letter-spacing:.9em; font-size:1rem; padding-left:.9em; }
+  h1.title{
+    font-size:clamp(2rem, 4.6vw, 3.1rem);
+    font-weight:400;
+    font-variant:small-caps;
+    letter-spacing:.1em;
+    line-height:1.15;
+    margin:6px 0 2px;
+    color:var(--ink);
+    text-shadow:0 1px 0 rgba(255,250,235,.7);
+  }
+  h1.title .gilt{
+    background:linear-gradient(170deg, #c6a02e 0%, #93701a 42%, #6e5410 75%, #b08c1e 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow:none;
+  }
+  .subtitle{
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:.98rem;
+  }
+  .subtitle .amp{ font-style:normal; color:var(--gold-lo); }
+
+  .grand-rule{
+    display:flex; align-items:center; gap:14px;
+    margin:18px auto 14px; max-width:720px;
+    color:var(--gold-lo);
+  }
+  .grand-rule::before, .grand-rule::after{
+    content:""; flex:1; height:5px;
+    border-top:1px solid var(--rule);
+    border-bottom:1px solid var(--rule);
+  }
+
+  /* ════════════════════════════ NAV ════════════════════════════ */
+  nav.chapters{
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:4px 0; margin:4px auto 34px; max-width:980px;
+  }
+  nav.chapters .sep{ color:var(--rule); padding:0 10px; align-self:center; font-size:.8rem; }
+  nav.chapters button{
+    appearance:none; background:none; border:none; cursor:pointer;
+    font-family:var(--serif);
+    font-variant:small-caps; letter-spacing:.12em;
+    font-size:.95rem; color:var(--ink-soft);
+    padding:6px 6px 3px; border-bottom:2px solid transparent;
+    position:relative;
+  }
+  nav.chapters button:hover{ color:var(--oxblood); }
+  nav.chapters button[aria-current="true"]{
+    color:var(--ink);
+    border-bottom:2px solid var(--gold);
+  }
+  .due-ledger{
+    display:inline-block;
+    font-variant:normal; font-style:italic;
+    font-size:.78rem; color:var(--oxblood);
+    margin-left:6px; letter-spacing:0;
+    transform:translateY(-6px);
+  }
+
+  /* ════════════════════════════ SHARED ORNAMENT ════════════════════════════ */
+  .divider{
+    display:flex; align-items:center; gap:16px;
+    margin:34px 0 22px; color:var(--gold-lo); font-size:1.05rem;
+  }
+  .divider::before,.divider::after{ content:""; flex:1; border-top:1px solid var(--rule-soft); }
+
+  h2.section-head{
+    font-variant:small-caps; font-weight:400;
+    letter-spacing:.14em; font-size:1.5rem;
+    text-align:center; color:var(--ink);
+  }
+  h2.section-head .rubric{ color:var(--oxblood); }
+  .section-motto{
+    text-align:center; font-style:italic; color:var(--ink-faint);
+    font-size:.92rem; margin-top:2px; margin-bottom:26px;
+  }
+
+  .dropcap-par{ font-size:1.02rem; max-width:62ch; margin:0 auto 26px; color:var(--ink-soft); text-align:justify; }
+  .dropcap{
+    float:left;
+    font-size:3.5em; line-height:.78;
+    padding:.1em .14em .02em 0;
+    margin-top:.07em;
+    font-weight:400;
+    background:linear-gradient(160deg, var(--gold-hi) 0%, var(--gold) 48%, var(--gold-lo) 90%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:none;
+  }
+
+  .btn{
+    appearance:none; cursor:pointer;
+    font-family:var(--serif); font-size:.86rem;
+    font-variant:small-caps; letter-spacing:.1em;
+    color:var(--ink);
+    background:linear-gradient(175deg, #faf3e2, #efe2c2);
+    border:1px solid var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:2px;
+    padding:7px 18px 6px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .btn:hover{ background:linear-gradient(175deg, #fdf8ea, #f3ead0); color:var(--oxblood); }
+  .btn.gilt{
+    border-color:var(--gold-lo);
+    background:linear-gradient(170deg, var(--gold-hi) 0%, #ddbd4e 45%, var(--gold) 100%);
+    color:#3c2d08;
+    text-shadow:0 1px 0 rgba(255,245,210,.55);
+  }
+  .btn.gilt:hover{ background:linear-gradient(170deg, #f4e7a8 0%, #e5c75e 45%, #cfa92e 100%); color:#2c2004; }
+  .btn.rubric{ color:var(--oxblood); border-color:#9c5a53; }
+  .btn.rubric:hover{ background:linear-gradient(175deg,#f8ecdf,#efd9c8); }
+  .btn:focus-visible, nav.chapters button:focus-visible{ outline:2px solid var(--oxblood); outline-offset:3px; }
+
+  .tag{
+    display:inline-block;
+    font-size:.74rem; font-variant:small-caps; letter-spacing:.09em;
+    color:var(--forest);
+    border:1px solid #9db08f;
+    padding:1px 9px 0;
+    border-radius:10px;
+    background:rgba(46,83,57,.06);
+    margin:2px 3px 2px 0;
+  }
+
+  .ink-red{ color:var(--oxblood); }
+  .ink-green{ color:var(--forest); }
+
+  textarea, select, input[type="text"]{
+    font-family:var(--serif); font-size:.95rem; color:var(--ink);
+    background:rgba(255,252,243,.75);
+    border:1px solid var(--rule);
+    padding:9px 12px;
+    width:100%;
+  }
+  textarea:focus, select:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+  textarea.quill{
+    background:
+      repeating-linear-gradient(transparent, transparent 27px, rgba(180,156,114,.45) 27px, rgba(180,156,114,.45) 28px),
+      rgba(255,252,243,.78);
+    line-height:28px;
+    min-height:116px;
+    resize:vertical;
+  }
+
+  /* ════════════════════════════ VIEWS ════════════════════════════ */
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* ── Library ─────────────────────────────── */
+  .shelf-head{
+    display:flex; align-items:baseline; gap:14px;
+    margin:30px 0 14px;
+  }
+  .shelf-head h3{
+    font-variant:small-caps; font-weight:400; letter-spacing:.13em;
+    font-size:1.12rem; color:var(--oxblood); white-space:nowrap;
+  }
+  .shelf-head .count{ font-style:italic; font-size:.82rem; color:var(--ink-faint); white-space:nowrap; }
+  .shelf-head::after{ content:""; flex:1; border-top:1px double var(--rule-soft); transform:translateY(-4px); }
+
+  .catalog{ display:grid; grid-template-columns:1fr 1fr; gap:14px 22px; }
+  @media (max-width:820px){ .catalog{ grid-template-columns:1fr; } }
+
+  .entry{
+    display:grid; grid-template-columns:58px 1fr; gap:14px;
+    padding:14px 16px 12px;
+    background:linear-gradient(173deg, rgba(255,252,242,.65), rgba(243,230,200,.5));
+    border:1px solid var(--rule-soft);
+    outline:1px solid rgba(180,156,114,.4); outline-offset:3px;
+    cursor:pointer;
+    transition:background .15s ease;
+  }
+  .entry:hover{ background:linear-gradient(173deg, rgba(255,253,246,.9), rgba(246,234,206,.75)); }
+  .entry:focus-visible{ outline:2px solid var(--oxblood); outline-offset:3px; }
+  .initial{
+    width:58px; height:58px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:2rem; line-height:1;
+    color:#fbf2d3;
+    background:
+      linear-gradient(150deg, rgba(255,246,200,.5), rgba(0,0,0,.12)),
+      linear-gradient(160deg, var(--gold-hi) 0%, var(--gold) 42%, var(--gold-lo) 100%);
+    border:1px solid var(--gold-lo);
+    outline:1px solid var(--gold-lo); outline-offset:2px;
+    text-shadow:0 1px 1px rgba(90,60,0,.65);
+  }
+  .entry h4{ font-weight:400; font-size:1.08rem; line-height:1.3; }
+  .entry .byline{ font-style:italic; font-size:.85rem; color:var(--ink-soft); }
+  .entry .dates{ font-size:.76rem; color:var(--ink-faint); margin:2px 0 4px; }
+  .entry .ledger{ font-size:.76rem; font-style:italic; margin-top:3px; }
+  .entry .ledger .due-mark{ color:var(--oxblood); }
+
+  /* ── Detail / manuscript page ─────────────── */
+  .ms-page{
+    background:linear-gradient(176deg, rgba(255,253,245,.72), rgba(243,229,197,.55));
+    border:1px solid var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:4px;
+    padding:36px 42px 40px;
+  }
+  @media (max-width:900px){ .ms-page{ padding:24px 20px 28px; } }
+
+  .ms-back{ margin-bottom:18px; }
+  .ms-columns{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 258px;
+    gap:40px;
+  }
+  @media (max-width:900px){
+    .ms-columns{ grid-template-columns:1fr; gap:26px; }
+  }
+
+  .ms-title{ font-weight:400; font-size:1.9rem; line-height:1.2; margin-bottom:2px; }
+  .ms-title .dropcap{ font-size:2.6em; }
+  .ms-kind{ font-variant:small-caps; letter-spacing:.16em; font-size:.8rem; color:var(--oxblood); }
+  .ms-meta{
+    margin:14px 0 8px;
+    font-size:.9rem;
+    border-top:1px solid var(--rule-soft);
+    border-bottom:1px solid var(--rule-soft);
+    padding:10px 2px;
+  }
+  .ms-meta dt{ font-variant:small-caps; letter-spacing:.1em; font-size:.76rem; color:var(--ink-faint); }
+  .ms-meta dd{ margin:0 0 7px; font-style:italic; color:var(--ink-soft); }
+  .ms-meta dd:last-child{ margin-bottom:0; }
+
+  .ms-quote{
+    margin:20px 0 20px 8px;
+    padding-left:18px;
+    border-left:3px double var(--gold);
+    font-style:italic;
+    font-size:1.04rem;
+    color:var(--ink-soft);
+  }
+  .ms-quote::before{ content:"❝"; color:var(--gold-lo); font-style:normal; margin-right:6px; }
+  .ms-quote footer{ font-size:.8rem; font-style:normal; font-variant:small-caps; letter-spacing:.1em; color:var(--ink-faint); margin-top:4px; }
+
+  .ms-cards-note{ font-size:.84rem; font-style:italic; color:var(--ink-faint); margin-top:18px; }
+
+  .marginalia h5{
+    font-variant:small-caps; font-weight:400; letter-spacing:.13em;
+    color:var(--oxblood); font-size:.95rem; margin-bottom:4px;
+  }
+  .marginalia .m-sub{ font-size:.76rem; font-style:italic; color:var(--ink-faint); margin-bottom:14px; }
+  .m-note{
+    font-style:italic;
+    font-size:.9rem;
+    color:#4c3a20;
+    border-top:1px dotted var(--rule);
+    padding:10px 2px 8px;
+    position:relative;
+  }
+  .m-note .m-hand{ display:block; white-space:pre-wrap; }
+  .m-note .m-when{ font-size:.72rem; font-style:normal; font-variant:small-caps; letter-spacing:.08em; color:var(--ink-faint); margin-top:5px; display:block; }
+  .m-note .m-edit{
+    appearance:none; background:none; border:none; cursor:pointer;
+    font-family:var(--serif); font-size:.72rem; font-variant:small-caps; letter-spacing:.1em;
+    color:var(--forest); text-decoration:underline dotted; padding:0; margin-top:3px;
+  }
+  .m-note .m-edit:hover{ color:var(--oxblood); }
+  .m-editor{ padding:10px 0 6px; border-top:1px dotted var(--rule); }
+  .m-editor .row{ display:flex; gap:8px; margin-top:8px; }
+  .m-add-wrap{ margin-top:16px; }
+
+  /* ── Flashcards (Disputations) ────────────── */
+  .study-stage{ max-width:620px; margin:0 auto; text-align:center; }
+  .study-ledger{ font-style:italic; font-size:.9rem; margin-bottom:16px; color:var(--ink-soft); }
+  .study-ledger .due-mark{ color:var(--oxblood); }
+
+  .flashcard{
+    position:relative;
+    height:330px;
+    perspective:1400px;
+    cursor:pointer;
+  }
+  .flashcard .face{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; justify-content:center; align-items:center;
+    padding:46px 44px;
+    backface-visibility:hidden;
+    background:linear-gradient(174deg, #fbf4e3, #efe1bd);
+    border:1px solid var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:4px;
+    transition:transform .55s cubic-bezier(.4,.1,.2,1);
+  }
+  @media (prefers-reduced-motion: reduce){ .flashcard .face{ transition:none; } }
+  .flashcard .face.back{ transform:rotateY(180deg); background:linear-gradient(174deg, #faf1da, #ecdcb2); }
+  .flashcard.flipped .face.front{ transform:rotateY(180deg); }
+  .flashcard.flipped .face.back{ transform:rotateY(360deg); }
+
+  .flashcard .corner{ position:absolute; width:30px; height:30px; color:var(--gold-lo); font-size:1.05rem; line-height:1; pointer-events:none; }
+  .flashcard .corner::before{ content:"❧"; }
+  .flashcard .c-tl{ top:9px; left:11px; }
+  .flashcard .c-tr{ top:9px; right:11px; transform:scaleX(-1); }
+  .flashcard .c-bl{ bottom:9px; left:11px; transform:scaleY(-1); }
+  .flashcard .c-br{ bottom:9px; right:11px; transform:scale(-1); }
+  .flashcard .face::after{
+    content:""; position:absolute; inset:14px;
+    border:1px solid var(--rule-soft); pointer-events:none;
+  }
+
+  .fc-label{ font-variant:small-caps; letter-spacing:.2em; font-size:.74rem; color:var(--oxblood); margin-bottom:14px; }
+  .fc-text{ font-size:1.18rem; line-height:1.5; }
+  .fc-text.answer{ font-style:italic; color:var(--ink-soft); font-size:1.08rem; }
+  .fc-source{ margin-top:16px; font-size:.76rem; font-variant:small-caps; letter-spacing:.12em; color:var(--ink-faint); }
+  .fc-hint{ position:absolute; bottom:24px; left:0; right:0; font-size:.74rem; font-style:italic; color:var(--ink-faint); }
+
+  .grade-row{ display:flex; justify-content:center; gap:10px; margin-top:24px; flex-wrap:wrap; }
+  .grade-row[hidden]{ display:none; }
+  .grade-btn{
+    appearance:none; cursor:pointer;
+    font-family:var(--serif);
+    border:1px solid var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:2px;
+    background:linear-gradient(175deg,#faf3e2,#efe2c2);
+    padding:8px 16px 7px;
+    min-width:108px;
+  }
+  .grade-btn:hover{ background:#fdf8ea; }
+  .grade-btn:focus-visible{ outline:2px solid var(--oxblood); outline-offset:3px; }
+  .grade-btn .latin{ display:block; font-variant:small-caps; letter-spacing:.12em; font-size:.92rem; }
+  .grade-btn .gloss{ display:block; font-size:.7rem; font-style:italic; color:var(--ink-faint); }
+  .grade-btn.g-again .latin{ color:var(--oxblood); }
+  .grade-btn.g-hard  .latin{ color:#8a5a12; }
+  .grade-btn.g-good  .latin{ color:var(--forest); }
+  .grade-btn.g-easy  .latin{ color:var(--gold-lo); }
+  .study-after{ font-size:.76rem; font-style:italic; color:var(--ink-faint); margin-top:12px; min-height:1.2em; }
+
+  .study-done{
+    padding:60px 30px; font-style:italic; color:var(--ink-soft);
+    border:1px double var(--rule); outline:1px solid var(--rule-soft); outline-offset:4px;
+    background:rgba(255,252,242,.5);
+  }
+  .study-done .big{ font-size:1.6rem; color:var(--gold-lo); display:block; margin-bottom:8px; font-style:normal; }
+
+  /* ── Examination ──────────────────────────── */
+  .exam-setup{ max-width:560px; margin:0 auto; text-align:center; }
+  .exam-setup .row{ display:flex; gap:12px; margin:16px 0; align-items:center; }
+  .exam-setup label{ font-variant:small-caps; letter-spacing:.1em; font-size:.85rem; white-space:nowrap; }
+  .exam-sheet{ max-width:680px; margin:0 auto; }
+  .exam-q{
+    background:linear-gradient(174deg,#fbf4e3,#f0e3c0);
+    border:1px solid var(--rule); outline:1px solid var(--rule-soft); outline-offset:3px;
+    padding:26px 30px; margin-bottom:18px; text-align:center;
+  }
+  .exam-q .fc-label{ margin-bottom:8px; }
+  .exam-q .q{ font-size:1.14rem; }
+  .exam-q .src{ margin-top:10px; font-size:.75rem; font-variant:small-caps; letter-spacing:.12em; color:var(--ink-faint); }
+  .exam-answer-label{ font-variant:small-caps; letter-spacing:.12em; font-size:.8rem; color:var(--ink-soft); margin-bottom:6px; display:block; }
+  .exam-reveal{
+    margin-top:18px; padding:16px 20px;
+    border-left:3px double var(--forest);
+    background:rgba(46,83,57,.05);
+    font-style:italic;
+  }
+  .exam-reveal .lbl{ font-variant:small-caps; font-style:normal; letter-spacing:.12em; font-size:.76rem; color:var(--forest); display:block; margin-bottom:4px; }
+  .exam-actions{ text-align:center; margin-top:18px; }
+  .exam-progress{ text-align:center; font-size:.78rem; font-style:italic; color:var(--ink-faint); margin-bottom:12px; }
+
+  /* ── Commonplace Book ─────────────────────── */
+  .common-wrap{ max-width:700px; margin:0 auto; }
+  .quote-plate{
+    text-align:center;
+    padding:30px 36px 24px;
+    border:1px double var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:4px;
+    background:linear-gradient(174deg, rgba(255,253,245,.7), rgba(243,229,197,.5));
+    margin-bottom:10px;
+  }
+  .quote-plate .q-mark{ font-size:2rem; color:var(--gold); line-height:1; }
+  .quote-plate blockquote{ font-size:1.22rem; font-style:italic; color:var(--ink-soft); margin:6px 0 10px; }
+  .quote-plate .attr{ font-variant:small-caps; letter-spacing:.14em; font-size:.82rem; color:var(--oxblood); }
+  .quote-tools{ text-align:center; margin:12px 0 22px; }
+  .reflection-editor label{ font-variant:small-caps; letter-spacing:.12em; font-size:.84rem; display:block; margin-bottom:6px; color:var(--ink-soft); }
+  .reflection-editor .row{ text-align:right; margin-top:10px; }
+  .refl-entry{
+    border-top:1px dotted var(--rule);
+    padding:16px 4px 14px;
+  }
+  .refl-entry .r-date{ font-variant:small-caps; letter-spacing:.12em; font-size:.76rem; color:var(--oxblood); }
+  .refl-entry .r-quote{ font-size:.86rem; font-style:italic; color:var(--ink-faint); margin:4px 0 6px; }
+  .refl-entry .r-text{ font-size:.96rem; white-space:pre-wrap; }
+  .refl-saved-note{ text-align:center; font-style:italic; font-size:.82rem; color:var(--forest); min-height:1.3em; margin-bottom:8px; }
+
+  /* ── Knowledge graph ──────────────────────── */
+  .graph-frame{
+    border:1px solid var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:4px;
+    background:
+      radial-gradient(640px 420px at 50% 46%, rgba(201,162,39,.07), transparent 70%),
+      linear-gradient(176deg, rgba(255,253,245,.6), rgba(240,225,190,.5));
+    padding:8px;
+  }
+  #graphSvg{ display:block; width:100%; height:auto; }
+  .g-edge{ stroke:#8a7452; stroke-opacity:.3; transition:stroke-opacity .15s ease, stroke .15s ease; }
+  .g-node{ cursor:pointer; }
+  .g-node circle.medallion{
+    fill:url(#giltGrad);
+    stroke:var(--gold-lo); stroke-width:1.3;
+  }
+  .g-node circle.halo{ fill:none; stroke:var(--gold-lo); stroke-opacity:.5; stroke-width:.7; stroke-dasharray:2 3; }
+  .g-node text.g-initial{
+    font-family:var(--serif); font-size:17px; fill:#4a3608;
+    text-anchor:middle; dominant-baseline:central; pointer-events:none;
+  }
+  .g-node text.g-caption{
+    font-family:var(--serif); font-size:11.5px; font-style:italic; fill:var(--ink-soft);
+    text-anchor:middle; pointer-events:none;
+  }
+  svg.dimming .g-edge{ stroke-opacity:.07; }
+  svg.dimming .g-edge.lit{ stroke:var(--oxblood); stroke-opacity:.75; }
+  svg.dimming .g-node{ opacity:.25; }
+  svg.dimming .g-node.lit{ opacity:1; }
+  .g-node.lit circle.medallion{ stroke:var(--oxblood); stroke-width:2; }
+  .graph-caption{
+    text-align:center; font-style:italic; font-size:.88rem;
+    color:var(--ink-soft); margin-top:12px; min-height:1.5em;
+  }
+  .graph-caption .t{ color:var(--forest); font-style:normal; font-variant:small-caps; letter-spacing:.08em; }
+
+  /* ── Memento (serendipity) ────────────────── */
+  .memento{
+    position:fixed; right:26px; bottom:26px; z-index:60;
+    width:min(370px, calc(100vw - 40px));
+    background:
+      linear-gradient(176deg, #fbf4e1, #efdfba);
+    border:1px solid var(--rule);
+    outline:1px solid var(--rule-soft); outline-offset:3px;
+    box-shadow:0 14px 34px rgba(60,40,10,.28);
+    padding:20px 22px 16px 26px;
+    transform:translateX(calc(100% + 60px));
+    transition:transform .5s cubic-bezier(.3,.9,.3,1);
+  }
+  .memento.shown{ transform:translateX(0); }
+  @media (prefers-reduced-motion: reduce){ .memento{ transition:none; } }
+  .wax-seal{
+    position:absolute; top:-18px; left:-18px;
+    width:52px; height:52px; border-radius:50%;
+    background:radial-gradient(circle at 34% 30%, #a83a38 0%, #7a1f23 46%, #581114 100%);
+    box-shadow:inset 0 2px 5px rgba(255,160,150,.4), inset 0 -3px 6px rgba(30,0,0,.5), 0 3px 8px rgba(50,10,10,.4);
+    display:flex; align-items:center; justify-content:center;
+    color:#e8b7a8; font-size:1.25rem;
+    font-variant:small-caps;
+    text-shadow:0 -1px 1px rgba(40,0,0,.8), 0 1px 1px rgba(255,190,170,.35);
+  }
+  .wax-seal::after{
+    content:""; position:absolute; inset:7px;
+    border-radius:50%; border:1px solid rgba(255,180,160,.35);
+  }
+  .memento h6{ font-variant:small-caps; font-weight:400; letter-spacing:.16em; font-size:.85rem; color:var(--oxblood); margin:0 0 6px 14px; }
+  .memento .mem-text{ font-style:italic; font-size:.92rem; color:#4c3a20; max-height:130px; overflow:auto; }
+  .memento .mem-src{ font-size:.74rem; font-variant:small-caps; letter-spacing:.1em; color:var(--ink-faint); margin-top:8px; }
+  .memento .mem-row{ display:flex; gap:8px; margin-top:12px; justify-content:flex-end; }
+  .memento .mem-row .btn{ padding:4px 12px 3px; font-size:.76rem; }
+  .memento .mem-close{
+    position:absolute; top:6px; right:10px;
+    appearance:none; border:none; background:none; cursor:pointer;
+    font-family:var(--serif); font-size:1rem; color:var(--ink-faint);
+  }
+  .memento .mem-close:hover{ color:var(--oxblood); }
+
+  footer.colophon{
+    margin-top:70px; text-align:center;
+    font-style:italic; font-size:.8rem; color:var(--ink-faint);
+  }
+  footer.colophon .fleurons{ color:var(--gold-lo); letter-spacing:.8em; padding-left:.8em; display:block; margin-bottom:6px; font-style:normal; }
+</style>
+</head>
+<body>
+<div class="folio">
+
+  <a class="gallery-link" href="../index.html">← Gallery</a>
+
+  <header class="masthead">
+    <div class="fleuron-row" aria-hidden="true">❦ ❧ ❦</div>
+    <h1 class="title"><span class="gilt">Bibliotheca Memoriae</span></h1>
+    <p class="subtitle">The Private Study of Matthew Geiling <span class="amp">·</span> Reading, Recollection <span class="amp">&amp;</span> Synthesis</p>
+    <div class="grand-rule" aria-hidden="true"><span>✦</span></div>
+  </header>
+
+  <nav class="chapters" aria-label="Chapters">
+    <button data-view="library" aria-current="true">Catalogus Librorum</button>
+    <span class="sep" aria-hidden="true">❧</span>
+    <button data-view="study">Disputations<span class="due-ledger" id="navDue"></span></button>
+    <span class="sep" aria-hidden="true">❧</span>
+    <button data-view="exam">Examination</button>
+    <span class="sep" aria-hidden="true">❧</span>
+    <button data-view="reflect">Commonplace Book</button>
+    <span class="sep" aria-hidden="true">❧</span>
+    <button data-view="graph">Arbor Scientiae</button>
+  </nav>
+
+  <!-- ═══════════ LIBRARY ═══════════ -->
+  <section class="view active" id="view-library" aria-label="Library catalogue">
+    <p class="dropcap-par"><span class="dropcap">H</span>erein is set down an index of the works lately read, heard, and considered in this study — each volume, essay, article, and recorded discourse entered with its author, its particulars, and the annotations made upon it. Select any entry to open its page and read the marginalia.</p>
+    <div id="libraryShelves"></div>
+  </section>
+
+  <!-- ═══════════ DETAIL ═══════════ -->
+  <section class="view" id="view-detail" aria-label="Content detail">
+    <div class="ms-back"><button class="btn" id="detailBack">← Return to the Catalogue</button></div>
+    <div class="ms-page" id="detailPage"></div>
+  </section>
+
+  <!-- ═══════════ FLASHCARDS ═══════════ -->
+  <section class="view" id="view-study" aria-label="Flashcards">
+    <div class="divider" aria-hidden="true"><span>❦</span></div>
+    <h2 class="section-head">Disputations</h2>
+    <p class="section-motto">Quaestiones drawn from every work in the library, posed for the exercise of memory.</p>
+    <div class="study-stage" id="studyStage"></div>
+  </section>
+
+  <!-- ═══════════ EXAMINATION ═══════════ -->
+  <section class="view" id="view-exam" aria-label="Active recall examination">
+    <div class="divider" aria-hidden="true"><span>❦</span></div>
+    <h2 class="section-head">The Examination</h2>
+    <p class="section-motto">Write the answer in your own hand before the truth is unveiled; then judge yourself honestly.</p>
+    <div id="examArea"></div>
+  </section>
+
+  <!-- ═══════════ COMMONPLACE BOOK ═══════════ -->
+  <section class="view" id="view-reflect" aria-label="Commonplace book">
+    <div class="divider" aria-hidden="true"><span>❦</span></div>
+    <h2 class="section-head">The Commonplace Book</h2>
+    <p class="section-motto">A passage is surfaced for contemplation; set down what it stirs in you.</p>
+    <div class="common-wrap">
+      <div class="quote-plate" id="quotePlate"></div>
+      <div class="quote-tools"><button class="btn" id="anotherQuote">❧ Surface Another Passage</button></div>
+      <div class="reflection-editor">
+        <label for="reflInput">Your reflection, in your own hand</label>
+        <textarea id="reflInput" class="quill" rows="5" placeholder="What does this passage connect to? Where does it hold, and where does it fail?"></textarea>
+        <div class="row"><button class="btn gilt" id="saveRefl">Enter into the Book</button></div>
+      </div>
+      <p class="refl-saved-note" id="reflSavedNote" aria-live="polite"></p>
+      <div class="divider" aria-hidden="true"><span>❧ Entries Past ❧</span></div>
+      <div id="reflList"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════ KNOWLEDGE GRAPH ═══════════ -->
+  <section class="view" id="view-graph" aria-label="Knowledge graph">
+    <div class="divider" aria-hidden="true"><span>❦</span></div>
+    <h2 class="section-head">Arbor Scientiae</h2>
+    <p class="section-motto">A celestial diagram of the library — works joined by the subjects they share. Rest upon a medallion to see its kinships; select one to open its page.</p>
+    <div class="graph-frame"><svg id="graphSvg" viewBox="0 0 960 620" role="img" aria-label="Diagram of works connected by shared tags"></svg></div>
+    <p class="graph-caption" id="graphCaption">❧ Pass the hand over the diagram ❧</p>
+  </section>
+
+  <footer class="colophon">
+    <span class="fleurons" aria-hidden="true">❧ ❦ ❧</span>
+    Set in the Roman manner · Anno Domini MMXXVI · Design the Tenth
+  </footer>
+</div>
+
+<!-- ═══════════ MEMENTO (serendipity) ═══════════ -->
+<aside class="memento" id="memento" aria-live="polite" aria-label="Memento — a resurfaced note">
+  <div class="wax-seal" aria-hidden="true">M</div>
+  <button class="mem-close" id="memClose" aria-label="Dismiss memento">✕</button>
+  <h6>Memento · From Your Past Hand</h6>
+  <div class="mem-text" id="memText"></div>
+  <div class="mem-src" id="memSrc"></div>
+  <div class="mem-row">
+    <button class="btn" id="memAnother">Another</button>
+    <button class="btn gilt" id="memOpen">Open</button>
+  </div>
+</aside>
+
+<script>
+'use strict';
+/* ═════════════════════════════ MOCK DATA ═════════════════════════════
+   All state lives in memory. SRS due offsets are in days relative to load. */
+const NOW = Date.now();
+const DAY = 86400000;
+const d = (off) => NOW + off * DAY;
+
+const WORKS = [
+  {
+    id:'w1', type:'book', title:'Thinking, Fast and Slow', author:'Daniel Kahneman',
+    published:'2011', consumed:'2025-03-14',
+    tags:['psychology','decision-making','memory'],
+    notes:[
+      { text:'System 1 explains why my first reading of anything feels like understanding but is not — fluency is a feeling, not a measurement. Pair this with Matuschak on books.', date:'2025-03-16' },
+      { text:'The planning fallacy section reads like a diary of my semester projects. Reference class forecasting: ask how long it took last time, not how long it feels like it should take.', date:'2025-03-20' },
+    ],
+    quotes:[
+      { text:'Nothing in life is as important as you think it is, while you are thinking about it.' },
+      { text:'A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.' },
+    ],
+    cards:[
+      { q:'What are System 1 and System 2 in Kahneman’s framework?', a:'System 1 is fast, automatic, intuitive thought; System 2 is slow, deliberate, effortful reasoning. Most judgments originate in System 1, and System 2 often merely endorses them.', srs:{ ease:2.5, interval:4, reps:3, due:d(-1.2) } },
+      { q:'What is the availability heuristic?', a:'Judging the frequency or probability of an event by how easily examples come to mind — so vivid or recent cases are overweighted.', srs:{ ease:2.36, interval:2, reps:2, due:d(-0.3) } },
+      { q:'What does Kahneman mean by WYSIATI?', a:'“What You See Is All There Is” — the mind builds a confident story from the evidence at hand and does not account for the evidence it lacks.', srs:{ ease:2.5, interval:9, reps:4, due:d(5) } },
+    ],
+  },
+  {
+    id:'w2', type:'book', title:'Atomic Habits', author:'James Clear',
+    published:'2018', consumed:'2025-01-08',
+    tags:['habits','systems','psychology'],
+    notes:[
+      { text:'Identity-first framing is the real engine: “be a reader who reviews daily” beats “review 20 cards.” I should name the identity before the metric in every system I build.', date:'2025-01-10' },
+    ],
+    quotes:[
+      { text:'You do not rise to the level of your goals. You fall to the level of your systems.' },
+      { text:'Every action you take is a vote for the type of person you wish to become.' },
+    ],
+    cards:[
+      { q:'Name the four laws of behaviour change.', a:'Make it obvious, make it attractive, make it easy, make it satisfying — and invert each to break a bad habit.', srs:{ ease:2.6, interval:12, reps:5, due:d(-2) } },
+      { q:'What is habit stacking?', a:'Anchoring a new habit to an existing one: “After I [current habit], I will [new habit].” The established routine becomes the cue.', srs:{ ease:2.5, interval:6, reps:3, due:d(2) } },
+    ],
+  },
+  {
+    id:'w3', type:'book', title:'Deep Work', author:'Cal Newport',
+    published:'2016', consumed:'2025-05-02',
+    tags:['focus','habits','creativity'],
+    notes:[
+      { text:'The “any-benefit” trap: I justify tools by any benefit rather than net benefit. Audit tools the way Newport audits networks — against my top goals only.', date:'2025-05-04' },
+      { text:'Scheduling every minute sounds rigid but is actually a forcing function for honesty about time. Trying the shutdown ritual this month.', date:'2025-05-11' },
+    ],
+    quotes:[
+      { text:'Clarity about what matters provides clarity about what does not.' },
+    ],
+    cards:[
+      { q:'How does Newport define deep work?', a:'Professional activity performed in a state of distraction-free concentration that pushes cognitive capabilities to their limit, creating new value and skills that are hard to replicate.', srs:{ ease:2.5, interval:3, reps:2, due:d(-0.6) } },
+      { q:'What is attention residue?', a:'When switching tasks, a residue of attention remains stuck on the prior task, degrading performance on the next one — the cost of even brief context switches.', srs:{ ease:2.42, interval:7, reps:3, due:d(3.5) } },
+    ],
+  },
+  {
+    id:'w4', type:'book', title:'Make It Stick', author:'Brown, Roediger & McDaniel',
+    published:'2014', consumed:'2025-06-18',
+    tags:['learning','memory','psychology'],
+    notes:[
+      { text:'Core inversion: difficulty during practice predicts durability of learning. Rereading feels productive and does nothing; retrieval feels like failure and does everything. This app exists because of this book.', date:'2025-06-20' },
+    ],
+    quotes:[
+      { text:'Learning is deeper and more durable when it is effortful. Learning that is easy is like writing in sand, here today and gone tomorrow.' },
+      { text:'The illusion of knowing is the besetting sin of the fluent rereader.' },
+    ],
+    cards:[
+      { q:'What are “desirable difficulties”?', a:'Practice conditions that feel harder and slow apparent progress — spacing, interleaving, retrieval — but produce stronger, longer-lasting learning.', srs:{ ease:2.56, interval:10, reps:4, due:d(-3) } },
+      { q:'Why does retrieval practice beat rereading?', a:'The act of recalling reconsolidates and strengthens the memory trace itself, while rereading only breeds fluency with the text — a feeling of knowing without the knowing.', srs:{ ease:2.5, interval:1, reps:1, due:d(-0.1) } },
+      { q:'What is interleaving?', a:'Mixing different topics or problem types within a practice session rather than blocking them, which improves discrimination and transfer at the cost of slower-feeling practice.', srs:{ ease:2.3, interval:5, reps:2, due:d(4) } },
+    ],
+  },
+  {
+    id:'w5', type:'book', title:'The Design of Everyday Things', author:'Don Norman',
+    published:'1988', consumed:'2025-08-09',
+    tags:['design','psychology','systems'],
+    notes:[
+      { text:'“Knowledge in the world” vs “knowledge in the head” maps exactly onto this project: a good review system puts the knowledge-in-the-world scaffolding around a head that forgets.', date:'2025-08-12' },
+    ],
+    quotes:[
+      { text:'When you have trouble with things — whether it’s figuring out whether to push or pull a door — it is not your fault. It is the fault of the design.' },
+    ],
+    cards:[
+      { q:'What is an affordance, per Norman?', a:'A relationship between an object’s properties and an agent’s capabilities that determines how the object could possibly be used — a flat plate affords pushing, a handle affords pulling.', srs:{ ease:2.5, interval:8, reps:3, due:d(6) } },
+      { q:'What are the Gulf of Execution and Gulf of Evaluation?', a:'The gap between a user’s intention and the actions a system allows (execution), and the gap between the system’s state and the user’s ability to perceive and interpret it (evaluation). Good design bridges both.', srs:{ ease:2.44, interval:2, reps:2, due:d(-0.8) } },
+    ],
+  },
+  {
+    id:'w6', type:'book', title:'Meditations', author:'Marcus Aurelius',
+    published:'c. 170–180 AD', consumed:'2025-11-23',
+    tags:['philosophy','habits','focus'],
+    notes:[
+      { text:'He was journaling to retrain his own attention — the Meditations are repetitions, not arguments. The repetitiveness people complain about is the method: spaced self-instruction, two millennia early.', date:'2025-11-25' },
+      { text:'Book 2.1 as a morning prefetch: rehearse the day’s frictions before they arrive so the response is already drafted.', date:'2025-12-02' },
+    ],
+    quotes:[
+      { text:'You have power over your mind — not outside events. Realize this, and you will find strength.' },
+      { text:'The impediment to action advances action. What stands in the way becomes the way.' },
+    ],
+    cards:[
+      { q:'What is the Stoic “dichotomy of control” as practised in the Meditations?', a:'Attend only to what is up to you — judgment, intention, response — and treat everything outside that (reputation, outcomes, others’ acts) as material to work with, not conditions to demand.', srs:{ ease:2.5, interval:5, reps:2, due:d(-1.5) } },
+    ],
+  },
+  {
+    id:'w7', type:'essay', title:'How to Do Great Work', author:'Paul Graham',
+    published:'2023', consumed:'2025-02-11',
+    tags:['creativity','focus','philosophy'],
+    notes:[
+      { text:'His compounding argument: work on something long enough for interestingness to compound. Curiosity is the engine AND the rudder — the essay’s best single line to retrieve.', date:'2025-02-12' },
+    ],
+    quotes:[
+      { text:'The way to figure out what to work on is by working. If you’re not sure what to work on, guess.' },
+      { text:'Curiosity is the key to all four steps in doing great work: it will choose the field for you, get you to the frontier, cause you to notice the gaps in it, and drive you to explore them.' },
+    ],
+    cards:[
+      { q:'What are Graham’s four steps toward great work?', a:'Choose a field that suits you, learn enough to reach the frontier of knowledge, notice the gaps, and explore the promising ones — with curiosity driving every step.', srs:{ ease:2.5, interval:3, reps:2, due:d(1.5) } },
+      { q:'Why does Graham say to “guess” at what to work on?', a:'Because the only way to discover what suits you is through doing; waiting for certainty costs more than the errors of starting, and projects reveal their own next questions.', srs:{ ease:2.5, interval:1, reps:1, due:d(-0.4) } },
+    ],
+  },
+  {
+    id:'w8', type:'essay', title:'As We May Think', author:'Vannevar Bush',
+    published:'1945', consumed:'2025-09-27',
+    tags:['systems','memory','design'],
+    notes:[
+      { text:'The memex is this app’s great-grandfather: associative trails instead of alphabetical indexes, because “the human mind operates by association.” The knowledge graph view is a memex trail made visible.', date:'2025-09-29' },
+    ],
+    quotes:[
+      { text:'The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.' },
+    ],
+    cards:[
+      { q:'What was Bush’s “memex”?', a:'A hypothetical desk-sized device (1945) storing all of a person’s books and records, consulted via associative “trails” linking items together — a mechanical precursor to hypertext and personal knowledge bases.', srs:{ ease:2.5, interval:4, reps:2, due:d(-2.5) } },
+      { q:'Why did Bush reject indexing as the model for memory augmentation?', a:'Because artificial indexes (alphabetical, hierarchical) fight how the mind works; the mind retrieves by association, so tools should store and follow associative trails.', srs:{ ease:2.6, interval:11, reps:4, due:d(8) } },
+    ],
+  },
+  {
+    id:'w9', type:'essay', title:'Self-Reliance', author:'Ralph Waldo Emerson',
+    published:'1841', consumed:'2026-01-16',
+    tags:['philosophy','creativity'],
+    notes:[
+      { text:'“In every work of genius we recognize our own rejected thoughts” — the strongest argument I know for keeping a commonplace book. Write the thought down before you learn someone famous already had it.', date:'2026-01-18' },
+    ],
+    quotes:[
+      { text:'In every work of genius we recognize our own rejected thoughts: they come back to us with a certain alienated majesty.' },
+      { text:'A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.' },
+    ],
+    cards:[
+      { q:'What does Emerson mean by “alienated majesty”?', a:'The pang of seeing your own abandoned ideas expressed by someone else: works of genius return our rejected thoughts to us, now carrying authority because another dared to keep them.', srs:{ ease:2.5, interval:2, reps:1, due:d(2.5) } },
+    ],
+  },
+  {
+    id:'w10', type:'article', title:'Why Books Don’t Work', author:'Andy Matuschak',
+    published:'2019', consumed:'2025-04-05',
+    tags:['learning','memory','design'],
+    notes:[
+      { text:'The medium carries an implicit theory of how people learn, and the book’s theory (transmissionism) is false. Notes-to-self: every view in this app should demand something *from* me, not just display *to* me.', date:'2025-04-06' },
+      { text:'Honest test from the essay: name two books read last year and try to recall their claims in detail. I failed it. That failure is the product spec.', date:'2025-04-07' },
+    ],
+    quotes:[
+      { text:'Books don’t work for the same reason that lectures don’t work: neither medium has any explicit theory of how people actually learn things, and as a result, both mediums accidentally rely on a theory that’s plainly false.' },
+    ],
+    cards:[
+      { q:'What is “transmissionism,” and why does Matuschak call it false?', a:'The tacit belief that understanding transmits from text to reader through exposure alone. False because durable understanding requires the reader to do cognitive work — retrieval, connection, application — that books never demand.', srs:{ ease:2.5, interval:6, reps:3, due:d(-0.9) } },
+      { q:'What does Matuschak propose instead of the book as a medium?', a:'“Mnemonic media” — reading environments with retrieval practice woven into the text itself, so remembering is a property of the medium rather than left to the reader’s discipline.', srs:{ ease:2.4, interval:3, reps:2, due:d(1) } },
+    ],
+  },
+  {
+    id:'w11', type:'article', title:'Augmenting Long-term Memory', author:'Michael Nielsen',
+    published:'2018', consumed:'2025-07-21',
+    tags:['memory','learning','systems'],
+    notes:[
+      { text:'“Anki makes memory a choice” reframes everything: memorization is not a talent but a decision plus a system. His 20-rule-ish craft points (atomic cards, understand first, delete bad cards) are the quality bar for my own deck.', date:'2025-07-23' },
+    ],
+    quotes:[
+      { text:'Anki makes memory a choice, rather than a haphazard event, to be left to chance.' },
+      { text:'The single biggest change that Anki brings about is that it means memory is no longer a haphazard event, to be left to chance.' },
+    ],
+    cards:[
+      { q:'Roughly what study economics does Nielsen attribute to a spaced-repetition card?', a:'A few minutes of total review time over twenty years per card — versus many times that for ad-hoc revision — making it cheap enough to memorize anything worth five minutes.', srs:{ ease:2.5, interval:7, reps:3, due:d(-1.8) } },
+      { q:'What is Nielsen’s rule of thumb for what to put into Anki?', a:'If remembering something is plausibly worth five minutes of your future time, make a card for it — because the system makes the marginal cost of remembering so low.', srs:{ ease:2.66, interval:14, reps:5, due:d(10) } },
+    ],
+  },
+  {
+    id:'w12', type:'podcast', title:'Huberman Lab: Understanding & Improving Memory', author:'Andrew Huberman',
+    published:'2022', consumed:'2025-10-15',
+    tags:['memory','learning','psychology'],
+    notes:[
+      { text:'Adrenaline *after* encoding strengthens consolidation — so a cold shower or brisk walk right after a study block is a protocol, not a break. Also: mental walk-throughs count as repetitions.', date:'2025-10-16' },
+    ],
+    quotes:[
+      { text:'Repetition works because it offsets the requirement for emotional salience — you can either have a heightened emotional state, or you can repeat the thing.' },
+    ],
+    cards:[
+      { q:'Per Huberman, what two routes strengthen memory consolidation?', a:'Emotional salience (adrenaline/arousal around the event, especially just after encoding) or repetition — repetition substitutes for salience when the material is neutral.', srs:{ ease:2.5, interval:5, reps:2, due:d(-0.2) } },
+      { q:'Why does taking a photo of something tend to impair memory of it?', a:'Offloading: directing attention to capturing rather than encoding — studies discussed show photographed objects are remembered worse than observed ones.', srs:{ ease:2.3, interval:2, reps:1, due:d(3) } },
+    ],
+  },
+  {
+    id:'w13', type:'podcast', title:'The Knowledge Project: Mental Models', author:'Shane Parrish',
+    published:'2021', consumed:'2026-02-03',
+    tags:['decision-making','systems','philosophy'],
+    notes:[
+      { text:'A latticework beats a list: models only pay off when connected across disciplines, which is precisely what tags-plus-graph should do for this library. Inversion remains the cheapest model with the highest yield.', date:'2026-02-05' },
+    ],
+    quotes:[
+      { text:'You have to have the models in your head, and you have to array your experience — both vicarious and direct — on this latticework of models.' },
+    ],
+    cards:[
+      { q:'What is “inversion” as a mental model?', a:'Approaching a problem backwards: instead of asking how to succeed, ask what would guarantee failure and avoid it — often easier to see and act on.', srs:{ ease:2.5, interval:4, reps:2, due:d(-0.7) } },
+      { q:'What is “circle of competence”?', a:'The boundary of what you genuinely understand versus what you only think you understand; good judgment means knowing where that edge is and behaving differently outside it.', srs:{ ease:2.5, interval:1, reps:1, due:d(1.2) } },
+    ],
+  },
+];
+
+/* In-memory reflections (newest first) */
+const REFLECTIONS = [
+  {
+    date:'2026-01-20',
+    quote:'In every work of genius we recognize our own rejected thoughts: they come back to us with a certain alienated majesty.',
+    source:'Self-Reliance — Ralph Waldo Emerson',
+    text:'Emerson and Matuschak are making the same accusation from opposite centuries: I outsource my thinking — to famous authors, to books I merely reread. The fix in both cases is to produce before I consume: write the guess, then read; attempt the recall, then check. This commonplace book is where the guesses go.',
+  },
+  {
+    date:'2025-07-24',
+    quote:'Anki makes memory a choice, rather than a haphazard event, to be left to chance.',
+    source:'Augmenting Long-term Memory — Michael Nielsen',
+    text:'If memory is a choice, then forgetting is also a choice — a default I keep choosing by not reviewing. Kahneman would say the planning fallacy hides the cost: each skipped review feels free. Clear would say to make the review obvious and satisfying. Hence: the due-count in red ink at the top of this very page.',
+  },
+];
+
+/* ═════════════════════════════ UTILITIES ═════════════════════════════ */
+const $  = (s, el=document) => el.querySelector(s);
+const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+const esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function fmtDate(iso){
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+  if(!m) return iso;
+  return `${parseInt(m[3],10)} ${MONTHS[parseInt(m[2],10)-1]} ${m[1]}`;
+}
+function todayISO(){
+  const t = new Date();
+  const p = n => String(n).padStart(2,'0');
+  return `${t.getFullYear()}-${p(t.getMonth()+1)}-${p(t.getDate())}`;
+}
+const TYPE_LABEL  = { book:'Liber · Book', essay:'Epistola · Essay', article:'Articulus · Article', podcast:'Sermo · Podcast' };
+const SHELF_LABEL = { book:'Libri — Books', essay:'Epistolae — Essays', article:'Articuli — Articles', podcast:'Sermones — Podcasts' };
+const workById = (id) => WORKS.find(w => w.id === id);
+
+function allCards(){
+  const out = [];
+  WORKS.forEach(w => w.cards.forEach((c,i) => out.push({ work:w, card:c, id:`${w.id}c${i}` })));
+  return out;
+}
+function dueCards(){ return allCards().filter(x => x.card.srs.due <= Date.now()); }
+function dueCountFor(work){ return work.cards.filter(c => c.srs.due <= Date.now()).length; }
+
+/* ═════════════════════════════ SRS (SM-2 flavoured) ═════════════════════
+   grade: 0 Again · 1 Hard · 2 Good · 3 Easy. Interval in days. */
+function gradeCard(srs, grade){
+  if(grade === 0){
+    srs.reps = 0;
+    srs.ease = Math.max(1.3, srs.ease - 0.2);
+    srs.interval = 0.007; // ~10 minutes
+  } else {
+    if(grade === 1){
+      srs.ease = Math.max(1.3, srs.ease - 0.15);
+      srs.interval = srs.reps === 0 ? 0.5 : Math.max(srs.interval * 1.2, srs.interval + 0.5);
+    } else if(grade === 2){
+      srs.interval = srs.reps === 0 ? 1 : (srs.reps === 1 ? 6 : srs.interval * srs.ease);
+    } else {
+      srs.ease = srs.ease + 0.15;
+      srs.interval = srs.reps === 0 ? 2 : (srs.reps === 1 ? 8 : srs.interval * srs.ease * 1.3);
+    }
+    srs.reps += 1;
+  }
+  srs.interval = Math.round(srs.interval * 100) / 100;
+  srs.due = Date.now() + srs.interval * DAY;
+  return srs;
+}
+function intervalPhrase(interval){
+  if(interval < 0.05) return 'again within the hour';
+  if(interval < 1)    return 'later today';
+  const dd = Math.round(interval);
+  return dd === 1 ? 'on the morrow' : `in ${dd} days’ time`;
+}
+
+/* ═════════════════════════════ NAVIGATION ═════════════════════════════ */
+let currentView = 'library';
+function showView(name){
+  currentView = name;
+  $$('.view').forEach(v => v.classList.remove('active'));
+  const el = $(`#view-${name}`);
+  if(el) el.classList.add('active');
+  $$('nav.chapters button').forEach(b => b.setAttribute('aria-current', b.dataset.view === name ? 'true' : 'false'));
+  if(name === 'library') renderLibrary();
+  if(name === 'study')   startStudy();
+  if(name === 'exam')    renderExamSetup();
+  if(name === 'reflect') renderReflections();
+  if(name === 'graph')   { buildGraph(); }
+  updateDueBadge();
+  window.scrollTo(0,0);
+}
+$$('nav.chapters button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+
+function updateDueBadge(){
+  const n = dueCards().length;
+  $('#navDue').textContent = n > 0 ? `${n} due` : '';
+  $('#navDue').setAttribute('title', n > 0 ? `${n} cards due for review` : 'No cards due');
+}
+
+/* ═════════════════════════════ LIBRARY ═════════════════════════════ */
+function renderLibrary(){
+  const order = ['book','essay','article','podcast'];
+  const host = $('#libraryShelves');
+  host.innerHTML = order.map(type => {
+    const works = WORKS.filter(w => w.type === type);
+    if(!works.length) return '';
+    const entries = works.map(w => {
+      const due = dueCountFor(w);
+      const ledger = due > 0
+        ? `<span class="due-mark">✠ ${due} ${due===1?'question':'questions'} due for review</span>`
+        : `<span class="ink-green">all questions in good standing</span>`;
+      return `
+        <div class="entry" role="button" tabindex="0" data-open="${w.id}" aria-label="Open ${esc(w.title)}">
+          <div class="initial" aria-hidden="true">${esc(w.title.charAt(0))}</div>
+          <div>
+            <h4>${esc(w.title)}</h4>
+            <div class="byline">${esc(w.author)} · ${esc(w.published)}</div>
+            <div class="dates">read ${fmtDate(w.consumed)} · ${w.notes.length} ${w.notes.length===1?'note':'notes'} · ${w.quotes.length} ${w.quotes.length===1?'quote':'quotes'} · ${w.cards.length} ${w.cards.length===1?'question':'questions'}</div>
+            <div>${w.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+            <div class="ledger">${ledger}</div>
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="shelf-head"><h3>${SHELF_LABEL[type]}</h3><span class="count">${works.length} ${works.length===1?'entry':'entries'}</span></div>
+      <div class="catalog">${entries}</div>`;
+  }).join('');
+
+  $$('[data-open]', host).forEach(el => {
+    el.addEventListener('click', () => openWork(el.dataset.open));
+    el.addEventListener('keydown', (e) => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openWork(el.dataset.open); } });
+  });
+}
+
+/* ═════════════════════════════ DETAIL ═════════════════════════════ */
+let currentWorkId = null;
+function openWork(id){
+  currentWorkId = id;
+  renderDetail();
+  currentView = 'detail';
+  $$('.view').forEach(v => v.classList.remove('active'));
+  $('#view-detail').classList.add('active');
+  $$('nav.chapters button').forEach(b => b.setAttribute('aria-current','false'));
+  window.scrollTo(0,0);
+}
+$('#detailBack').addEventListener('click', () => showView('library'));
+
+function renderDetail(){
+  const w = workById(currentWorkId);
+  if(!w) return;
+  const due = dueCountFor(w);
+  const quotes = w.quotes.map(q => `
+    <blockquote class="ms-quote">${esc(q.text)}<footer>— ${esc(w.author)}</footer></blockquote>`).join('');
+  const notes = w.notes.map((n,i) => `
+    <div class="m-note" data-note="${i}">
+      <span class="m-hand">${esc(n.text)}</span>
+      <span class="m-when">annotated ${fmtDate(n.date)}</span>
+      <button class="m-edit" data-editnote="${i}">emend this note</button>
+    </div>`).join('');
+
+  $('#detailPage').innerHTML = `
+    <div class="ms-columns">
+      <article>
+        <div class="ms-kind">${TYPE_LABEL[w.type]}</div>
+        <h3 class="ms-title"><span class="dropcap">${esc(w.title.charAt(0))}</span>${esc(w.title.slice(1))}</h3>
+        <dl class="ms-meta">
+          <dt>Author</dt><dd>${esc(w.author)}</dd>
+          <dt>Published</dt><dd>${esc(w.published)}</dd>
+          <dt>Consumed</dt><dd>${fmtDate(w.consumed)}</dd>
+          <dt>Subjects</dt><dd>${w.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</dd>
+        </dl>
+        <div class="divider" aria-hidden="true"><span>❧ Passages Preserved ❧</span></div>
+        ${quotes}
+        <p class="ms-cards-note">${w.cards.length} ${w.cards.length===1?'question stands':'questions stand'} in disputation upon this work${due>0?` — <span class="ink-red">${due} presently due</span>`:' — <span class="ink-green">none presently due</span>'}.
+        <button class="btn rubric" id="examThisWork" style="margin-left:10px">Be Examined Upon It</button></p>
+      </article>
+      <aside class="marginalia">
+        <h5>Marginalia</h5>
+        <p class="m-sub">notes in your own hand, kept in the margin</p>
+        <div id="noteList">${notes || '<p class="m-sub">The margin is yet blank.</p>'}</div>
+        <div class="m-add-wrap" id="noteAddWrap">
+          <button class="btn" id="noteAddBtn">✎ Annotate the Margin</button>
+        </div>
+      </aside>
+    </div>`;
+
+  $('#examThisWork').addEventListener('click', () => { showView('exam'); startExam('work:'+w.id); });
+  $$('#detailPage [data-editnote]').forEach(btn => btn.addEventListener('click', () => editNote(parseInt(btn.dataset.editnote,10))));
+  $('#noteAddBtn').addEventListener('click', openNoteAdder);
+}
+
+function editNote(idx){
+  const w = workById(currentWorkId);
+  const host = $(`#detailPage .m-note[data-note="${idx}"]`);
+  if(!w || !host) return;
+  const editor = document.createElement('div');
+  editor.className = 'm-editor';
+  editor.innerHTML = `
+    <textarea class="quill" rows="4" aria-label="Emend note"></textarea>
+    <div class="row"><button class="btn gilt">Set Down</button><button class="btn">Leave Be</button></div>`;
+  const ta = $('textarea', editor);
+  ta.value = w.notes[idx].text;
+  host.replaceWith(editor);
+  ta.focus();
+  const [saveB, cancelB] = $$('.row .btn', editor);
+  saveB.addEventListener('click', () => {
+    const v = ta.value.trim();
+    if(v){ w.notes[idx].text = v; w.notes[idx].date = todayISO(); }
+    renderDetail();
+  });
+  cancelB.addEventListener('click', () => renderDetail());
+}
+
+function openNoteAdder(){
+  const wrap = $('#noteAddWrap');
+  wrap.innerHTML = `
+    <div class="m-editor" style="border-top:none">
+      <textarea class="quill" rows="4" placeholder="A thought worth keeping in the margin…" aria-label="New note"></textarea>
+      <div class="row"><button class="btn gilt" id="noteSave">Set Down</button><button class="btn" id="noteCancel">Leave Be</button></div>
+    </div>`;
+  const ta = $('textarea', wrap);
+  ta.focus();
+  $('#noteSave').addEventListener('click', () => {
+    const v = ta.value.trim();
+    if(v){ workById(currentWorkId).notes.push({ text:v, date:todayISO() }); }
+    renderDetail();
+  });
+  $('#noteCancel').addEventListener('click', () => renderDetail());
+}
+
+/* ═════════════════════════════ FLASHCARDS ═════════════════════════════ */
+let studyQueue = [];
+let studyIdx = 0;
+let studyAhead = false;
+let lastGradeNote = '';
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startStudy(){
+  const due = dueCards();
+  if(due.length){
+    studyQueue = shuffle(due.slice());
+    studyAhead = false;
+  } else {
+    studyQueue = shuffle(allCards());
+    studyAhead = true;
+  }
+  studyIdx = 0;
+  lastGradeNote = '';
+  renderStudyCard();
+}
+
+function renderStudyCard(){
+  const host = $('#studyStage');
+  if(studyIdx >= studyQueue.length){
+    host.innerHTML = `
+      <div class="study-done">
+        <span class="big">❦ Finis ❦</span>
+        The disputation is concluded${studyAhead?' (you reviewed ahead of schedule)':''}.
+        ${dueCards().length ? `<br>Yet <span class="ink-red">${dueCards().length}</span> ${dueCards().length===1?'question has':'questions have'} returned due.` : '<br>Nothing further is owed to memory today.'}
+        <div style="margin-top:20px"><button class="btn gilt" id="studyAgain">Begin Anew</button></div>
+      </div>`;
+    $('#studyAgain').addEventListener('click', startStudy);
+    updateDueBadge();
+    return;
+  }
+  const { work, card } = studyQueue[studyIdx];
+  const n = dueCards().length;
+  host.innerHTML = `
+    <p class="study-ledger">
+      ${studyAhead
+        ? 'Nothing is due — you dispute <span class="ink-green">ahead of schedule</span>.'
+        : `In the ledger: <span class="due-mark">${n} ${n===1?'question':'questions'} due</span>.`}
+      Question ${studyIdx+1} of ${studyQueue.length}.
+    </p>
+    <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-label="Flashcard — activate to turn over">
+      <div class="face front">
+        <span class="corner c-tl" aria-hidden="true"></span><span class="corner c-tr" aria-hidden="true"></span>
+        <span class="corner c-bl" aria-hidden="true"></span><span class="corner c-br" aria-hidden="true"></span>
+        <div class="fc-label">Quaestio</div>
+        <div class="fc-text">${esc(card.q)}</div>
+        <div class="fc-source">${esc(work.title)} · ${esc(work.author)}</div>
+        <div class="fc-hint">— turn the card to reveal the answer —</div>
+      </div>
+      <div class="face back">
+        <span class="corner c-tl" aria-hidden="true"></span><span class="corner c-tr" aria-hidden="true"></span>
+        <span class="corner c-bl" aria-hidden="true"></span><span class="corner c-br" aria-hidden="true"></span>
+        <div class="fc-label ink-green">Responsum</div>
+        <div class="fc-text answer">${esc(card.a)}</div>
+        <div class="fc-source">${esc(work.title)} · ${esc(work.author)}</div>
+      </div>
+    </div>
+    <div class="grade-row" id="gradeRow" hidden>${gradeButtonsHTML()}</div>
+    <p class="study-after" aria-live="polite">${esc(lastGradeNote)}</p>`;
+
+  const fc = $('#flashcard');
+  const flip = () => {
+    fc.classList.add('flipped');
+    $('#gradeRow').hidden = false;
+  };
+  fc.addEventListener('click', flip);
+  fc.addEventListener('keydown', (e) => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } });
+
+  $$('#gradeRow .grade-btn').forEach(btn => btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const g = parseInt(btn.dataset.grade,10);
+    gradeCard(card.srs, g);
+    lastGradeNote = `Marked ${btn.dataset.latin} — it shall return ${intervalPhrase(card.srs.interval)}.`;
+    studyIdx += 1;
+    updateDueBadge();
+    renderStudyCard();
+  }));
+}
+
+function gradeButtonsHTML(){
+  return `
+    <button class="grade-btn g-again" data-grade="0" data-latin="Iterum"><span class="latin">Iterum</span><span class="gloss">again</span></button>
+    <button class="grade-btn g-hard"  data-grade="1" data-latin="Difficile"><span class="latin">Difficile</span><span class="gloss">hard</span></button>
+    <button class="grade-btn g-good"  data-grade="2" data-latin="Bene"><span class="latin">Bene</span><span class="gloss">good</span></button>
+    <button class="grade-btn g-easy"  data-grade="3" data-latin="Optime"><span class="latin">Optime</span><span class="gloss">easy</span></button>`;
+}
+
+/* ═════════════════════════════ EXAMINATION ═════════════════════════════ */
+let examQueue = [];
+let examIdx = 0;
+let examScopeLabel = '';
+
+function allTags(){
+  const s = new Set();
+  WORKS.forEach(w => w.tags.forEach(t => s.add(t)));
+  return Array.from(s).sort();
+}
+
+function renderExamSetup(){
+  const workOpts = WORKS.map(w => `<option value="work:${w.id}">${esc(w.title)}</option>`).join('');
+  const tagOpts  = allTags().map(t => `<option value="tag:${t}">${esc(t)}</option>`).join('');
+  $('#examArea').innerHTML = `
+    <div class="exam-setup">
+      <p class="dropcap-par" style="text-align:center"><span class="dropcap">C</span>hoose the matter upon which you shall be examined — a single work from the catalogue, or a whole subject that spans many.</p>
+      <div class="row">
+        <label for="examScope">Matter</label>
+        <select id="examScope">
+          <optgroup label="— A Single Work —">${workOpts}</optgroup>
+          <optgroup label="— A Subject —">${tagOpts}</optgroup>
+        </select>
+        <button class="btn gilt" id="examStart" style="white-space:nowrap">Begin</button>
+      </div>
+    </div>`;
+  $('#examStart').addEventListener('click', () => startExam($('#examScope').value));
+}
+
+function startExam(scope){
+  let pool;
+  if(scope.startsWith('work:')){
+    const w = workById(scope.slice(5));
+    pool = allCards().filter(x => x.work.id === w.id);
+    examScopeLabel = w.title;
+  } else {
+    const tag = scope.slice(4);
+    pool = allCards().filter(x => x.work.tags.includes(tag));
+    examScopeLabel = `the subject of ${tag}`;
+  }
+  // due first, then the rest, each shuffled
+  const due = shuffle(pool.filter(x => x.card.srs.due <= Date.now()));
+  const rest = shuffle(pool.filter(x => x.card.srs.due > Date.now()));
+  examQueue = due.concat(rest);
+  examIdx = 0;
+  renderExamQuestion();
+}
+
+function renderExamQuestion(){
+  const host = $('#examArea');
+  if(examIdx >= examQueue.length){
+    host.innerHTML = `
+      <div class="study-stage">
+        <div class="study-done">
+          <span class="big">❦ Examination Concluded ❦</span>
+          You have answered all ${examQueue.length} ${examQueue.length===1?'question':'questions'} upon ${esc(examScopeLabel)}.
+          <div style="margin-top:20px"><button class="btn gilt" id="examAgainBtn">Choose Another Matter</button></div>
+        </div>
+      </div>`;
+    $('#examAgainBtn').addEventListener('click', renderExamSetup);
+    updateDueBadge();
+    return;
+  }
+  const { work, card } = examQueue[examIdx];
+  host.innerHTML = `
+    <div class="exam-sheet">
+      <p class="exam-progress">Upon ${esc(examScopeLabel)} · question ${examIdx+1} of ${examQueue.length}</p>
+      <div class="exam-q">
+        <div class="fc-label">Quaestio</div>
+        <div class="q">${esc(card.q)}</div>
+        <div class="src">${esc(work.title)} · ${esc(work.author)}</div>
+      </div>
+      <label class="exam-answer-label" for="examAnswer">Your answer, upon the ruled sheet</label>
+      <textarea id="examAnswer" class="quill" rows="4" placeholder="Attempt the recall before the truth is unveiled…"></textarea>
+      <div id="examRevealZone"></div>
+      <div class="exam-actions" id="examActions">
+        <button class="btn gilt" id="examReveal">Unveil the Answer</button>
+        <button class="btn" id="examAbandon">Abandon the Examination</button>
+      </div>
+    </div>`;
+  $('#examAnswer').focus();
+  $('#examAbandon').addEventListener('click', renderExamSetup);
+  $('#examReveal').addEventListener('click', () => {
+    $('#examRevealZone').innerHTML = `
+      <div class="exam-reveal"><span class="lbl">Responsum</span>${esc(card.a)}</div>`;
+    $('#examActions').innerHTML = `
+      <p class="exam-progress" style="margin-bottom:8px">Judge your own answer honestly:</p>
+      <div class="grade-row">${gradeButtonsHTML()}</div>`;
+    $$('#examActions .grade-btn').forEach(btn => btn.addEventListener('click', () => {
+      gradeCard(card.srs, parseInt(btn.dataset.grade,10));
+      examIdx += 1;
+      updateDueBadge();
+      renderExamQuestion();
+    }));
+  });
+}
+
+/* ═════════════════════════════ COMMONPLACE BOOK ═════════════════════════════ */
+let currentQuote = null;
+
+function allQuotes(){
+  const out = [];
+  WORKS.forEach(w => w.quotes.forEach(q => out.push({ text:q.text, work:w })));
+  return out;
+}
+
+function pickQuote(){
+  const qs = allQuotes();
+  let q = qs[Math.floor(Math.random()*qs.length)];
+  if(currentQuote && qs.length > 1){
+    let guard = 0;
+    while(q.text === currentQuote.text && guard++ < 10) q = qs[Math.floor(Math.random()*qs.length)];
+  }
+  currentQuote = q;
+  $('#quotePlate').innerHTML = `
+    <div class="q-mark" aria-hidden="true">❝</div>
+    <blockquote>${esc(q.text)}</blockquote>
+    <div class="attr">— ${esc(q.work.author)}, <em>${esc(q.work.title)}</em> (${esc(q.work.published)})</div>`;
+}
+
+function renderReflections(){
+  if(!currentQuote) pickQuote();
+  $('#reflList').innerHTML = REFLECTIONS.map(r => `
+    <div class="refl-entry">
+      <div class="r-date">${fmtDate(r.date)}</div>
+      <div class="r-quote">upon: “${esc(r.quote.length > 110 ? r.quote.slice(0,110)+'…' : r.quote)}” — ${esc(r.source)}</div>
+      <div class="r-text">${esc(r.text)}</div>
+    </div>`).join('');
+}
+
+$('#anotherQuote').addEventListener('click', pickQuote);
+$('#saveRefl').addEventListener('click', () => {
+  const ta = $('#reflInput');
+  const v = ta.value.trim();
+  if(!v){ $('#reflSavedNote').textContent = 'The page awaits your hand — write something first.'; return; }
+  REFLECTIONS.unshift({
+    date: todayISO(),
+    quote: currentQuote ? currentQuote.text : '',
+    source: currentQuote ? `${currentQuote.work.title} — ${currentQuote.work.author}` : '',
+    text: v,
+  });
+  ta.value = '';
+  $('#reflSavedNote').textContent = '❧ Entered into the Commonplace Book.';
+  renderReflections();
+});
+
+/* ═════════════════════════════ KNOWLEDGE GRAPH ═════════════════════════════ */
+let graphBuilt = false;
+function sharedTags(a,b){ return a.tags.filter(t => b.tags.includes(t)); }
+
+function buildGraph(){
+  if(graphBuilt) return;
+  graphBuilt = true;
+  const svg = $('#graphSvg');
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 960, H = 620, CX = 480, CY = 300;
+  const n = WORKS.length;
+
+  // Deterministic celestial layout: two interleaved rings with gentle jitter.
+  const pos = {};
+  WORKS.forEach((w,i) => {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const ringR = (i % 2 === 0) ? 1 : 0.68;
+    const jitter = ((i * 37) % 11 - 5) * 3;
+    pos[w.id] = {
+      x: CX + Math.cos(angle) * (335 * ringR) + jitter,
+      y: CY + Math.sin(angle) * (218 * ringR) + ((i * 53) % 9 - 4) * 3,
+    };
+  });
+
+  // defs: gilt gradient
+  const defs = document.createElementNS(NS,'defs');
+  defs.innerHTML = `
+    <radialGradient id="giltGrad" cx="38%" cy="32%" r="80%">
+      <stop offset="0%" stop-color="#f3e4a0"/>
+      <stop offset="45%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#8f6d14"/>
+    </radialGradient>`;
+  svg.appendChild(defs);
+
+  // faint celestial rings
+  [1, 0.68].forEach(r => {
+    const ell = document.createElementNS(NS,'ellipse');
+    ell.setAttribute('cx',CX); ell.setAttribute('cy',CY);
+    ell.setAttribute('rx',335*r); ell.setAttribute('ry',218*r);
+    ell.setAttribute('fill','none');
+    ell.setAttribute('stroke','#8a7452'); ell.setAttribute('stroke-opacity','0.14');
+    ell.setAttribute('stroke-dasharray','1 6');
+    svg.appendChild(ell);
+  });
+
+  // edges
+  const edgeLayer = document.createElementNS(NS,'g');
+  svg.appendChild(edgeLayer);
+  const edges = [];
+  for(let i=0;i<n;i++){
+    for(let j=i+1;j<n;j++){
+      const shared = sharedTags(WORKS[i], WORKS[j]);
+      if(!shared.length) continue;
+      const a = pos[WORKS[i].id], b = pos[WORKS[j].id];
+      const line = document.createElementNS(NS,'line');
+      line.setAttribute('x1',a.x); line.setAttribute('y1',a.y);
+      line.setAttribute('x2',b.x); line.setAttribute('y2',b.y);
+      line.setAttribute('class','g-edge');
+      line.setAttribute('stroke-width', 0.6 + shared.length * 0.7);
+      edgeLayer.appendChild(line);
+      edges.push({ el:line, a:WORKS[i].id, b:WORKS[j].id, shared });
+    }
+  }
+
+  // nodes
+  const caption = $('#graphCaption');
+  WORKS.forEach(w => {
+    const p = pos[w.id];
+    const g = document.createElementNS(NS,'g');
+    g.setAttribute('class','g-node');
+    g.setAttribute('tabindex','0');
+    g.setAttribute('role','button');
+    g.setAttribute('aria-label',`Open ${w.title}`);
+
+    const halo = document.createElementNS(NS,'circle');
+    halo.setAttribute('cx',p.x); halo.setAttribute('cy',p.y); halo.setAttribute('r',27);
+    halo.setAttribute('class','halo');
+    const med = document.createElementNS(NS,'circle');
+    med.setAttribute('cx',p.x); med.setAttribute('cy',p.y); med.setAttribute('r',20);
+    med.setAttribute('class','medallion');
+    const letter = document.createElementNS(NS,'text');
+    letter.setAttribute('x',p.x); letter.setAttribute('y',p.y+1);
+    letter.setAttribute('class','g-initial');
+    letter.textContent = w.title.charAt(0);
+    const cap = document.createElementNS(NS,'text');
+    cap.setAttribute('x',p.x); cap.setAttribute('y',p.y + 42);
+    cap.setAttribute('class','g-caption');
+    const short = w.title.length > 26 ? w.title.slice(0,24)+'…' : w.title;
+    cap.textContent = short;
+
+    g.appendChild(halo); g.appendChild(med); g.appendChild(letter); g.appendChild(cap);
+    svg.appendChild(g);
+
+    const enter = () => {
+      svg.classList.add('dimming');
+      g.classList.add('lit');
+      const kin = [];
+      edges.forEach(e => {
+        const hit = (e.a === w.id || e.b === w.id);
+        e.el.classList.toggle('lit', hit);
+        if(hit){
+          const otherId = e.a === w.id ? e.b : e.a;
+          const other = workById(otherId);
+          $$('.g-node', svg).forEach(node => {
+            if(node.getAttribute('aria-label') === `Open ${other.title}`) node.classList.add('lit');
+          });
+          kin.push(`<em>${esc(other.title)}</em> <span class="t">(${e.shared.map(esc).join(', ')})</span>`);
+        }
+      });
+      caption.innerHTML = kin.length
+        ? `<strong>${esc(w.title)}</strong> is kin to ${kin.join(' · ')}`
+        : `<strong>${esc(w.title)}</strong> stands alone in the firmament.`;
+    };
+    const leave = () => {
+      svg.classList.remove('dimming');
+      $$('.g-node', svg).forEach(node => node.classList.remove('lit'));
+      edges.forEach(e => e.el.classList.remove('lit'));
+      caption.innerHTML = '❧ Pass the hand over the diagram ❧';
+    };
+    g.addEventListener('mouseenter', enter);
+    g.addEventListener('mouseleave', leave);
+    g.addEventListener('focus', enter);
+    g.addEventListener('blur', leave);
+    g.addEventListener('click', () => { leave(); openWork(w.id); });
+    g.addEventListener('keydown', (e) => { if(e.key==='Enter'||e.key===' '){ e.preventDefault(); leave(); openWork(w.id); } });
+  });
+}
+
+/* ═════════════════════════════ MEMENTO (serendipity) ═════════════════════════════ */
+let currentMemento = null;
+
+function mementoPool(){
+  const pool = [];
+  WORKS.forEach(w => w.notes.forEach(nt => pool.push({
+    kind:'note', text:nt.text, date:nt.date,
+    src:`marginal note · ${w.title}`, workId:w.id,
+  })));
+  REFLECTIONS.forEach(r => pool.push({
+    kind:'reflection', text:r.text, date:r.date,
+    src:`commonplace entry · upon ${r.source}`, workId:null,
+  }));
+  return pool;
+}
+
+function showMemento(){
+  const pool = mementoPool();
+  let m = pool[Math.floor(Math.random()*pool.length)];
+  if(currentMemento && pool.length > 1){
+    let guard = 0;
+    while(m.text === currentMemento.text && guard++ < 10) m = pool[Math.floor(Math.random()*pool.length)];
+  }
+  currentMemento = m;
+  $('#memText').textContent = m.text;
+  $('#memSrc').textContent = `${m.src} · ${fmtDate(m.date)}`;
+  $('#memento').classList.add('shown');
+}
+function hideMemento(){ $('#memento').classList.remove('shown'); }
+
+$('#memClose').addEventListener('click', hideMemento);
+$('#memAnother').addEventListener('click', showMemento);
+$('#memOpen').addEventListener('click', () => {
+  if(!currentMemento) return;
+  hideMemento();
+  if(currentMemento.kind === 'note' && currentMemento.workId) openWork(currentMemento.workId);
+  else showView('reflect');
+});
+
+/* Auto-appear a few seconds after load — but not when embedded (gallery thumbnails). */
+let isEmbedded = false;
+try { isEmbedded = window.self !== window.top; } catch(e){ isEmbedded = true; }
+if(!isEmbedded){
+  setTimeout(showMemento, 4500);
+}
+
+/* ═════════════════════════════ GLOBAL KEYS ═════════════════════════════ */
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape') return;
+  const mem = $('#memento');
+  if(mem.classList.contains('shown')){ hideMemento(); return; }
+  // cancel any open marginalia editors
+  if(currentView === 'detail' && $('#detailPage .m-editor')){ renderDetail(); return; }
+});
+
+/* ═════════════════════════════ INIT ═════════════════════════════ */
+renderLibrary();
+pickQuote();
+renderReflections();
+updateDueBadge();
+</script>
+</body>
+</html>

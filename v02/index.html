@@ -1,0 +1,1418 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matthew&#8217;s Mind — Knowledge Base</title>
+<style>
+  :root{
+    --bg: #ffffff;
+    --bg-soft: #f7f7f5;
+    --bg-hover: #efefed;
+    --ink: #37352f;
+    --ink-soft: #787774;
+    --ink-faint: #9b9a97;
+    --line: #e9e9e7;
+    --line-soft: #f1f1ef;
+    --accent: #2e7cd1;
+    --pill-gray-bg:#f1f1ef;   --pill-gray-ink:#5a5a57;
+    --pill-brown-bg:#f3eeee; --pill-brown-ink:#6e5a50;
+    --pill-orange-bg:#fbecdd;--pill-orange-ink:#89562b;
+    --pill-yellow-bg:#fbf3db;--pill-yellow-ink:#7d6a2c;
+    --pill-green-bg:#edf3ec; --pill-green-ink:#3c6255;
+    --pill-blue-bg:#e7f3f8;  --pill-blue-ink:#2b6184;
+    --pill-purple-bg:#f6f3f9;--pill-purple-ink:#6a4f8a;
+    --pill-pink-bg:#faf1f5;  --pill-pink-ink:#99436e;
+    --pill-red-bg:#fdebec;   --pill-red-ink:#9a4040;
+    --shadow: 0 1px 2px rgba(15,15,15,.04), 0 4px 14px rgba(15,15,15,.07);
+    --radius: 6px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color:var(--ink);
+    background:var(--bg);
+    font-size:15px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  button{ font:inherit; color:inherit; background:none; border:none; padding:0; cursor:pointer; }
+  button:focus-visible, a:focus-visible, [tabindex]:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; border-radius:4px; }
+  textarea, input, select{ font:inherit; color:var(--ink); }
+
+  /* ---------- App shell ---------- */
+  .app{ display:flex; min-height:100vh; }
+
+  .sidebar{
+    width:252px; flex:0 0 252px;
+    background:var(--bg-soft);
+    border-right:1px solid var(--line);
+    padding:10px 8px 24px;
+    display:flex; flex-direction:column; gap:2px;
+    position:sticky; top:0; align-self:flex-start;
+    height:100vh; overflow-y:auto;
+  }
+  .ws-head{
+    display:flex; align-items:center; gap:8px;
+    padding:6px 8px 10px; margin-bottom:4px;
+    font-weight:600; font-size:14px;
+  }
+  .ws-head .ws-icon{
+    width:22px; height:22px; border-radius:4px;
+    background:var(--ink); color:#fff;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+  }
+  .ws-head .ws-sub{ display:block; font-weight:400; font-size:11px; color:var(--ink-faint); }
+
+  .side-label{
+    font-size:11px; font-weight:600; letter-spacing:.04em;
+    color:var(--ink-faint); text-transform:uppercase;
+    padding:10px 8px 2px;
+  }
+  .side-item{
+    display:flex; align-items:center; gap:8px; width:100%;
+    padding:5px 8px; border-radius:4px; text-align:left;
+    color:var(--ink-soft); font-size:14px; font-weight:500;
+  }
+  .side-item:hover{ background:var(--bg-hover); }
+  .side-item.active{ background:#e8e8e5; color:var(--ink); }
+  .side-item .emj{ width:18px; text-align:center; flex:0 0 18px; }
+  .side-item .grow{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .badge{
+    font-size:11px; font-weight:600; line-height:1;
+    padding:3px 7px; border-radius:99px;
+    background:var(--pill-red-bg); color:var(--pill-red-ink);
+  }
+  .badge.zero{ background:var(--pill-gray-bg); color:var(--pill-gray-ink); }
+  .badge.soft{ background:var(--pill-gray-bg); color:var(--pill-gray-ink); font-weight:500; }
+
+  .tree details{ margin:0; }
+  .tree summary{
+    list-style:none; cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:6px;
+    padding:4px 8px; border-radius:4px;
+    font-size:13px; font-weight:500; color:var(--ink-soft);
+  }
+  .tree summary::-webkit-details-marker{ display:none; }
+  .tree summary:hover{ background:var(--bg-hover); }
+  .tree summary .caret{ display:inline-block; width:12px; font-size:10px; color:var(--ink-faint); transition:transform .15s ease; }
+  .tree details[open] > summary .caret{ transform:rotate(90deg); }
+  .tree .leaf{
+    display:flex; align-items:center; gap:7px; width:100%;
+    padding:3px 8px 3px 26px; border-radius:4px; text-align:left;
+    font-size:13px; color:var(--ink-soft);
+  }
+  .tree .leaf:hover{ background:var(--bg-hover); color:var(--ink); }
+  .tree .leaf .t{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .side-foot{ margin-top:auto; padding:12px 8px 0; font-size:12px; color:var(--ink-faint); border-top:1px solid var(--line); }
+
+  /* ---------- Main ---------- */
+  .main{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; gap:10px;
+    padding:10px 28px;
+    background:rgba(255,255,255,.92);
+    border-bottom:1px solid var(--line-soft);
+    backdrop-filter:blur(4px);
+    font-size:14px;
+  }
+  .hamburger{ display:none; padding:4px 8px; border-radius:4px; font-size:16px; color:var(--ink-soft); }
+  .hamburger:hover{ background:var(--bg-hover); }
+  .crumbs{ display:flex; align-items:center; gap:6px; color:var(--ink-soft); min-width:0; flex-wrap:wrap; }
+  .crumbs .sep{ color:var(--ink-faint); }
+  .crumbs button{ color:var(--ink-soft); padding:2px 5px; border-radius:4px; white-space:nowrap; }
+  .crumbs button:hover{ background:var(--bg-hover); color:var(--ink); }
+  .crumbs .here{ color:var(--ink); font-weight:500; padding:2px 5px; }
+  .gallery-link{
+    margin-left:auto; color:var(--ink-soft); text-decoration:none;
+    font-size:13px; padding:4px 10px; border:1px solid var(--line);
+    border-radius:var(--radius); background:var(--bg); white-space:nowrap;
+  }
+  .gallery-link:hover{ background:var(--bg-soft); color:var(--ink); }
+
+  .page{ width:100%; max-width:960px; margin:0 auto; padding:40px 48px 90px; }
+  .view{ display:none; }
+  .view.on{ display:block; }
+
+  .page-icon{ font-size:44px; line-height:1; margin-bottom:10px; }
+  h1{ font-size:30px; line-height:1.2; margin:0 0 6px; font-weight:700; letter-spacing:-.01em; }
+  .page-sub{ color:var(--ink-soft); margin:0 0 26px; font-size:15px; }
+  h2{ font-size:19px; font-weight:600; margin:34px 0 10px; letter-spacing:-.005em; }
+  h3{ font-size:15px; font-weight:600; margin:18px 0 8px; }
+  .divider{ border:none; border-top:1px solid var(--line); margin:26px 0; }
+
+  /* pills */
+  .pill{
+    display:inline-flex; align-items:center;
+    font-size:12px; font-weight:500; line-height:1;
+    padding:4px 8px; border-radius:4px;
+    background:var(--pill-gray-bg); color:var(--pill-gray-ink);
+    white-space:nowrap;
+  }
+  .pill-row{ display:flex; flex-wrap:wrap; gap:6px; }
+
+  /* ---------- Library ---------- */
+  .lib-toolbar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .chip{
+    font-size:13px; font-weight:500; color:var(--ink-soft);
+    padding:5px 11px; border-radius:var(--radius);
+    border:1px solid var(--line); background:var(--bg);
+  }
+  .chip:hover{ background:var(--bg-soft); }
+  .chip.on{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .lib-count{ margin-left:auto; font-size:13px; color:var(--ink-faint); }
+
+  .db-table{ border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  table{ width:100%; border-collapse:collapse; }
+  thead th{
+    text-align:left; font-size:12px; font-weight:500;
+    color:var(--ink-faint); padding:8px 12px;
+    border-bottom:1px solid var(--line); background:var(--bg-soft);
+    white-space:nowrap;
+  }
+  tbody td{ padding:9px 12px; border-bottom:1px solid var(--line-soft); font-size:14px; vertical-align:middle; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody tr{ cursor:pointer; }
+  tbody tr:hover{ background:var(--bg-soft); }
+  td.name{ font-weight:500; }
+  td.name .emj{ margin-right:8px; }
+  td .muted{ color:var(--ink-soft); font-size:13px; }
+  .open-hint{ opacity:0; font-size:12px; color:var(--ink-faint); transition:opacity .12s; white-space:nowrap; }
+  tbody tr:hover .open-hint{ opacity:1; }
+
+  /* ---------- Detail ---------- */
+  .back-link{ font-size:13px; color:var(--ink-soft); padding:3px 8px; margin-left:-8px; border-radius:4px; }
+  .back-link:hover{ background:var(--bg-hover); color:var(--ink); }
+  .props{ margin:20px 0 6px; border-top:1px solid var(--line-soft); }
+  .prop-row{ display:flex; align-items:flex-start; gap:14px; padding:6px 0; border-bottom:1px solid var(--line-soft); font-size:14px; }
+  .prop-key{ flex:0 0 136px; color:var(--ink-faint); display:flex; align-items:center; gap:7px; padding-top:2px; }
+  .prop-val{ flex:1; min-width:0; }
+
+  blockquote.q{
+    margin:0 0 12px; padding:10px 18px;
+    border-left:3px solid var(--ink);
+    background:var(--bg-soft); border-radius:0 var(--radius) var(--radius) 0;
+    font-size:15px;
+  }
+  blockquote.q .attr{ display:block; margin-top:6px; font-size:12.5px; color:var(--ink-soft); font-style:normal; }
+
+  .toggle-sec{ border-top:1px solid var(--line-soft); padding:4px 0; }
+  .toggle-sec > summary{
+    list-style:none; cursor:pointer; user-select:none;
+    display:flex; align-items:center; gap:8px;
+    padding:8px 4px; border-radius:4px;
+    font-size:15px; font-weight:600;
+  }
+  .toggle-sec > summary::-webkit-details-marker{ display:none; }
+  .toggle-sec > summary:hover{ background:var(--bg-soft); }
+  .toggle-sec > summary .caret{ font-size:11px; color:var(--ink-faint); width:12px; transition:transform .15s ease; }
+  .toggle-sec[open] > summary .caret{ transform:rotate(90deg); }
+  .toggle-sec .sec-body{ padding:6px 4px 14px 24px; }
+
+  .note-block{
+    position:relative; padding:10px 86px 10px 14px; margin-bottom:8px;
+    border:1px solid var(--line); border-radius:var(--radius);
+    background:var(--bg); font-size:14.5px;
+  }
+  .note-block .nd{ display:block; margin-top:6px; font-size:12px; color:var(--ink-faint); }
+  .note-act{
+    position:absolute; top:8px; right:8px;
+    opacity:0; transition:opacity .12s;
+    font-size:12px; color:var(--ink-soft);
+    border:1px solid var(--line); border-radius:4px;
+    padding:3px 8px; background:var(--bg);
+  }
+  .note-block:hover .note-act{ opacity:1; }
+  .note-act:hover{ background:var(--bg-hover); color:var(--ink); }
+  .note-editor textarea{
+    width:100%; min-height:88px; resize:vertical;
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:10px 12px; font-size:14.5px; line-height:1.5;
+    background:var(--bg);
+  }
+  .note-editor textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(46,124,209,.15); }
+  .editor-row{ display:flex; gap:8px; margin-top:8px; }
+
+  .btn{
+    display:inline-flex; align-items:center; gap:7px;
+    font-size:13.5px; font-weight:500;
+    padding:6px 13px; border-radius:var(--radius);
+    border:1px solid var(--line); background:var(--bg); color:var(--ink);
+  }
+  .btn:hover{ background:var(--bg-soft); }
+  .btn.primary{ background:var(--ink); border-color:var(--ink); color:#fff; }
+  .btn.primary:hover{ background:#4a4842; }
+  .btn.ghost{ border-color:transparent; color:var(--ink-soft); }
+  .btn.ghost:hover{ background:var(--bg-hover); color:var(--ink); }
+  .add-new{
+    display:flex; align-items:center; gap:8px; width:100%;
+    padding:8px 12px; border-radius:var(--radius); text-align:left;
+    color:var(--ink-faint); font-size:14px;
+    border:1px dashed var(--line);
+  }
+  .add-new:hover{ background:var(--bg-soft); color:var(--ink-soft); }
+  .add-new .plus{ font-size:15px; }
+
+  /* ---------- Flashcards ---------- */
+  .fc-meta{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:18px; font-size:14px; color:var(--ink-soft); }
+  .fc-stage{ perspective:1200px; margin:0 auto; max-width:640px; }
+  .flashcard{
+    position:relative; width:100%; min-height:270px;
+    transform-style:preserve-3d; transition:transform .45s cubic-bezier(.3,.7,.3,1);
+    cursor:pointer;
+  }
+  .flashcard.flipped{ transform:rotateY(180deg); }
+  .fc-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden; -webkit-backface-visibility:hidden;
+    border:1px solid var(--line); border-radius:10px;
+    background:var(--bg); box-shadow:var(--shadow);
+    padding:34px 36px 46px;
+    display:flex; flex-direction:column; justify-content:center; gap:10px;
+    text-align:center;
+  }
+  .fc-face.back{ transform:rotateY(180deg); background:var(--bg-soft); }
+  .fc-kind{ font-size:11px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint); }
+  .fc-text{ font-size:18px; line-height:1.5; font-weight:500; }
+  .fc-face.back .fc-text{ font-weight:400; font-size:16.5px; }
+  .fc-src{ position:absolute; left:0; right:0; bottom:14px; font-size:12.5px; color:var(--ink-faint); }
+  .fc-hint{ text-align:center; margin-top:14px; font-size:13px; color:var(--ink-faint); }
+  .grade-row{ display:flex; justify-content:center; gap:10px; margin-top:20px; flex-wrap:wrap; }
+  .grade-row.hide{ visibility:hidden; }
+  .grade{
+    min-width:92px; text-align:center; flex-direction:column; gap:2px; padding:8px 14px;
+    display:inline-flex; align-items:center;
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--bg);
+    font-size:13.5px; font-weight:600;
+  }
+  .grade small{ font-weight:400; font-size:11px; color:var(--ink-faint); }
+  .grade:hover{ background:var(--bg-soft); }
+  .grade.g0{ color:var(--pill-red-ink); }  .grade.g0:hover{ background:var(--pill-red-bg); border-color:#eccfcf; }
+  .grade.g1{ color:var(--pill-orange-ink);} .grade.g1:hover{ background:var(--pill-orange-bg); border-color:#eed8c2; }
+  .grade.g2{ color:var(--pill-green-ink); } .grade.g2:hover{ background:var(--pill-green-bg); border-color:#d3e2d6; }
+  .grade.g3{ color:var(--pill-blue-ink); }  .grade.g3:hover{ background:var(--pill-blue-bg); border-color:#cfe2ee; }
+  .empty-state{
+    border:1px dashed var(--line); border-radius:10px;
+    padding:46px 28px; text-align:center; color:var(--ink-soft);
+  }
+  .empty-state .big{ font-size:34px; margin-bottom:10px; }
+  .empty-state p{ margin:0 0 16px; }
+
+  /* ---------- Recall ---------- */
+  .recall-setup{ border:1px solid var(--line); border-radius:var(--radius); padding:20px; background:var(--bg-soft); }
+  .recall-setup label{ display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px; }
+  .recall-setup select{
+    width:100%; max-width:420px; padding:8px 10px;
+    border:1px solid var(--line); border-radius:var(--radius); background:var(--bg);
+  }
+  .recall-card{ border:1px solid var(--line); border-radius:10px; padding:26px 30px; box-shadow:var(--shadow); background:var(--bg); }
+  .recall-card .fc-kind{ margin-bottom:8px; }
+  .recall-q{ font-size:18px; font-weight:500; margin:0 0 16px; }
+  .recall-card textarea{
+    width:100%; min-height:110px; resize:vertical;
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:11px 13px; font-size:14.5px; line-height:1.55; background:var(--bg);
+  }
+  .recall-card textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(46,124,209,.15); }
+  .recall-answer{
+    margin-top:16px; padding:14px 16px;
+    background:var(--pill-green-bg); border:1px solid #d3e2d6;
+    border-radius:var(--radius); font-size:14.5px;
+  }
+  .recall-answer .lab{ font-size:11px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--pill-green-ink); display:block; margin-bottom:5px; }
+  .recall-src{ margin-top:10px; font-size:12.5px; color:var(--ink-faint); }
+  .progress-line{ font-size:13px; color:var(--ink-faint); margin-bottom:12px; }
+
+  /* ---------- Reflections ---------- */
+  .reflect-quote{
+    border:1px solid var(--line); border-radius:10px;
+    padding:26px 30px 22px; background:var(--bg-soft);
+    position:relative;
+  }
+  .reflect-quote .qmark{ font-size:30px; line-height:1; color:var(--ink-faint); }
+  .reflect-quote .qt{ font-size:17.5px; line-height:1.55; margin:8px 0 12px; font-weight:500; }
+  .reflect-quote .qa{ font-size:13.5px; color:var(--ink-soft); }
+  .reflect-ed textarea{
+    width:100%; min-height:120px; resize:vertical; margin-top:14px;
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:12px 14px; font-size:14.5px; line-height:1.6; background:var(--bg);
+  }
+  .reflect-ed textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(46,124,209,.15); }
+  .reflection-item{
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 18px; margin-bottom:10px; background:var(--bg);
+  }
+  .reflection-item .rq{ font-size:13px; color:var(--ink-soft); border-left:2px solid var(--line); padding-left:10px; margin-bottom:8px; font-style:italic; }
+  .reflection-item .rt{ font-size:14.5px; }
+  .reflection-item .rm{ margin-top:8px; font-size:12px; color:var(--ink-faint); }
+
+  /* ---------- Graph ---------- */
+  .graph-wrap{ border:1px solid var(--line); border-radius:10px; background:var(--bg-soft); overflow:hidden; }
+  .graph-info{
+    padding:10px 16px; font-size:13px; color:var(--ink-soft);
+    border-bottom:1px solid var(--line); background:var(--bg);
+    min-height:40px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  svg#graph{ display:block; width:100%; height:auto; }
+  .gnode{ cursor:pointer; }
+  .gnode circle{ fill:#fff; stroke:#cfcecb; stroke-width:1.5; transition:all .15s ease; }
+  .gnode:hover circle{ stroke:var(--ink); stroke-width:2; }
+  .gnode text.lbl{ font-size:12px; fill:var(--ink-soft); text-anchor:middle; pointer-events:none; }
+  .gnode text.emj{ text-anchor:middle; pointer-events:none; }
+  .gedge{ stroke:#cfcecb; fill:none; transition:all .15s ease; }
+  .gedge.hot{ stroke:var(--ink); }
+  .dimmed{ opacity:.14; }
+  .graph-legend{ padding:10px 16px; font-size:12.5px; color:var(--ink-faint); border-top:1px solid var(--line); background:var(--bg); }
+
+  /* ---------- Serendipity toast ---------- */
+  .toast{
+    position:fixed; right:22px; bottom:22px; z-index:90;
+    width:min(360px, calc(100vw - 32px));
+    background:var(--bg); border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 6px 24px rgba(15,15,15,.14);
+    padding:16px 18px 14px;
+    transform:translateY(16px); opacity:0; pointer-events:none;
+    transition:all .3s cubic-bezier(.3,.7,.3,1);
+  }
+  .toast.show{ transform:none; opacity:1; pointer-events:auto; }
+  .toast .t-head{ display:flex; align-items:center; gap:8px; font-size:12px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px; }
+  .toast .t-close{ margin-left:auto; color:var(--ink-faint); font-size:14px; padding:2px 6px; border-radius:4px; }
+  .toast .t-close:hover{ background:var(--bg-hover); color:var(--ink); }
+  .toast .t-text{ font-size:14px; margin-bottom:8px; }
+  .toast .t-src{ font-size:12.5px; color:var(--ink-soft); margin-bottom:12px; }
+  .toast .t-actions{ display:flex; gap:8px; }
+
+  .kbd{ font-size:11px; border:1px solid var(--line); border-bottom-width:2px; border-radius:4px; padding:1px 5px; color:var(--ink-soft); background:var(--bg-soft); }
+
+  .scrim{ display:none; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1000px){
+    th.hide-md, td.hide-md{ display:none; }
+    .page{ padding:32px 28px 80px; }
+  }
+  @media (max-width: 768px){
+    .sidebar{
+      position:fixed; left:0; top:0; z-index:100;
+      transform:translateX(-102%); transition:transform .22s ease;
+      box-shadow:0 0 0 rgba(0,0,0,0);
+    }
+    body.side-open .sidebar{ transform:none; box-shadow:0 12px 40px rgba(15,15,15,.2); }
+    body.side-open .scrim{ display:block; position:fixed; inset:0; z-index:99; background:rgba(15,15,15,.25); }
+    .hamburger{ display:inline-flex; }
+    .page{ padding:26px 18px 80px; }
+    h1{ font-size:25px; }
+    th.hide-sm, td.hide-sm{ display:none; }
+    .prop-key{ flex-basis:110px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ======== Sidebar ======== -->
+  <nav class="sidebar" id="sidebar" aria-label="Workspace navigation">
+    <div class="ws-head">
+      <span class="ws-icon" aria-hidden="true">M</span>
+      <span>Matthew&#8217;s Mind<span class="ws-sub">Personal knowledge base</span></span>
+    </div>
+
+    <div class="side-label">Workspace</div>
+    <button class="side-item" data-nav="library" onclick="nav('library')"><span class="emj">📚</span><span class="grow">Library</span><span class="badge soft" id="libBadge"></span></button>
+    <button class="side-item" data-nav="flashcards" onclick="nav('flashcards')"><span class="emj">🃏</span><span class="grow">Flashcards</span><span class="badge" id="dueBadge">0</span></button>
+    <button class="side-item" data-nav="recall" onclick="nav('recall')"><span class="emj">✍️</span><span class="grow">Active Recall</span></button>
+    <button class="side-item" data-nav="reflections" onclick="nav('reflections')"><span class="emj">💭</span><span class="grow">Reflections</span></button>
+    <button class="side-item" data-nav="graph" onclick="nav('graph')"><span class="emj">🕸️</span><span class="grow">Knowledge Graph</span></button>
+    <button class="side-item" onclick="showSerendipity()"><span class="emj">✨</span><span class="grow">Serendipity</span></button>
+
+    <div class="side-label">Library</div>
+    <div class="tree" id="sideTree"></div>
+
+    <div class="side-foot">Press <span class="kbd">Esc</span> to dismiss popups</div>
+  </nav>
+  <div class="scrim" onclick="closeSidebar()"></div>
+
+  <!-- ======== Main ======== -->
+  <div class="main">
+    <header class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+      <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+      <a class="gallery-link" href="../index.html">&#8592; Gallery</a>
+    </header>
+
+    <div class="page">
+
+      <!-- ===== Library ===== -->
+      <section class="view" id="view-library">
+        <div class="page-icon" aria-hidden="true">📚</div>
+        <h1>Library</h1>
+        <p class="page-sub">Everything consumed, in one database. Click a row to open its page.</p>
+        <div class="lib-toolbar" id="libToolbar"></div>
+        <div class="db-table">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:34%">Name</th>
+                <th>Type</th>
+                <th class="hide-sm">Author</th>
+                <th class="hide-md">Tags</th>
+                <th class="hide-sm">Consumed</th>
+                <th>Cards</th>
+                <th style="width:1%"></th>
+              </tr>
+            </thead>
+            <tbody id="libRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== Detail ===== -->
+      <section class="view" id="view-detail"><div id="detailBody"></div></section>
+
+      <!-- ===== Flashcards ===== -->
+      <section class="view" id="view-flashcards">
+        <div class="page-icon" aria-hidden="true">🃏</div>
+        <h1>Flashcards</h1>
+        <p class="page-sub">Takeaways from across the library, scheduled by a simple SM-2 spaced-repetition engine.</p>
+        <div id="fcBody"></div>
+      </section>
+
+      <!-- ===== Recall ===== -->
+      <section class="view" id="view-recall">
+        <div class="page-icon" aria-hidden="true">✍️</div>
+        <h1>Active Recall</h1>
+        <p class="page-sub">Pick one work or a whole subject, write the answer from memory, then grade yourself. Grades feed the same spaced-repetition schedule as Flashcards.</p>
+        <div id="recallBody"></div>
+      </section>
+
+      <!-- ===== Reflections ===== -->
+      <section class="view" id="view-reflections">
+        <div class="page-icon" aria-hidden="true">💭</div>
+        <h1>Reflection Engine</h1>
+        <p class="page-sub">A quote resurfaces; you synthesize. Writing is where retention becomes understanding.</p>
+        <div id="reflectPrompt"></div>
+        <h2>Past reflections <span class="badge soft" id="reflCount"></span></h2>
+        <div id="reflectList"></div>
+      </section>
+
+      <!-- ===== Graph ===== -->
+      <section class="view" id="view-graph">
+        <div class="page-icon" aria-hidden="true">🕸️</div>
+        <h1>Knowledge Graph</h1>
+        <p class="page-sub">Works connected by shared tags. Hover to trace a work&#8217;s neighborhood; click a node to open its page.</p>
+        <div class="graph-wrap">
+          <div class="graph-info" id="graphInfo">Hover a node to see its connections.</div>
+          <svg id="graph" viewBox="0 0 920 640" role="img" aria-label="Knowledge graph of library content"></svg>
+          <div class="graph-legend">Line weight = number of shared tags · inner ring: books · outer ring: essays, articles &amp; podcasts</div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- ======== Serendipity toast ======== -->
+<div class="toast" id="toast" role="dialog" aria-label="Serendipity">
+  <div class="t-head"><span>✨ Serendipity</span><button class="t-close" onclick="hideToast()" aria-label="Dismiss">✕</button></div>
+  <div class="t-text" id="toastText"></div>
+  <div class="t-src" id="toastSrc"></div>
+  <div class="t-actions">
+    <button class="btn" onclick="rollSerendipity()">↻ Another</button>
+    <button class="btn primary" id="toastOpen">Open</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   Mock data — all in-memory. Nothing persists; that's the point for now.
+   ===================================================================== */
+const NOW = Date.now();
+const DAY = 86400000;
+const d = (offsetDays) => new Date(NOW + offsetDays * DAY);
+
+const WORKS = [
+  {
+    id:'tfs', type:'book', emoji:'🧠', title:'Thinking, Fast and Slow', short:'Thinking, Fast & Slow',
+    author:'Daniel Kahneman', pub:'2011', consumed:'2025-02-18',
+    tags:['psychology','decision-making','memory'],
+    notes:[
+      {text:"The planning fallacy section hit uncomfortably close to home. I underestimate every project by roughly the same factor and never update. New rule: multiply every estimate by 1.5 before committing.", date:'2025-02-20'},
+      {text:"System 1 isn't the villain — it's the engine. The skill is noticing the handful of situations where it reliably misfires (anchors, base rates, vividness) and slowing down only then.", date:'2025-03-02'}
+    ],
+    quotes:[
+      "Nothing in life is as important as you think it is, while you are thinking about it.",
+      "A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth."
+    ],
+    cards:[
+      {q:"What are System 1 and System 2?", a:"System 1 is fast, automatic, intuitive thinking; System 2 is slow, deliberate, effortful reasoning. Most judgments start in System 1, and System 2 often just endorses them."},
+      {q:"What is anchoring?", a:"The tendency for an initial number — even an obviously arbitrary one — to pull later estimates toward it."},
+      {q:"What is loss aversion, roughly quantified?", a:"Losses are felt about twice as strongly as equivalent gains, which skews decisions toward avoiding loss rather than seeking gain."}
+    ]
+  },
+  {
+    id:'ah', type:'book', emoji:'🔁', title:'Atomic Habits', short:'Atomic Habits',
+    author:'James Clear', pub:'2018', consumed:'2025-01-12',
+    tags:['habits','systems','psychology'],
+    notes:[
+      {text:"Habit stacking actually works: 'after I pour coffee, I review 10 flashcards' has held for three weeks. The anchor habit does all the lifting — zero willpower spent on remembering.", date:'2025-01-25'}
+    ],
+    quotes:[
+      "You do not rise to the level of your goals. You fall to the level of your systems.",
+      "Every action you take is a vote for the type of person you wish to become."
+    ],
+    cards:[
+      {q:"What are the four laws of behavior change?", a:"Make it obvious (cue), make it attractive (craving), make it easy (response), make it satisfying (reward). Invert all four to break a bad habit."},
+      {q:"What is identity-based habit formation?", a:"Start from who you want to be, not what you want to achieve — 'I am a person who studies daily' outlasts 'I want to pass the exam.' Each rep is a vote for that identity."},
+      {q:"What is the two-minute rule?", a:"Scale any new habit down until it takes two minutes or less. Master showing up first; the habit must exist before it can be improved."}
+    ]
+  },
+  {
+    id:'dw', type:'book', emoji:'🎯', title:'Deep Work', short:'Deep Work',
+    author:'Cal Newport', pub:'2016', consumed:'2025-04-06',
+    tags:['focus','habits','creativity'],
+    notes:[
+      {text:"Time-blocked 9–11am as a no-input window for a month. The surprise wasn't more output — it was that shallow work compressed to fit the space left over, like it was gas all along.", date:'2025-04-19'}
+    ],
+    quotes:[
+      "Clarity about what matters provides clarity about what does not."
+    ],
+    cards:[
+      {q:"How does Newport define deep work?", a:"Professional activity performed in a state of distraction-free concentration that pushes cognitive capabilities to their limit, creating new value that is hard to replicate."},
+      {q:"What is attention residue?", a:"When you switch tasks, part of your attention stays stuck on the previous task, degrading performance on the next one — the hidden tax of 'quick checks.'"}
+    ]
+  },
+  {
+    id:'mis', type:'book', emoji:'🧷', title:'Make It Stick', short:'Make It Stick',
+    author:'Brown, Roediger & McDaniel', pub:'2014', consumed:'2025-05-11',
+    tags:['memory','learning','psychology'],
+    notes:[
+      {text:"This book is basically the design doc for this app: retrieval over rereading, spacing over cramming, interleaving over blocking. Every feature here should map to one of those three.", date:'2025-05-14'},
+      {text:"'Desirable difficulty' reframes frustration during recall as the signal that learning is happening. Worth surfacing in the UI when a card is graded 'Hard'.", date:'2025-05-20'}
+    ],
+    quotes:[
+      "Learning is deeper and more durable when it's effortful.",
+      "Rereading text and massed practice of a skill are among the least productive study strategies — yet they are the most preferred."
+    ],
+    cards:[
+      {q:"Why is retrieval practice superior to rereading?", a:"The act of pulling knowledge out of memory strengthens the memory trace itself; rereading only breeds fluency illusions — familiarity mistaken for mastery."},
+      {q:"What is the spacing effect?", a:"Spreading practice over time, allowing some forgetting between sessions, produces far stronger long-term retention than massed practice of the same duration."},
+      {q:"What is interleaving?", a:"Mixing different topics or problem types within a study session. It feels worse than blocking but builds the discrimination skills real-world use demands."}
+    ]
+  },
+  {
+    id:'doet', type:'book', emoji:'🚪', title:'The Design of Everyday Things', short:'Design of Everyday Things',
+    author:'Don Norman', pub:'1988', consumed:'2025-07-03',
+    tags:['design','psychology','systems'],
+    notes:[
+      {text:"Applying this to the app itself: every clickable thing needs a signifier, not just an affordance. If I have to hover-hunt to find the edit button, that's a Norman door.", date:'2025-07-10'}
+    ],
+    quotes:[
+      "Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible."
+    ],
+    cards:[
+      {q:"Affordance vs. signifier — what's the difference?", a:"An affordance is what an object actually allows (a handle affords pulling); a signifier is the perceivable cue that communicates it. Design failures are usually missing signifiers."},
+      {q:"What is a 'Norman door'?", a:"A door whose design signals the wrong action — pushing when it needs pulling. Shorthand for any object where users fail and then wrongly blame themselves."}
+    ]
+  },
+  {
+    id:'med', type:'book', emoji:'🏛️', title:'Meditations', short:'Meditations',
+    author:'Marcus Aurelius', pub:'c. 180 AD', consumed:'2025-08-22',
+    tags:['philosophy','habits'],
+    notes:[
+      {text:"Reading one passage each morning before opening anything with a feed. It's a private notebook never meant for readers — which is exactly why it feels honest where most advice feels performed.", date:'2025-09-01'}
+    ],
+    quotes:[
+      "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "The impediment to action advances action. What stands in the way becomes the way."
+    ],
+    cards:[
+      {q:"What does Marcus say about events outside your control?", a:"Judge nothing external as good or bad in itself; your power lies only in your own judgments and responses. Events are neutral — the opinion about them is yours."},
+      {q:"What does 'the obstacle becomes the way' mean?", a:"Whatever blocks a plan becomes raw material for practicing virtue — patience, ingenuity, acceptance — so the impediment itself advances action."}
+    ]
+  },
+  {
+    id:'hgw', type:'essay', emoji:'🛠️', title:'How to Do Great Work', short:'How to Do Great Work',
+    author:'Paul Graham', pub:'2023', consumed:'2025-06-15',
+    tags:['creativity','focus','philosophy'],
+    notes:[
+      {text:"The compounding argument is the core: work that builds on itself beats scattered effort, so choosing what NOT to work on is most of the job. Pairs almost 1:1 with Newport.", date:'2025-06-16'}
+    ],
+    quotes:[
+      "The way to figure out what to work on is by working. If you're not sure what to work on, guess."
+    ],
+    cards:[
+      {q:"What role does curiosity play in Graham's model of great work?", a:"It's the compass: great work follows excessive, almost obsessive curiosity about a question — interest that outruns what others find reasonable."},
+      {q:"Why does Graham say work compounds?", a:"Each piece of work builds infrastructure — skills, audience, taste — for the next, so consistent effort in one direction grows exponentially while scattered effort stays linear."}
+    ]
+  },
+  {
+    id:'awmt', type:'essay', emoji:'🔮', title:'As We May Think', short:'As We May Think',
+    author:'Vannevar Bush', pub:'1945', consumed:'2025-09-14',
+    tags:['systems','design','memory'],
+    notes:[
+      {text:"1945, and he's describing hyperlinks, personal knowledge bases, and basically this app. The memex insight: storage was never the bottleneck — selection and association are.", date:'2025-09-15'}
+    ],
+    quotes:[
+      "The human mind... operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts."
+    ],
+    cards:[
+      {q:"What is the memex?", a:"Bush's hypothetical desk-sized device storing all of a person's books and records, consulted with speed and flexibility — an enlarged intimate supplement to memory."},
+      {q:"What are associative trails?", a:"User-created links joining documents into durable, shareable paths of thought — Bush's proposal to replace rigid indexing with the mind's own associative structure."}
+    ]
+  },
+  {
+    id:'sr', type:'essay', emoji:'🌲', title:'Self-Reliance', short:'Self-Reliance',
+    author:'Ralph Waldo Emerson', pub:'1841', consumed:'2026-01-08',
+    tags:['philosophy','creativity'],
+    notes:[
+      {text:"Harder to read than I expected and better than I expected. The 'foolish consistency' line is usually quoted to excuse flip-flopping; in context it's about refusing to let your past self veto your present judgment.", date:'2026-01-10'}
+    ],
+    quotes:[
+      "Envy is ignorance; imitation is suicide.",
+      "A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines."
+    ],
+    cards:[
+      {q:"What does Emerson mean by 'a foolish consistency is the hobgoblin of little minds'?", a:"Don't let yesterday's stated positions bind today's thinking. Speak what you believe now, even if it contradicts what you said before — growth requires it."}
+    ]
+  },
+  {
+    id:'wbdw', type:'article', emoji:'📖', title:"Why Books Don't Work", short:"Why Books Don't Work",
+    author:'Andy Matuschak', pub:'2019', consumed:'2025-10-02',
+    tags:['learning','memory','design'],
+    notes:[
+      {text:"Painful test: I listed what I actually retained from books read two years ago. A few sentences each, at best. Matuschak's diagnosis — the medium assumes transmissionism — explains the data perfectly.", date:'2025-10-04'}
+    ],
+    quotes:[
+      "As a medium, books are surprisingly bad at conveying knowledge, and readers mostly don't realize it."
+    ],
+    cards:[
+      {q:"What is 'transmissionism' and why does Matuschak reject it?", a:"The implicit model that knowledge transfers by exposition alone — author explains, reader absorbs. Decades of learning science show absorption requires active engagement the book medium never demands."},
+      {q:"What does Matuschak propose instead of books?", a:"A 'mnemonic medium' — prose with embedded spaced-repetition prompts, so the act of reading carries its own practice and memory becomes a property of the medium."}
+    ]
+  },
+  {
+    id:'altm', type:'article', emoji:'🗃️', title:'Augmenting Long-term Memory', short:'Augmenting Long-term Memory',
+    author:'Michael Nielsen', pub:'2018', consumed:'2025-11-18',
+    tags:['memory','learning','systems'],
+    notes:[
+      {text:"The arithmetic that sold me on SRS: ~5 minutes total review time per card, spread over 20 years. At that price, 'is this worth memorizing?' almost always flips to yes.", date:'2025-11-20'},
+      {text:"His deeper point: Anki isn't for trivia, it's for reading hard papers. Cards make understanding durable enough to build on.", date:'2025-12-01'}
+    ],
+    quotes:[
+      "Anki makes memory a choice, rather than a haphazard event, to be left to chance."
+    ],
+    cards:[
+      {q:"What is Nielsen's rule for writing good spaced-repetition cards?", a:"Make them atomic: one precise idea per card. Compound cards fail ambiguously; atomic cards tell you exactly what you don't know."},
+      {q:"What is the approximate lifetime cost of one Anki card?", a:"About five minutes of total review time spread over twenty years — which makes memorizing almost anything of real value a bargain."}
+    ]
+  },
+  {
+    id:'hub', type:'podcast', emoji:'🎙️', title:'Huberman Lab: Understanding & Improving Memory', short:'Huberman Lab: Memory',
+    author:'Andrew Huberman', pub:'2022', consumed:'2026-02-09',
+    tags:['memory','learning','psychology'],
+    notes:[
+      {text:"Actionable bit: emotional arousal right AFTER learning (cold shower, exercise) tags the preceding material for consolidation. Order matters — spike after, not before.", date:'2026-02-10'}
+    ],
+    quotes:[
+      "Repetition works, but the most powerful lever on memory is the emotional state and neurochemical state that follows learning."
+    ],
+    cards:[
+      {q:"What role does sleep play in memory, per Huberman?", a:"Consolidation happens largely during deep sleep and REM — the reps create the trace, but sleep stabilizes it. Sacrificing sleep to study more is self-defeating."},
+      {q:"How does post-learning adrenaline affect retention?", a:"A spike of adrenaline/norepinephrine shortly after learning marks the preceding experience as important and enhances its consolidation — the spike must come after, not during."}
+    ]
+  },
+  {
+    id:'tkp', type:'podcast', emoji:'🧩', title:'The Knowledge Project: Mental Models', short:'Knowledge Project: Mental Models',
+    author:'Shane Parrish', pub:'2021', consumed:'2025-03-27',
+    tags:['decision-making','systems','philosophy'],
+    notes:[
+      {text:"A latticework of models from many disciplines beats depth in one — because problems don't arrive labeled with the discipline they belong to. Good argument for reading outside my lane.", date:'2025-03-29'}
+    ],
+    quotes:[
+      "You have to know the big ideas from the big disciplines and use them routinely — all of them, not just a few."
+    ],
+    cards:[
+      {q:"What is a mental model?", a:"A compressed representation of how some part of the world works — a reusable chunk of understanding you can apply across unfamiliar problems."},
+      {q:"What is the circle of competence?", a:"The boundary of what you genuinely understand. The skill is not enlarging it so much as knowing precisely where its edge is — and behaving differently outside it."},
+      {q:"What is inversion as a thinking tool?", a:"Attack problems backward: instead of 'how do I succeed,' ask 'what would guarantee failure' and avoid that. Avoiding stupidity is more tractable than seeking brilliance."}
+    ]
+  }
+];
+
+const TYPE_META = {
+  book:    {label:'Book',    plural:'Books',    emoji:'📕', pill:['--pill-blue-bg','--pill-blue-ink']},
+  essay:   {label:'Essay',   plural:'Essays',   emoji:'📝', pill:['--pill-purple-bg','--pill-purple-ink']},
+  article: {label:'Article', plural:'Articles', emoji:'📰', pill:['--pill-orange-bg','--pill-orange-ink']},
+  podcast: {label:'Podcast', plural:'Podcasts', emoji:'🎧', pill:['--pill-green-bg','--pill-green-ink']}
+};
+const TAG_COLOR = {
+  memory:'red', learning:'orange', habits:'green', psychology:'purple',
+  'decision-making':'yellow', focus:'blue', systems:'brown', philosophy:'gray',
+  creativity:'pink', design:'blue'
+};
+
+/* =====================================================================
+   App state (in-memory only)
+   ===================================================================== */
+const state = {
+  view:'library',
+  libFilter:'all',
+  currentWork:null,
+  srs:{},                 // cardId -> {ef, interval, reps, due}
+  fcQueue:[], fcCurrent:null, fcFlipped:false, fcDone:0,
+  recall:null,            // {cards, idx, revealed, label}
+  reflections:[
+    { quote:"As a medium, books are surprisingly bad at conveying knowledge, and readers mostly don't realize it.",
+      source:"Why Books Don't Work — Andy Matuschak",
+      text:"This stung because it's true of my own shelf. Make It Stick gives the mechanism (no retrieval = no retention) and Matuschak names the medium as the culprit. The fix isn't reading harder — it's bolting practice onto reading. That's the whole thesis of this app.",
+      date: d(-21) },
+    { quote:"You have power over your mind — not outside events. Realize this, and you will find strength.",
+      source:"Meditations — Marcus Aurelius",
+      text:"Newport is accidentally Stoic: deep work is just the dichotomy of control applied to attention. I can't control the inbox filling; I can control whether 9–11am belongs to it. Two thousand years apart, same move.",
+      date: d(-6) }
+  ],
+  toastItem:null
+};
+
+/* Flatten cards + seed SRS so a realistic chunk is due right now */
+const ALL_CARDS = [];
+(function seed(){
+  let i = 0;
+  WORKS.forEach(w => w.cards.forEach(c => {
+    c.id = 'c' + i;
+    c.workId = w.id;
+    ALL_CARDS.push(c);
+    const due = (i % 3 === 0)
+      ? NOW - ((i % 5) + 1) * 3600e3          // overdue by 1–5 hours
+      : NOW + ((i % 9) + 1) * DAY;            // due in 1–9 days
+    state.srs[c.id] = { ef: 2.5 - (i % 5) * 0.05, interval: (i % 6) + 1, reps: (i % 4) + 1, due };
+    i++;
+  }));
+})();
+
+const workById = id => WORKS.find(w => w.id === id);
+const dueCards = () => ALL_CARDS.filter(c => state.srs[c.id].due <= Date.now());
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtDate = x => new Date(x).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+
+function tagPill(t){
+  const c = TAG_COLOR[t] || 'gray';
+  return `<span class="pill" style="background:var(--pill-${c}-bg);color:var(--pill-${c}-ink)">${esc(t)}</span>`;
+}
+function typePill(type){
+  const m = TYPE_META[type];
+  return `<span class="pill" style="background:var(${m.pill[0]});color:var(${m.pill[1]})">${m.emoji}&nbsp;${m.label}</span>`;
+}
+
+/* =====================================================================
+   SM-2-ish scheduler.  grade: 0 Again · 1 Hard · 2 Good · 3 Easy
+   ===================================================================== */
+function gradeCard(cardId, grade){
+  const s = state.srs[cardId];
+  const now = Date.now();
+  if (grade === 0){
+    s.reps = 0;
+    s.interval = 0;
+    s.ef = Math.max(1.3, s.ef - 0.2);
+    s.due = now + 10 * 60e3;                       // retry in ~10 min
+  } else {
+    const q = grade + 2;                           // map to SM-2 quality 3/4/5
+    s.ef = Math.max(1.3, s.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+    if (s.reps === 0)      s.interval = grade === 1 ? 1 : grade === 2 ? 2 : 4;
+    else if (grade === 1)  s.interval = Math.max(1, Math.round(s.interval * 1.2));
+    else if (grade === 2)  s.interval = Math.max(1, Math.round(s.interval * s.ef));
+    else                   s.interval = Math.max(1, Math.round(s.interval * s.ef * 1.35));
+    s.reps++;
+    s.due = now + s.interval * DAY;
+  }
+  updateDueBadge();
+}
+function intervalPreview(cardId, grade){
+  const s = state.srs[cardId];
+  if (grade === 0) return '~10 min';
+  if (s.reps === 0) return (grade === 1 ? 1 : grade === 2 ? 2 : 4) + 'd';
+  const m = grade === 1 ? 1.2 : grade === 2 ? s.ef : s.ef * 1.35;
+  return Math.max(1, Math.round(s.interval * m)) + 'd';
+}
+function updateDueBadge(){
+  const n = dueCards().length;
+  const el = document.getElementById('dueBadge');
+  el.textContent = n;
+  el.classList.toggle('zero', n === 0);
+}
+
+/* =====================================================================
+   Navigation
+   ===================================================================== */
+const VIEW_TITLES = { library:'Library', flashcards:'Flashcards', recall:'Active Recall', reflections:'Reflections', graph:'Knowledge Graph' };
+
+function nav(view){
+  state.view = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  document.getElementById('view-' + (view === 'detail' ? 'detail' : view)).classList.add('on');
+  document.querySelectorAll('.side-item[data-nav]').forEach(b => {
+    b.classList.toggle('active', b.dataset.nav === view || (view === 'detail' && b.dataset.nav === 'library'));
+  });
+  renderCrumbs();
+  if (view === 'library')     renderLibrary();
+  if (view === 'flashcards')  startFlashcards();
+  if (view === 'recall')      renderRecallSetup();
+  if (view === 'reflections') renderReflections();
+  if (view === 'graph')       { /* graph is static once built */ }
+  closeSidebar();
+  window.scrollTo(0, 0);
+}
+function renderCrumbs(){
+  const c = document.getElementById('crumbs');
+  let html = `<button onclick="nav('library')">🧠 Matthew&#8217;s Mind</button>`;
+  if (state.view === 'detail' && state.currentWork){
+    const w = workById(state.currentWork);
+    html += `<span class="sep">/</span><button onclick="nav('library')">Library</button>`
+          + `<span class="sep">/</span><span class="here">${w.emoji} ${esc(w.short)}</span>`;
+  } else {
+    html += `<span class="sep">/</span><span class="here">${VIEW_TITLES[state.view] || ''}</span>`;
+  }
+  c.innerHTML = html;
+}
+function toggleSidebar(){ document.body.classList.toggle('side-open'); }
+function closeSidebar(){ document.body.classList.remove('side-open'); }
+
+/* =====================================================================
+   Sidebar tree
+   ===================================================================== */
+function renderSideTree(){
+  const order = ['book','essay','article','podcast'];
+  document.getElementById('sideTree').innerHTML = order.map(type => {
+    const items = WORKS.filter(w => w.type === type);
+    return `<details open>
+      <summary><span class="caret">▶</span>${TYPE_META[type].emoji} ${TYPE_META[type].plural}
+        <span class="badge soft" style="margin-left:auto">${items.length}</span></summary>
+      ${items.map(w => `<button class="leaf" onclick="openWork('${w.id}')"><span>${w.emoji}</span><span class="t">${esc(w.short)}</span></button>`).join('')}
+    </details>`;
+  }).join('');
+}
+
+/* =====================================================================
+   Library
+   ===================================================================== */
+function renderLibrary(){
+  const filters = [['all','All'],['book','Books'],['essay','Essays'],['article','Articles'],['podcast','Podcasts']];
+  const shown = WORKS.filter(w => state.libFilter === 'all' || w.type === state.libFilter);
+  document.getElementById('libToolbar').innerHTML =
+    filters.map(([k,l]) => `<button class="chip ${state.libFilter===k?'on':''}" onclick="setLibFilter('${k}')">${l}</button>`).join('')
+    + `<span class="lib-count">${shown.length} item${shown.length===1?'':'s'}</span>`;
+  document.getElementById('libRows').innerHTML = shown.map(w => `
+    <tr onclick="openWork('${w.id}')" tabindex="0" onkeydown="if(event.key==='Enter')openWork('${w.id}')">
+      <td class="name"><span class="emj">${w.emoji}</span>${esc(w.title)}</td>
+      <td>${typePill(w.type)}</td>
+      <td class="hide-sm muted">${esc(w.author)}</td>
+      <td class="hide-md"><div class="pill-row">${w.tags.map(tagPill).join('')}</div></td>
+      <td class="hide-sm muted">${fmtDate(w.consumed)}</td>
+      <td class="muted">${w.cards.length}</td>
+      <td><span class="open-hint">Open →</span></td>
+    </tr>`).join('');
+  document.getElementById('libBadge').textContent = WORKS.length;
+}
+function setLibFilter(f){ state.libFilter = f; renderLibrary(); }
+
+/* =====================================================================
+   Detail view  (notes: view / add / edit in place)
+   ===================================================================== */
+function openWork(id){
+  state.currentWork = id;
+  renderDetail();
+  nav('detail');
+}
+function renderDetail(){
+  const w = workById(state.currentWork);
+  if (!w) return;
+  const due = w.cards.filter(c => state.srs[c.id].due <= Date.now()).length;
+  document.getElementById('detailBody').innerHTML = `
+    <button class="back-link" onclick="nav('library')">← Back to Library</button>
+    <div class="page-icon" style="margin-top:14px">${w.emoji}</div>
+    <h1>${esc(w.title)}</h1>
+    <div class="props">
+      <div class="prop-row"><span class="prop-key">≡ Type</span><span class="prop-val">${typePill(w.type)}</span></div>
+      <div class="prop-row"><span class="prop-key">👤 Author</span><span class="prop-val">${esc(w.author)}</span></div>
+      <div class="prop-row"><span class="prop-key">🗓 Published</span><span class="prop-val">${esc(w.pub)}</span></div>
+      <div class="prop-row"><span class="prop-key">✅ Consumed</span><span class="prop-val">${fmtDate(w.consumed)}</span></div>
+      <div class="prop-row"><span class="prop-key"># Tags</span><span class="prop-val"><div class="pill-row">${w.tags.map(tagPill).join('')}</div></span></div>
+      <div class="prop-row"><span class="prop-key">🃏 Cards</span><span class="prop-val">${w.cards.length} flashcard${w.cards.length===1?'':'s'} · <span class="badge ${due?'':'zero'}" style="vertical-align:1px">${due} due</span></span></div>
+    </div>
+
+    <details class="toggle-sec" open>
+      <summary><span class="caret">▶</span>💬 Quotes <span class="badge soft">${w.quotes.length}</span></summary>
+      <div class="sec-body">
+        ${w.quotes.map(q => `<blockquote class="q">&#8220;${esc(q)}&#8221;<span class="attr">— ${esc(w.author)}</span></blockquote>`).join('')}
+      </div>
+    </details>
+
+    <details class="toggle-sec" open>
+      <summary><span class="caret">▶</span>📝 My notes <span class="badge soft">${w.notes.length}</span></summary>
+      <div class="sec-body" id="notesBody">${notesHtml(w)}</div>
+    </details>
+
+    <details class="toggle-sec">
+      <summary><span class="caret">▶</span>🃏 Flashcards from this work <span class="badge soft">${w.cards.length}</span></summary>
+      <div class="sec-body">
+        ${w.cards.map(c => {
+          const s = state.srs[c.id];
+          const dueTxt = s.due <= Date.now() ? 'due now' : 'due ' + fmtDate(s.due);
+          return `<div class="note-block" style="padding-right:14px"><strong>Q:</strong> ${esc(c.q)}<br><strong>A:</strong> ${esc(c.a)}
+            <span class="nd">${dueTxt} · interval ${s.interval}d · ease ${s.ef.toFixed(2)}</span></div>`;
+        }).join('')}
+        <button class="btn ghost" onclick="startRecallFor('${w.id}')" style="margin-top:6px">✍️ Test me on this work →</button>
+      </div>
+    </details>`;
+}
+function notesHtml(w){
+  return w.notes.map((n, i) => `
+    <div class="note-block" id="note-${w.id}-${i}">
+      ${esc(n.text)}
+      <span class="nd">${fmtDate(n.date)}</span>
+      <button class="note-act" onclick="editNote('${w.id}', ${i})">✎ Edit</button>
+    </div>`).join('')
+    + `<button class="add-new" id="addNoteBtn" onclick="addNoteForm('${w.id}')"><span class="plus">＋</span> New note</button>
+       <div id="newNoteSlot"></div>`;
+}
+function editNote(workId, i){
+  const w = workById(workId);
+  const el = document.getElementById(`note-${workId}-${i}`);
+  if (!el) return;
+  el.classList.add('note-editing');
+  el.style.padding = '10px 14px';
+  el.innerHTML = `
+    <div class="note-editor">
+      <textarea id="noteTa-${i}">${esc(w.notes[i].text)}</textarea>
+      <div class="editor-row">
+        <button class="btn primary" onclick="saveNote('${workId}', ${i})">Save</button>
+        <button class="btn ghost" onclick="renderDetail()">Cancel</button>
+      </div>
+    </div>`;
+  const ta = document.getElementById('noteTa-' + i);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+function saveNote(workId, i){
+  const w = workById(workId);
+  const val = document.getElementById('noteTa-' + i).value.trim();
+  if (val){ w.notes[i].text = val; w.notes[i].date = new Date(); }
+  renderDetail();
+}
+function addNoteForm(workId){
+  document.getElementById('addNoteBtn').style.display = 'none';
+  document.getElementById('newNoteSlot').innerHTML = `
+    <div class="note-editor note-editing">
+      <textarea id="newNoteTa" placeholder="Write a note… what do you want your future self to remember?"></textarea>
+      <div class="editor-row">
+        <button class="btn primary" onclick="saveNewNote('${workId}')">Add note</button>
+        <button class="btn ghost" onclick="renderDetail()">Cancel</button>
+      </div>
+    </div>`;
+  document.getElementById('newNoteTa').focus();
+}
+function saveNewNote(workId){
+  const val = document.getElementById('newNoteTa').value.trim();
+  if (val) workById(workId).notes.push({ text: val, date: new Date() });
+  renderDetail();
+}
+
+/* =====================================================================
+   Flashcards
+   ===================================================================== */
+function startFlashcards(){
+  state.fcQueue = shuffle(dueCards());
+  state.fcDone = 0;
+  nextFlashcard();
+}
+function reviewAhead(){
+  const upcoming = ALL_CARDS
+    .filter(c => state.srs[c.id].due > Date.now())
+    .sort((a,b) => state.srs[a.id].due - state.srs[b.id].due)
+    .slice(0, 8);
+  state.fcQueue = upcoming;
+  state.fcDone = 0;
+  nextFlashcard();
+}
+function nextFlashcard(){
+  state.fcFlipped = false;
+  state.fcCurrent = state.fcQueue.length ? state.fcQueue[0] : null;
+  renderFlashcards();
+}
+function renderFlashcards(){
+  const host = document.getElementById('fcBody');
+  const nDue = dueCards().length;
+  if (!state.fcCurrent){
+    host.innerHTML = `
+      <div class="empty-state">
+        <div class="big">🎉</div>
+        <p><strong>${state.fcDone ? `Session complete — ${state.fcDone} card${state.fcDone===1?'':'s'} reviewed.` : 'All caught up.'}</strong><br>
+        ${nDue ? `${nDue} card${nDue===1?'':'s'} waiting — start another pass.` : 'Nothing is due right now. The forgetting curve will bring cards back soon.'}</p>
+        ${nDue
+          ? `<button class="btn primary" onclick="startFlashcards()">Review ${nDue} due card${nDue===1?'':'s'}</button>`
+          : `<button class="btn" onclick="reviewAhead()">Review ahead ↦ next 8 upcoming</button>`}
+      </div>`;
+    return;
+  }
+  const c = state.fcCurrent;
+  const w = workById(c.workId);
+  host.innerHTML = `
+    <div class="fc-meta">
+      <span class="badge ${nDue?'':'zero'}">${nDue} due</span>
+      <span>· ${state.fcDone} reviewed this session · ${state.fcQueue.length} left in queue</span>
+    </div>
+    <div class="fc-stage">
+      <div class="flashcard ${state.fcFlipped ? 'flipped' : ''}" id="fcCard" onclick="flipCard()" role="button" tabindex="0"
+           onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault();flipCard();}" aria-label="Flashcard — activate to flip">
+        <div class="fc-face front">
+          <div class="fc-kind">Question</div>
+          <div class="fc-text">${esc(c.q)}</div>
+          <div class="fc-src">${w.emoji} ${esc(w.short)} · ${esc(w.author)}</div>
+        </div>
+        <div class="fc-face back">
+          <div class="fc-kind">Answer</div>
+          <div class="fc-text">${esc(c.a)}</div>
+          <div class="fc-src">${w.emoji} ${esc(w.short)} · ${esc(w.author)}</div>
+        </div>
+      </div>
+      <div class="fc-hint">${state.fcFlipped ? 'How well did you recall it?' : 'Click the card (or press Space) to reveal the answer'}</div>
+      <div class="grade-row ${state.fcFlipped ? '' : 'hide'}">
+        <button class="grade g0" onclick="fcGrade(0)">Again<small>${intervalPreview(c.id,0)}</small></button>
+        <button class="grade g1" onclick="fcGrade(1)">Hard<small>${intervalPreview(c.id,1)}</small></button>
+        <button class="grade g2" onclick="fcGrade(2)">Good<small>${intervalPreview(c.id,2)}</small></button>
+        <button class="grade g3" onclick="fcGrade(3)">Easy<small>${intervalPreview(c.id,3)}</small></button>
+      </div>
+    </div>`;
+}
+function flipCard(){
+  if (state.fcFlipped) return;
+  state.fcFlipped = true;
+  document.getElementById('fcCard').classList.add('flipped');
+  document.querySelector('#fcBody .grade-row').classList.remove('hide');
+  document.querySelector('#fcBody .fc-hint').textContent = 'How well did you recall it?';
+}
+function fcGrade(grade){
+  const c = state.fcQueue.shift();
+  gradeCard(c.id, grade);
+  state.fcDone++;
+  if (grade === 0) state.fcQueue.push(c);     // lapsed cards come back this session
+  nextFlashcard();
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* =====================================================================
+   Active recall
+   ===================================================================== */
+function renderRecallSetup(){
+  state.recall = null;
+  const tags = [...new Set(WORKS.flatMap(w => w.tags))].sort();
+  document.getElementById('recallBody').innerHTML = `
+    <div class="recall-setup">
+      <label for="recallScope">Test me on…</label>
+      <select id="recallScope">
+        <optgroup label="A specific work">
+          ${WORKS.map(w => `<option value="w:${w.id}">${w.emoji} ${esc(w.title)} (${w.cards.length})</option>`).join('')}
+        </optgroup>
+        <optgroup label="A subject (tag)">
+          ${tags.map(t => {
+            const n = ALL_CARDS.filter(c => workById(c.workId).tags.includes(t)).length;
+            return `<option value="t:${t}"># ${esc(t)} (${n})</option>`;
+          }).join('')}
+        </optgroup>
+      </select>
+      <div class="editor-row" style="margin-top:14px">
+        <button class="btn primary" onclick="startRecall()">Start session →</button>
+      </div>
+    </div>`;
+}
+function startRecallFor(workId){
+  nav('recall');
+  const sel = document.getElementById('recallScope');
+  if (sel) sel.value = 'w:' + workId;
+  startRecall();
+}
+function startRecall(){
+  const v = document.getElementById('recallScope').value;
+  let cards, label;
+  if (v.startsWith('w:')){
+    const w = workById(v.slice(2));
+    cards = w.cards.slice();
+    label = `${w.emoji} ${w.title}`;
+  } else {
+    const t = v.slice(2);
+    cards = ALL_CARDS.filter(c => workById(c.workId).tags.includes(t));
+    label = `# ${t}`;
+  }
+  state.recall = { cards: shuffle(cards), idx: 0, revealed: false, label, graded: 0 };
+  renderRecallCard();
+}
+function renderRecallCard(){
+  const r = state.recall;
+  const host = document.getElementById('recallBody');
+  if (r.idx >= r.cards.length){
+    host.innerHTML = `
+      <div class="empty-state">
+        <div class="big">✅</div>
+        <p><strong>Session complete.</strong><br>${r.graded} prompt${r.graded===1?'':'s'} answered on <em>${esc(r.label)}</em>. The scheduler has been updated.</p>
+        <button class="btn primary" onclick="renderRecallSetup()">New session</button>
+      </div>`;
+    return;
+  }
+  const c = r.cards[r.idx];
+  const w = workById(c.workId);
+  host.innerHTML = `
+    <div class="progress-line">Testing: <strong>${esc(r.label)}</strong> · prompt ${r.idx + 1} of ${r.cards.length}</div>
+    <div class="recall-card">
+      <div class="fc-kind">Prompt</div>
+      <p class="recall-q">${esc(c.q)}</p>
+      <textarea id="recallTa" placeholder="Type your answer from memory — the typing is the point, even if it's rough…"></textarea>
+      <div id="recallReveal">
+        <div class="editor-row">
+          <button class="btn primary" onclick="revealRecall()">Reveal answer</button>
+          <button class="btn ghost" onclick="skipRecall()">Skip →</button>
+        </div>
+      </div>
+      <div class="recall-src">${w.emoji} ${esc(w.short)} · ${esc(w.author)}</div>
+    </div>`;
+  document.getElementById('recallTa').focus();
+}
+function revealRecall(){
+  const r = state.recall;
+  const c = r.cards[r.idx];
+  document.getElementById('recallReveal').innerHTML = `
+    <div class="recall-answer"><span class="lab">Reference answer</span>${esc(c.a)}</div>
+    <div class="fc-hint" style="text-align:left">Compare with what you wrote, then grade yourself:</div>
+    <div class="grade-row" style="justify-content:flex-start; margin-top:10px">
+      <button class="grade g0" onclick="recallGrade(0)">Again<small>${intervalPreview(c.id,0)}</small></button>
+      <button class="grade g1" onclick="recallGrade(1)">Hard<small>${intervalPreview(c.id,1)}</small></button>
+      <button class="grade g2" onclick="recallGrade(2)">Good<small>${intervalPreview(c.id,2)}</small></button>
+      <button class="grade g3" onclick="recallGrade(3)">Easy<small>${intervalPreview(c.id,3)}</small></button>
+    </div>`;
+}
+function recallGrade(grade){
+  const r = state.recall;
+  gradeCard(r.cards[r.idx].id, grade);
+  r.graded++;
+  r.idx++;
+  renderRecallCard();
+}
+function skipRecall(){
+  state.recall.idx++;
+  renderRecallCard();
+}
+
+/* =====================================================================
+   Reflection engine
+   ===================================================================== */
+let currentReflectQuote = null;
+function pickReflectQuote(){
+  const pool = WORKS.flatMap(w => w.quotes.map(q => ({ q, w })));
+  let pick = pool[Math.floor(Math.random() * pool.length)];
+  if (currentReflectQuote && pool.length > 1){
+    while (pick.q === currentReflectQuote.q) pick = pool[Math.floor(Math.random() * pool.length)];
+  }
+  currentReflectQuote = pick;
+  return pick;
+}
+function renderReflections(newQuote){
+  if (newQuote || !currentReflectQuote) pickReflectQuote();
+  const { q, w } = currentReflectQuote;
+  document.getElementById('reflectPrompt').innerHTML = `
+    <div class="reflect-quote">
+      <div class="qmark">❝</div>
+      <div class="qt">${esc(q)}</div>
+      <div class="qa">— ${esc(w.author)}, <em>${esc(w.title)}</em> · <button class="btn ghost" style="padding:2px 8px" onclick="renderReflections(true)">↻ different quote</button></div>
+      <div class="reflect-ed">
+        <textarea id="reflectTa" placeholder="What does this connect to? Where do you disagree? Write to find out…"></textarea>
+        <div class="editor-row">
+          <button class="btn primary" onclick="saveReflection()">＋ Save reflection</button>
+        </div>
+      </div>
+    </div>`;
+  renderReflectionList();
+}
+function renderReflectionList(){
+  document.getElementById('reflCount').textContent = state.reflections.length;
+  document.getElementById('reflectList').innerHTML = state.reflections.map(r => `
+    <div class="reflection-item">
+      <div class="rq">&#8220;${esc(r.quote)}&#8221; — ${esc(r.source)}</div>
+      <div class="rt">${esc(r.text)}</div>
+      <div class="rm">💭 Reflected on ${fmtDate(r.date)}</div>
+    </div>`).join('');
+}
+function saveReflection(){
+  const ta = document.getElementById('reflectTa');
+  const text = ta.value.trim();
+  if (!text){ ta.focus(); return; }
+  const { q, w } = currentReflectQuote;
+  state.reflections.unshift({ quote: q, source: `${w.title} — ${w.author}`, text, date: new Date() });
+  ta.value = '';
+  renderReflections(true);
+}
+
+/* =====================================================================
+   Knowledge graph (SVG, hand-rolled ring layout)
+   ===================================================================== */
+const GRAPH = { nodes: [], edges: [] };
+function buildGraph(){
+  const svg = document.getElementById('graph');
+  const NS = 'http://www.w3.org/2000/svg';
+  const cx = 460, cy = 318;
+  const books = WORKS.filter(w => w.type === 'book');
+  const rest  = WORKS.filter(w => w.type !== 'book');
+  books.forEach((w, i) => {
+    const a = -Math.PI / 2 + i * (2 * Math.PI / books.length);
+    GRAPH.nodes.push({ w, x: cx + 152 * Math.cos(a), y: cy + 152 * Math.sin(a), r: 24 });
+  });
+  rest.forEach((w, i) => {
+    const a = -Math.PI / 2 + 0.42 + i * (2 * Math.PI / rest.length);
+    GRAPH.nodes.push({ w, x: cx + 262 * Math.cos(a), y: cy + 262 * Math.sin(a), r: 20 });
+  });
+  // edges where tags overlap
+  for (let i = 0; i < GRAPH.nodes.length; i++){
+    for (let j = i + 1; j < GRAPH.nodes.length; j++){
+      const shared = GRAPH.nodes[i].w.tags.filter(t => GRAPH.nodes[j].w.tags.includes(t));
+      if (shared.length) GRAPH.edges.push({ a: i, b: j, shared });
+    }
+  }
+  const edgeGroup = document.createElementNS(NS, 'g');
+  GRAPH.edges.forEach((e, idx) => {
+    const n1 = GRAPH.nodes[e.a], n2 = GRAPH.nodes[e.b];
+    const line = document.createElementNS(NS, 'line');
+    line.setAttribute('x1', n1.x); line.setAttribute('y1', n1.y);
+    line.setAttribute('x2', n2.x); line.setAttribute('y2', n2.y);
+    line.setAttribute('class', 'gedge');
+    line.setAttribute('stroke-width', e.shared.length * 1.1);
+    line.setAttribute('stroke-opacity', 0.35 + e.shared.length * 0.1);
+    line.dataset.idx = idx;
+    edgeGroup.appendChild(line);
+    e.el = line;
+  });
+  svg.appendChild(edgeGroup);
+  GRAPH.nodes.forEach((n, idx) => {
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'gnode');
+    g.dataset.idx = idx;
+    const circle = document.createElementNS(NS, 'circle');
+    circle.setAttribute('cx', n.x); circle.setAttribute('cy', n.y); circle.setAttribute('r', n.r);
+    const emj = document.createElementNS(NS, 'text');
+    emj.setAttribute('class', 'emj');
+    emj.setAttribute('x', n.x); emj.setAttribute('y', n.y + (n.r > 20 ? 7 : 6));
+    emj.setAttribute('font-size', n.r > 20 ? 20 : 17);
+    emj.textContent = n.w.emoji;
+    const lbl = document.createElementNS(NS, 'text');
+    lbl.setAttribute('class', 'lbl');
+    lbl.setAttribute('x', n.x); lbl.setAttribute('y', n.y + n.r + 16);
+    lbl.textContent = n.w.short;
+    g.appendChild(circle); g.appendChild(emj); g.appendChild(lbl);
+    g.addEventListener('mouseenter', () => highlightNode(idx));
+    g.addEventListener('mouseleave', clearHighlight);
+    g.addEventListener('click', () => openWork(n.w.id));
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter') openWork(n.w.id); });
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'button');
+    g.setAttribute('aria-label', 'Open ' + n.w.title);
+    svg.appendChild(g);
+    n.el = g;
+  });
+}
+function highlightNode(idx){
+  const n = GRAPH.nodes[idx];
+  const neighbors = new Set([idx]);
+  let links = 0;
+  GRAPH.edges.forEach(e => {
+    const incident = e.a === idx || e.b === idx;
+    e.el.classList.toggle('hot', incident);
+    e.el.classList.toggle('dimmed', !incident);
+    if (incident){ neighbors.add(e.a); neighbors.add(e.b); links++; }
+  });
+  GRAPH.nodes.forEach((m, i) => m.el.classList.toggle('dimmed', !neighbors.has(i)));
+  document.getElementById('graphInfo').innerHTML =
+    `<strong>${n.w.emoji} ${esc(n.w.title)}</strong>` +
+    `<span style="color:var(--ink-faint)">· ${links} connection${links===1?'':'s'} via</span>` +
+    `<span class="pill-row">${n.w.tags.map(tagPill).join('')}</span>`;
+}
+function clearHighlight(){
+  GRAPH.edges.forEach(e => e.el.classList.remove('hot', 'dimmed'));
+  GRAPH.nodes.forEach(m => m.el.classList.remove('dimmed'));
+  document.getElementById('graphInfo').textContent = 'Hover a node to see its connections.';
+}
+
+/* =====================================================================
+   Serendipity engine
+   ===================================================================== */
+function serendipityPool(){
+  const pool = [];
+  WORKS.forEach(w => w.notes.forEach(n => pool.push({
+    kind: 'note', text: n.text, date: n.date,
+    source: `${w.emoji} ${w.short} · your note`, workId: w.id
+  })));
+  state.reflections.forEach(r => pool.push({
+    kind: 'reflection', text: r.text, date: r.date,
+    source: `💭 Reflection · on ${r.source}`, workId: null
+  }));
+  return pool;
+}
+function rollSerendipity(){
+  const pool = serendipityPool();
+  let pick = pool[Math.floor(Math.random() * pool.length)];
+  if (state.toastItem && pool.length > 1){
+    while (pick.text === state.toastItem.text) pick = pool[Math.floor(Math.random() * pool.length)];
+  }
+  state.toastItem = pick;
+  const t = pick.text.length > 220 ? pick.text.slice(0, 217).trimEnd() + '…' : pick.text;
+  document.getElementById('toastText').textContent = '“' + t + '”';
+  document.getElementById('toastSrc').textContent = pick.source + ' · ' + fmtDate(pick.date);
+}
+function showSerendipity(){
+  rollSerendipity();
+  document.getElementById('toast').classList.add('show');
+  closeSidebar();
+}
+function hideToast(){
+  document.getElementById('toast').classList.remove('show');
+}
+document.getElementById('toastOpen').addEventListener('click', () => {
+  const item = state.toastItem;
+  hideToast();
+  if (item && item.kind === 'note') openWork(item.workId);
+  else nav('reflections');
+});
+
+/* =====================================================================
+   Global keys + boot
+   ===================================================================== */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    hideToast();
+    closeSidebar();
+    const editing = document.querySelector('.note-editing');
+    if (editing && state.view === 'detail') renderDetail();
+  }
+});
+
+renderSideTree();
+buildGraph();
+updateDueBadge();
+nav('library');
+
+/* Auto-surface serendipity a few seconds after load — but never inside the
+   gallery's iframe thumbnails. */
+if (window.self === window.top){
+  setTimeout(() => { if (!document.getElementById('toast').classList.contains('show')) showSerendipity(); }, 4500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cortex — v19</title>
+<style>
+  :root{
+    --bg:#15131a;
+    --bg2:#1c1922;
+    --panel:#211d2a;
+    --panel2:#2a2535;
+    --ink:#ece7f2;
+    --ink-dim:#a89fb8;
+    --ink-faint:#6e6580;
+    --line:#352f42;
+    --cortex-1:#8a5a6b;
+    --cortex-2:#6b4357;
+    --spark:#9ff2ff;
+    --blue:#6ea3e8;    /* occipital — library */
+    --teal:#46c9b6;    /* hippocampus — flashcards */
+    --violet:#a98ae8;  /* prefrontal — recall */
+    --amber:#e2a94f;   /* DMN — reflections */
+    --green:#7ec97a;   /* temporal — graph */
+    --coral:#ee8571;   /* brainstem — serendipity */
+    --tint:var(--blue);
+    --radius:18px;
+    font-size:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #241f30 0%, transparent 60%),
+      radial-gradient(900px 600px at 85% 110%, #1e1626 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Avenir Next","Helvetica Neue",Helvetica,"Segoe UI",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  a{color:inherit}
+  ::selection{background:rgba(159,242,255,.25)}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:60;
+    display:flex;align-items:center;gap:16px;
+    padding:10px 20px;
+    background:rgba(21,19,26,.88);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .gallery-link{
+    font-size:.8rem;color:var(--ink-dim);text-decoration:none;
+    padding:6px 10px;border:1px solid var(--line);border-radius:999px;
+    white-space:nowrap;flex:none;
+  }
+  .gallery-link:hover{color:var(--ink);border-color:var(--ink-faint)}
+  .brand{display:flex;flex-direction:column;align-items:flex-start;line-height:1.1;flex:none}
+  .brand b{font-size:1rem;letter-spacing:.34em;font-weight:700}
+  .brand span{font-size:.62rem;color:var(--ink-faint);letter-spacing:.14em;text-transform:uppercase}
+  .topnav{display:flex;gap:2px;margin-left:auto;overflow-x:auto;scrollbar-width:none}
+  .topnav::-webkit-scrollbar{display:none}
+  .topnav button{
+    font-size:.74rem;letter-spacing:.06em;color:var(--ink-dim);
+    padding:7px 11px;border-radius:999px;white-space:nowrap;
+    display:flex;align-items:center;gap:6px;
+  }
+  .topnav button:hover{color:var(--ink);background:var(--panel2)}
+  .topnav button.active{color:var(--ink);background:var(--panel2);box-shadow:inset 0 0 0 1px var(--line)}
+  .topnav button .dot{width:7px;height:7px;border-radius:50%;flex:none}
+  .nav-badge{
+    background:var(--teal);color:#0c2420;font-weight:700;font-size:.66rem;
+    border-radius:999px;padding:1px 6px;min-width:17px;text-align:center;
+  }
+
+  main{max-width:1240px;margin:0 auto;padding:0 20px 90px}
+
+  /* ---------- home / brain ---------- */
+  #view-home{padding-top:14px}
+  .home-head{text-align:center;margin:10px auto 0;max-width:720px}
+  .home-head h1{font-size:1.05rem;letter-spacing:.42em;font-weight:700;color:var(--ink)}
+  .home-head .sub{margin-top:6px;font-size:.84rem;color:var(--ink-dim)}
+  .home-head .hint{margin-top:4px;font-size:.68rem;color:var(--ink-faint);letter-spacing:.12em;text-transform:uppercase}
+  .brain-stage{
+    max-width:1200px;margin:0 auto;
+    transition:transform .55s cubic-bezier(.45,.02,.2,1), opacity .5s ease .04s;
+  }
+  .brain-stage.zoomed{transform:scale(2.7);opacity:0;pointer-events:none}
+  #brain-svg{width:100%;height:auto;display:block}
+
+  .region{cursor:pointer;transition:filter .25s ease, opacity .25s ease;outline:none}
+  .zone .fill{transition:opacity .25s ease}
+  .zone.hot .fill{opacity:.95}
+  .zone.hot .region-main{filter:url(#glow)}
+  .zone:not(.hot) .region-main{filter:none}
+  .zone .label-in{pointer-events:none}
+  .pin text{pointer-events:none}
+  .pin .pin-hit{cursor:pointer}
+  .pin-region{fill:var(--ink);font-size:17px;font-weight:700;letter-spacing:.28em}
+  .pin-feature{font-size:15px;font-weight:600;letter-spacing:.04em}
+  .pin-quip{fill:var(--ink-faint);font-size:12.5px;font-style:italic;letter-spacing:.02em}
+  .leader{stroke:var(--ink-faint);stroke-width:1;fill:none;opacity:.6}
+  .leader-dot{fill:var(--ink-dim)}
+  .sulcus{fill:none;stroke:rgba(16,12,22,.4);stroke-width:5;stroke-linecap:round;pointer-events:none}
+  .axon{fill:none;stroke:rgba(159,242,255,.12);stroke-width:1.2;stroke-dasharray:2 7;pointer-events:none}
+  .spark-dot{fill:var(--spark);pointer-events:none}
+  @keyframes pulse-badge{
+    0%,100%{transform:scale(1);opacity:1}
+    50%{transform:scale(1.25);opacity:.75}
+  }
+  .fire-badge{transform-origin:center;transform-box:fill-box;animation:pulse-badge 1.6s ease-in-out infinite}
+  @keyframes drift{from{stroke-dashoffset:0}to{stroke-dashoffset:-90}}
+  .axon{animation:drift 7s linear infinite}
+
+  /* ---------- panels ---------- */
+  .view{display:none;animation:rise .35s ease}
+  .view.on{display:block}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .panel-wrap{
+    margin-top:22px;
+    background:linear-gradient(180deg, color-mix(in srgb, var(--tint) 7%, var(--panel)) 0%, var(--panel) 220px);
+    border:1px solid color-mix(in srgb, var(--tint) 26%, var(--line));
+    border-radius:26px;
+    padding:26px 28px 32px;
+    box-shadow:0 30px 70px -40px rgba(0,0,0,.8);
+  }
+  .panel-head{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+  .back-btn{
+    flex:none;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--ink-dim);border:1px solid var(--line);border-radius:999px;
+    padding:8px 14px;margin-top:4px;
+  }
+  .back-btn:hover{color:var(--ink);border-color:var(--tint)}
+  .panel-title{flex:1;min-width:220px}
+  .kicker{
+    font-size:.68rem;letter-spacing:.34em;text-transform:uppercase;font-weight:700;
+    color:var(--tint);
+  }
+  .panel-title h2{font-size:1.7rem;font-weight:700;margin-top:3px}
+  .quip{font-size:.84rem;color:var(--ink-dim);font-style:italic;margin-top:3px}
+  .eeg{display:block;width:100%;height:26px;margin:16px 0 20px;opacity:.55}
+  .eeg path{fill:none;stroke:var(--tint);stroke-width:1.6;stroke-linejoin:round}
+
+  /* ---------- library ---------- */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+  .chip{
+    font-size:.74rem;letter-spacing:.05em;padding:6px 13px;border-radius:999px;
+    border:1px solid var(--line);color:var(--ink-dim);
+  }
+  .chip:hover{color:var(--ink)}
+  .chip.active{background:color-mix(in srgb, var(--tint) 22%, transparent);border-color:var(--tint);color:var(--ink)}
+  .chip.tagchip{border-style:dashed}
+  .lib-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:14px}
+  .work-card{
+    text-align:left;background:var(--panel2);border:1px solid var(--line);
+    border-radius:var(--radius);padding:16px 16px 14px;display:flex;flex-direction:column;gap:8px;
+    transition:transform .18s ease, border-color .18s ease;
+  }
+  .work-card:hover{transform:translateY(-3px);border-color:var(--tint)}
+  .type-pill{
+    align-self:flex-start;font-size:.62rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;color:#14121a;
+  }
+  .work-card h3{font-size:1rem;line-height:1.3}
+  .work-meta{font-size:.74rem;color:var(--ink-dim)}
+  .work-meta em{color:var(--ink-faint);font-style:normal}
+  .tagrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+  .tag{
+    font-size:.66rem;letter-spacing:.04em;color:var(--ink-dim);
+    border:1px solid var(--line);border-radius:999px;padding:2px 8px;cursor:pointer;
+  }
+  .tag:hover{color:var(--ink);border-color:var(--ink-faint)}
+  .work-counts{font-size:.68rem;color:var(--ink-faint)}
+
+  /* ---------- detail / engram ---------- */
+  .engram-meta{display:flex;flex-wrap:wrap;gap:26px;row-gap:10px;margin-bottom:6px}
+  .meta-item .k{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint)}
+  .meta-item .v{font-size:.9rem;margin-top:2px}
+  .section-label{
+    font-size:.7rem;letter-spacing:.26em;text-transform:uppercase;font-weight:700;
+    color:var(--tint);margin:26px 0 12px;display:flex;align-items:center;gap:10px;
+  }
+  .section-label::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+  blockquote{
+    border-left:3px solid var(--tint);padding:10px 16px;margin-bottom:12px;
+    background:rgba(255,255,255,.025);border-radius:0 12px 12px 0;
+    font-style:italic;color:var(--ink);line-height:1.55;font-size:.92rem;
+  }
+  .note{
+    background:var(--panel2);border:1px solid var(--line);border-radius:14px;
+    padding:13px 15px;margin-bottom:10px;
+  }
+  .note p{font-size:.88rem;line-height:1.55}
+  .note-foot{display:flex;align-items:center;gap:12px;margin-top:9px}
+  .note-date{font-size:.68rem;color:var(--ink-faint)}
+  .mini-btn{
+    font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tint);
+    border:1px solid color-mix(in srgb,var(--tint) 45%, transparent);border-radius:999px;padding:3px 11px;
+  }
+  .mini-btn:hover{background:color-mix(in srgb,var(--tint) 18%, transparent)}
+  textarea{
+    width:100%;background:#17141e;border:1px solid var(--line);border-radius:12px;
+    color:var(--ink);font:inherit;font-size:.88rem;line-height:1.55;padding:11px 13px;
+    resize:vertical;min-height:84px;
+  }
+  textarea:focus{outline:none;border-color:var(--tint)}
+  .btn{
+    display:inline-block;background:var(--tint);color:#14121a;font-weight:700;font-size:.8rem;
+    letter-spacing:.06em;border-radius:999px;padding:9px 20px;
+  }
+  .btn:hover{filter:brightness(1.1)}
+  .btn.ghost{background:transparent;color:var(--ink-dim);border:1px solid var(--line);font-weight:500}
+  .btn.ghost:hover{color:var(--ink);filter:none;border-color:var(--ink-faint)}
+  .btn-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+
+  /* ---------- flashcards ---------- */
+  .srs-strip{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}
+  .srs-stat{
+    background:var(--panel2);border:1px solid var(--line);border-radius:14px;
+    padding:10px 18px;min-width:120px;
+  }
+  .srs-stat .n{font-size:1.4rem;font-weight:700;color:var(--tint)}
+  .srs-stat .k{font-size:.64rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint)}
+  .fc-zone{max-width:640px;margin:0 auto;text-align:center}
+  .fc-src{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+  .fc{perspective:1400px;cursor:pointer;margin-bottom:18px}
+  .fc-inner{
+    position:relative;min-height:230px;transform-style:preserve-3d;
+    transition:transform .5s cubic-bezier(.4,.05,.2,1.1);
+  }
+  .fc.flipped .fc-inner{transform:rotateY(180deg)}
+  .fc-face{
+    position:absolute;inset:0;backface-visibility:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    border-radius:22px;padding:28px 30px;border:1px solid color-mix(in srgb,var(--tint) 35%, var(--line));
+    background:
+      radial-gradient(400px 220px at 50% -40%, color-mix(in srgb,var(--tint) 16%, transparent), transparent 70%),
+      var(--panel2);
+  }
+  .fc-face .side{font-size:.62rem;letter-spacing:.3em;text-transform:uppercase;color:var(--tint);font-weight:700}
+  .fc-face .txt{font-size:1.06rem;line-height:1.5}
+  .fc-back{transform:rotateY(180deg)}
+  .fc-back .txt{font-size:.95rem;color:var(--ink)}
+  .fc-hint{font-size:.68rem;color:var(--ink-faint);margin-bottom:14px}
+  .grades{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .grades button{
+    border-radius:14px;padding:10px 18px;font-size:.82rem;font-weight:700;color:#14121a;min-width:88px;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+  }
+  .grades button small{font-weight:500;font-size:.62rem;opacity:.75}
+  .g-again{background:#e07a7a}.g-hard{background:#e2a94f}.g-good{background:#7ec97a}.g-easy{background:#6ea3e8}
+  .grades button:hover{filter:brightness(1.12)}
+  .all-done{
+    text-align:center;padding:40px 20px;color:var(--ink-dim);font-size:.94rem;line-height:1.6;
+  }
+
+  /* ---------- recall ---------- */
+  .recall-setup{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint)}
+  select{
+    background:#17141e;color:var(--ink);border:1px solid var(--line);border-radius:10px;
+    padding:9px 12px;font:inherit;font-size:.85rem;min-width:220px;
+  }
+  select:focus{outline:none;border-color:var(--tint)}
+  .or{font-size:.72rem;color:var(--ink-faint);padding-bottom:12px;letter-spacing:.2em}
+  .recall-card{
+    max-width:680px;margin:18px auto 0;background:var(--panel2);
+    border:1px solid color-mix(in srgb,var(--tint) 35%, var(--line));border-radius:22px;padding:26px 28px;
+  }
+  .recall-q{font-size:1.05rem;line-height:1.5;margin:8px 0 16px}
+  .recall-a{
+    border-top:1px dashed var(--line);margin-top:16px;padding-top:16px;
+    font-size:.92rem;line-height:1.55;
+  }
+  .recall-a .k{font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;color:var(--tint);font-weight:700;display:block;margin-bottom:6px}
+  .progress{font-size:.7rem;color:var(--ink-faint);letter-spacing:.1em;text-transform:uppercase}
+
+  /* ---------- reflections ---------- */
+  .reflect-quote{
+    max-width:720px;margin:0 auto 18px;text-align:center;padding:30px 28px;
+    border:1px solid color-mix(in srgb,var(--tint) 35%, var(--line));border-radius:22px;
+    background:radial-gradient(500px 240px at 50% -60%, color-mix(in srgb,var(--tint) 15%, transparent), transparent 70%), var(--panel2);
+  }
+  .reflect-quote .q{font-size:1.1rem;line-height:1.6;font-style:italic}
+  .reflect-quote .attr{margin-top:12px;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+  .reflect-editor{max-width:720px;margin:0 auto}
+  .reflection{
+    background:var(--panel2);border:1px solid var(--line);border-radius:16px;
+    padding:16px 18px;margin-bottom:12px;max-width:720px;margin-left:auto;margin-right:auto;
+  }
+  .reflection .rq{font-size:.78rem;font-style:italic;color:var(--ink-dim);border-left:2px solid var(--tint);padding-left:10px;margin-bottom:9px;line-height:1.5}
+  .reflection .rt{font-size:.88rem;line-height:1.6}
+  .reflection .rd{margin-top:9px;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+
+  /* ---------- graph ---------- */
+  .graph-box{background:#17141e;border:1px solid var(--line);border-radius:20px;overflow:hidden}
+  #graph-svg{width:100%;height:auto;display:block}
+  .gnode{cursor:pointer}
+  .gnode circle{transition:opacity .2s ease}
+  .gnode text{fill:var(--ink-dim);font-size:12px;pointer-events:none;transition:opacity .2s ease}
+  .gnode .halo{fill:none;stroke-width:1.4;opacity:0}
+  .gedge{fill:none;stroke:#3d3650;stroke-linecap:round;transition:opacity .2s ease, stroke .2s ease}
+  .dim{opacity:.13}
+  .lit circle{filter:url(#gglow)}
+  .lit .halo{opacity:.8}
+  .lit text{fill:var(--ink);opacity:1}
+  .gedge.lit-e{stroke:var(--spark)}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;font-size:.72rem;color:var(--ink-dim)}
+  .legend span{display:flex;align-items:center;gap:6px}
+  .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+  /* ---------- serendipity ---------- */
+  .spark-stage{max-width:640px;margin:0 auto;text-align:center}
+  .memory-card{
+    text-align:left;background:var(--panel2);border:1px solid color-mix(in srgb,var(--tint) 40%, var(--line));
+    border-radius:20px;padding:22px 24px;margin-top:18px;
+  }
+  .memory-card .mk{font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;color:var(--tint);font-weight:700}
+  .memory-card .mt{font-size:.95rem;line-height:1.6;margin:10px 0 12px}
+  .memory-card .ms{font-size:.72rem;color:var(--ink-faint)}
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed;right:22px;bottom:22px;z-index:90;width:min(360px,calc(100vw - 44px));
+    background:linear-gradient(180deg, color-mix(in srgb,var(--coral) 14%, var(--panel)), var(--panel));
+    border:1px solid color-mix(in srgb,var(--coral) 45%, var(--line));
+    border-radius:18px;padding:16px 18px;box-shadow:0 24px 60px -18px rgba(0,0,0,.85);
+    transform:translateY(calc(100% + 40px));transition:transform .45s cubic-bezier(.3,.9,.3,1.1);
+  }
+  .toast.show{transform:none}
+  .toast .tk{font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:var(--coral);font-weight:700;display:flex;align-items:center;gap:8px}
+  .toast .tk .zap{width:6px;height:6px;border-radius:50%;background:var(--spark);box-shadow:0 0 8px var(--spark);animation:pulse-badge 1.4s infinite}
+  .toast .tt{font-size:.82rem;line-height:1.5;margin:9px 0 8px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+  .toast .ts{font-size:.66rem;color:var(--ink-faint)}
+  .toast-actions{display:flex;gap:8px;margin-top:11px}
+  .toast-actions .mini-btn{--tint:var(--coral)}
+  .toast-x{position:absolute;top:8px;right:12px;color:var(--ink-faint);font-size:1rem;padding:4px}
+  .toast-x:hover{color:var(--ink)}
+
+  /* ---------- minimap ---------- */
+  #minimap{
+    position:fixed;left:18px;bottom:18px;z-index:80;width:120px;
+    background:rgba(23,20,30,.92);border:1px solid var(--line);border-radius:14px;
+    padding:8px 8px 4px;cursor:pointer;display:none;
+    transition:border-color .2s ease;
+  }
+  #minimap:hover{border-color:var(--tint)}
+  #minimap .mm-cap{font-size:.52rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);text-align:center;padding:3px 0 4px}
+  #minimap svg{width:100%;height:auto;display:block}
+  body.in-section #minimap{display:block}
+  #minimap .zone .fill{opacity:.25}
+  #minimap .zone.mm-here .fill{opacity:1}
+  #minimap .pins,#minimap .sulci,#minimap .axons,#minimap .label-in,#minimap .fire-badge{display:none}
+
+  footer{
+    max-width:1240px;margin:40px auto 0;padding:0 20px;
+    font-size:.68rem;color:var(--ink-faint);text-align:center;letter-spacing:.08em;
+  }
+
+  @media (max-width:900px){
+    .pins{display:none}
+    .brand span{display:none}
+    .panel-wrap{padding:20px 16px 26px;border-radius:20px}
+    #minimap{width:92px}
+  }
+  @media (max-width:768px){
+    .topbar{padding:8px 12px;gap:10px}
+    .brand b{letter-spacing:.2em;font-size:.9rem}
+    .home-head h1{letter-spacing:.24em}
+    .panel-title h2{font-size:1.35rem}
+    select{min-width:160px;flex:1}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation:none!important;transition:none!important}
+    .fc-inner{transform:none!important}
+    .fc.flipped .fc-front{visibility:hidden}
+    .fc:not(.flipped) .fc-back{visibility:hidden}
+    .fc-face{backface-visibility:visible}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <a class="gallery-link" href="../index.html">← Gallery</a>
+  <button class="brand" id="brand-btn" title="Back to cortex">
+    <b>CORTEX</b>
+    <span>Matthew Geiling · a brain for the brain</span>
+  </button>
+  <nav class="topnav" id="topnav" aria-label="Sections"></nav>
+</header>
+
+<main>
+  <!-- ============ HOME: THE BRAIN ============ -->
+  <section class="view on" id="view-home">
+    <div class="home-head">
+      <h1>CORTEX</h1>
+      <p class="sub">Your library, mapped onto the organ that has to hold it. Click a region to jump in.</p>
+      <p class="hint">esc returns to cortex · lateral view, anterior left</p>
+    </div>
+
+    <div class="brain-stage" id="brain-stage">
+      <svg id="brain-svg" viewBox="0 0 1200 840" role="group" aria-label="Interactive brain map">
+        <defs>
+          <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+            <feGaussianBlur stdDeviation="10" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <filter id="gglow" x="-80%" y="-80%" width="260%" height="260%">
+            <feGaussianBlur stdDeviation="5" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <linearGradient id="cortexGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7d5468"/>
+            <stop offset="1" stop-color="#5c3f52"/>
+          </linearGradient>
+          <radialGradient id="haloGrad" cx="0.5" cy="0.45" r="0.6">
+            <stop offset="0" stop-color="#9ff2ff" stop-opacity="0.10"/>
+            <stop offset="0.7" stop-color="#9ff2ff" stop-opacity="0.025"/>
+            <stop offset="1" stop-color="#9ff2ff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- ambient halo -->
+        <ellipse cx="600" cy="400" rx="520" ry="330" fill="url(#haloGrad)"/>
+
+        <!-- base cortex silhouette -->
+        <path id="cortex-base" fill="url(#cortexGrad)" stroke="#2a2030" stroke-width="3" d="
+          M 238 452
+          C 184 398 176 300 226 236
+          C 272 176 364 128 478 116
+          C 606 102 752 118 850 168
+          C 936 212 992 298 988 372
+          C 985 436 944 492 880 512
+          C 846 522 816 520 798 512
+          C 776 550 716 578 648 578
+          C 556 610 446 618 376 588
+          C 318 562 296 518 306 478
+          C 278 470 254 464 238 452 Z"/>
+
+        <!-- cerebellum -->
+        <g pointer-events="none">
+          <ellipse cx="884" cy="546" rx="84" ry="52" fill="#6b4357" stroke="#2a2030" stroke-width="3"/>
+          <path d="M 818 522 C 832 560 846 580 862 592 M 846 512 C 858 552 870 576 888 594 M 876 508 C 884 548 894 574 912 590 M 906 512 C 910 548 918 570 934 582 M 934 522 C 936 548 942 564 954 574"
+                fill="none" stroke="rgba(20,14,26,.35)" stroke-width="4" stroke-linecap="round"/>
+        </g>
+
+        <!-- ================= zones ================= -->
+
+        <!-- PREFRONTAL / recall (violet) -->
+        <g class="zone" data-key="recall">
+          <g class="region-main">
+            <path class="region fill" tabindex="0" role="button" aria-label="Prefrontal cortex: Active Recall"
+              fill="var(--violet)" opacity="0.6" d="
+              M 236 448
+              C 186 396 178 302 226 238
+              C 270 180 358 132 468 120
+              C 480 192 474 286 450 358
+              C 428 428 398 462 344 476
+              C 300 486 262 474 236 448 Z"/>
+          </g>
+          <text class="label-in" x="330" y="300" text-anchor="middle" fill="rgba(20,14,26,.65)" font-size="15" font-weight="700" letter-spacing="3">RECALL</text>
+        </g>
+
+        <!-- PARIETAL / DMN / reflections (amber) -->
+        <g class="zone" data-key="reflect">
+          <g class="region-main">
+            <path class="region fill" tabindex="0" role="button" aria-label="Default mode network: Reflections"
+              fill="var(--amber)" opacity="0.55" d="
+              M 478 118
+              C 586 106 712 116 806 154
+              C 824 162 840 172 852 182
+              C 828 256 778 320 708 356
+              C 646 388 564 394 506 372
+              C 480 300 470 206 478 118 Z"/>
+          </g>
+          <text class="label-in" x="660" y="250" text-anchor="middle" fill="rgba(20,14,26,.6)" font-size="15" font-weight="700" letter-spacing="3">REFLECT</text>
+        </g>
+
+        <!-- OCCIPITAL / library (blue) -->
+        <g class="zone" data-key="library">
+          <g class="region-main">
+            <path class="region fill" tabindex="0" role="button" aria-label="Occipital lobe: Library"
+              fill="var(--blue)" opacity="0.55" d="
+              M 852 182
+              C 924 222 984 302 986 372
+              C 988 432 948 490 882 510
+              C 852 518 826 516 808 508
+              C 798 458 802 408 820 360
+              C 840 304 856 240 852 182 Z"/>
+          </g>
+          <text class="label-in" x="896" y="372" text-anchor="middle" fill="rgba(20,14,26,.6)" font-size="14" font-weight="700" letter-spacing="2.5">LIBRARY</text>
+        </g>
+
+        <!-- TEMPORAL / graph (green) -->
+        <g class="zone" data-key="graph">
+          <g class="region-main">
+            <path class="region fill" tabindex="0" role="button" aria-label="Temporal lobe: Knowledge Graph"
+              fill="var(--green)" opacity="0.5" d="
+              M 318 486
+              C 362 464 426 456 490 460
+              C 584 466 682 482 756 502
+              C 772 538 736 570 662 586
+              C 566 606 452 608 384 582
+              C 334 562 310 524 318 486 Z"/>
+          </g>
+          <text class="label-in" x="420" y="530" text-anchor="middle" fill="rgba(20,14,26,.6)" font-size="14" font-weight="700" letter-spacing="2.5">GRAPH</text>
+        </g>
+
+        <!-- HIPPOCAMPUS / flashcards (teal) — seahorse curl -->
+        <g class="zone" data-key="cards">
+          <g class="region-main">
+            <path class="region-curl" pointer-events="none" fill="none" stroke="var(--teal)" stroke-width="21" stroke-linecap="round" d="
+              M 528 556
+              C 540 512 606 502 640 528
+              C 668 550 660 588 626 594
+              C 600 599 582 580 592 562
+              C 599 549 618 548 624 558"/>
+            <ellipse class="region fill" tabindex="0" role="button" aria-label="Hippocampus: Flashcards and spaced repetition"
+              cx="596" cy="552" rx="66" ry="44" fill="var(--teal)" opacity="0.14"/>
+          </g>
+          <!-- firing counter badge -->
+          <g class="fire-badge" id="pin-badge">
+            <circle cx="676" cy="518" r="15" fill="var(--teal)"/>
+            <text id="pin-badge-n" x="676" y="523" text-anchor="middle" font-size="14" font-weight="800" fill="#0c2420">0</text>
+          </g>
+        </g>
+
+        <!-- BRAINSTEM / serendipity (coral) -->
+        <g class="zone" data-key="spark">
+          <g class="region-main">
+            <path class="region fill" tabindex="0" role="button" aria-label="Brainstem: Serendipity"
+              fill="var(--coral)" opacity="0.72" d="
+              M 776 516
+              C 804 526 820 548 822 582
+              C 824 624 812 666 790 692
+              C 770 712 744 708 736 682
+              C 728 652 734 610 744 576
+              C 752 546 760 522 776 516 Z"/>
+          </g>
+        </g>
+
+        <!-- sulci texture -->
+        <g class="sulci" pointer-events="none">
+          <path class="sulcus" d="M 262 240 C 300 260 316 306 300 352 C 288 390 296 420 320 440"/>
+          <path class="sulcus" d="M 346 170 C 390 198 400 258 382 318 C 370 360 376 404 398 432"/>
+          <path class="sulcus" d="M 470 128 C 452 196 452 272 470 340"/>
+          <path class="sulcus" d="M 540 128 C 556 184 560 250 548 310 C 542 342 548 362 562 376"/>
+          <path class="sulcus" d="M 648 128 C 664 178 666 232 652 282 C 644 312 648 334 662 350"/>
+          <path class="sulcus" d="M 752 148 C 772 196 772 248 754 296 C 744 324 748 344 762 358"/>
+          <path class="sulcus" d="M 858 220 C 884 258 892 306 882 352 C 876 384 882 410 898 428"/>
+          <path class="sulcus" d="M 930 300 C 944 332 946 368 936 402"/>
+          <path class="sulcus" d="M 372 500 C 420 486 480 482 536 490"/>
+          <path class="sulcus" d="M 404 556 C 470 568 548 570 616 560"/>
+          <path class="sulcus" d="M 660 510 C 700 516 730 526 748 538"/>
+          <!-- central sulcus (prominent) -->
+          <path class="sulcus" d="M 474 122 C 492 200 490 290 466 364" style="stroke-width:7;stroke:rgba(16,12,22,.5)"/>
+          <!-- lateral fissure -->
+          <path class="sulcus" d="M 316 470 C 400 440 520 432 630 452 C 692 464 740 480 768 498" style="stroke-width:8;stroke:rgba(16,12,22,.5)"/>
+        </g>
+
+        <!-- axon connectors -->
+        <g class="axons" pointer-events="none">
+          <path class="axon" d="M 340 300 C 420 360 520 420 596 520"/>
+          <path class="axon" d="M 596 552 C 680 540 760 540 780 560"/>
+          <path class="axon" d="M 660 260 C 740 300 800 340 880 380"/>
+          <path class="axon" d="M 420 520 C 520 500 700 480 880 440"/>
+        </g>
+
+        <g id="sparks" pointer-events="none"></g>
+
+        <!-- ================= pins ================= -->
+        <g class="pins">
+          <!-- prefrontal -->
+          <g class="pin" data-key="recall">
+            <path class="leader" d="M 196 148 L 262 212"/><circle class="leader-dot" cx="262" cy="212" r="3.5"/>
+            <text class="pin-region" x="36" y="96" style="fill:var(--violet)">PREFRONTAL CORTEX</text>
+            <text class="pin-feature" x="36" y="120" fill="var(--ink)">Active Recall</text>
+            <text class="pin-quip" x="36" y="140">Executive retrieval — effort is the encoding.</text>
+            <rect class="pin-hit" x="30" y="76" width="300" height="76" fill="transparent"/>
+          </g>
+          <!-- DMN -->
+          <g class="pin" data-key="reflect">
+            <path class="leader" d="M 600 66 L 636 142"/><circle class="leader-dot" cx="636" cy="142" r="3.5"/>
+            <text class="pin-region" x="470" y="30" style="fill:var(--amber)">DEFAULT MODE NETWORK</text>
+            <text class="pin-feature" x="470" y="54" fill="var(--ink)">Reflections</text>
+            <text class="pin-quip" x="470" y="74">Where the wandering mind does its synthesis.</text>
+            <rect class="pin-hit" x="464" y="10" width="330" height="72" fill="transparent"/>
+          </g>
+          <!-- occipital -->
+          <g class="pin" data-key="library">
+            <path class="leader" d="M 1046 168 L 946 252"/><circle class="leader-dot" cx="946" cy="252" r="3.5"/>
+            <text class="pin-region" x="1180" y="110" text-anchor="end" style="fill:var(--blue)">OCCIPITAL LOBE</text>
+            <text class="pin-feature" x="1180" y="134" text-anchor="end" fill="var(--ink)">Library</text>
+            <text class="pin-quip" x="1180" y="154" text-anchor="end">Everything you've seen lands back here.</text>
+            <rect class="pin-hit" x="880" y="90" width="310" height="72" fill="transparent"/>
+          </g>
+          <!-- temporal -->
+          <g class="pin" data-key="graph">
+            <path class="leader" d="M 262 688 L 388 588"/><circle class="leader-dot" cx="388" cy="588" r="3.5"/>
+            <text class="pin-region" x="60" y="716" style="fill:var(--green)">TEMPORAL LOBE</text>
+            <text class="pin-feature" x="60" y="740" fill="var(--ink)">Knowledge Graph</text>
+            <text class="pin-quip" x="60" y="760">Association is just neurons keeping good company.</text>
+            <rect class="pin-hit" x="54" y="696" width="330" height="72" fill="transparent"/>
+          </g>
+          <!-- hippocampus -->
+          <g class="pin" data-key="cards">
+            <path class="leader" d="M 568 700 L 582 604"/><circle class="leader-dot" cx="582" cy="604" r="3.5"/>
+            <text class="pin-region" x="472" y="728" style="fill:var(--teal)">HIPPOCAMPUS</text>
+            <text class="pin-feature" id="pin-cards-feature" x="472" y="752" fill="var(--ink)">Flashcards &amp; SRS</text>
+            <text class="pin-quip" x="472" y="772">No consolidation, no memory. Fire together, wire together.</text>
+            <rect class="pin-hit" x="466" y="708" width="380" height="72" fill="transparent"/>
+          </g>
+          <!-- brainstem -->
+          <g class="pin" data-key="spark">
+            <path class="leader" d="M 936 682 L 810 648"/><circle class="leader-dot" cx="810" cy="648" r="3.5"/>
+            <text class="pin-region" x="942" y="676" style="fill:var(--coral)">BRAINSTEM</text>
+            <text class="pin-feature" x="942" y="700" fill="var(--ink)">Serendipity</text>
+            <text class="pin-quip" x="942" y="720">Spontaneous firing, day and night.</text>
+            <rect class="pin-hit" x="936" y="656" width="250" height="72" fill="transparent"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- ============ LIBRARY ============ -->
+  <section class="view" id="view-library" style="--tint:var(--blue)">
+    <div class="panel-wrap">
+      <div class="panel-head">
+        <button class="back-btn" data-home>← Back to cortex</button>
+        <div class="panel-title">
+          <div class="kicker">Occipital Lobe</div>
+          <h2>Library</h2>
+          <p class="quip">Everything you've seen lands back here — 13 traces and counting.</p>
+        </div>
+      </div>
+      <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+      <div class="chips" id="lib-chips"></div>
+      <div class="lib-grid" id="lib-grid"></div>
+    </div>
+  </section>
+
+  <!-- ============ DETAIL / ENGRAM ============ -->
+  <section class="view" id="view-detail" style="--tint:var(--blue)">
+    <div class="panel-wrap" id="detail-wrap"></div>
+  </section>
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section class="view" id="view-cards" style="--tint:var(--teal)">
+    <div class="panel-wrap">
+      <div class="panel-head">
+        <button class="back-btn" data-home>← Back to cortex</button>
+        <div class="panel-title">
+          <div class="kicker">Hippocampus</div>
+          <h2>Flashcards · Consolidation</h2>
+          <p class="quip">Each successful retrieval re-fires the trace. SM-2 decides when to fire next.</p>
+        </div>
+      </div>
+      <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+      <div class="srs-strip" id="srs-strip"></div>
+      <div id="fc-zone" class="fc-zone"></div>
+    </div>
+  </section>
+
+  <!-- ============ ACTIVE RECALL ============ -->
+  <section class="view" id="view-recall" style="--tint:var(--violet)">
+    <div class="panel-wrap">
+      <div class="panel-head">
+        <button class="back-btn" data-home>← Back to cortex</button>
+        <div class="panel-title">
+          <div class="kicker">Prefrontal Cortex</div>
+          <h2>Active Recall</h2>
+          <p class="quip">Executive retrieval: produce the answer before you see it. Typing counts.</p>
+        </div>
+      </div>
+      <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+      <div class="recall-setup">
+        <div class="field">
+          <label for="recall-work">Test one work</label>
+          <select id="recall-work"><option value="">— choose a work —</option></select>
+        </div>
+        <div class="or">— OR —</div>
+        <div class="field">
+          <label for="recall-tag">Test a subject</label>
+          <select id="recall-tag"><option value="">— choose a tag —</option></select>
+        </div>
+        <button class="btn" id="recall-start" style="--tint:var(--violet)">Begin session</button>
+      </div>
+      <div id="recall-stage"></div>
+    </div>
+  </section>
+
+  <!-- ============ REFLECTIONS ============ -->
+  <section class="view" id="view-reflect" style="--tint:var(--amber)">
+    <div class="panel-wrap">
+      <div class="panel-head">
+        <button class="back-btn" data-home>← Back to cortex</button>
+        <div class="panel-title">
+          <div class="kicker">Default Mode Network</div>
+          <h2>Reflections</h2>
+          <p class="quip">Mind-wandering with a pen: take one quote and synthesize it into your own words.</p>
+        </div>
+      </div>
+      <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+      <div class="reflect-quote" id="reflect-quote"></div>
+      <div class="reflect-editor">
+        <textarea id="reflect-text" rows="5" placeholder="What does this connect to? Where have you seen it fail? Write it in your own words…"></textarea>
+        <div class="btn-row">
+          <button class="btn" id="reflect-save" style="--tint:var(--amber)">Save reflection</button>
+          <button class="btn ghost" id="reflect-shuffle">Surface another quote</button>
+        </div>
+      </div>
+      <div class="section-label" style="margin-top:34px">Past reflections</div>
+      <div id="reflect-list"></div>
+    </div>
+  </section>
+
+  <!-- ============ KNOWLEDGE GRAPH ============ -->
+  <section class="view" id="view-graph" style="--tint:var(--green)">
+    <div class="panel-wrap">
+      <div class="panel-head">
+        <button class="back-btn" data-home>← Back to cortex</button>
+        <div class="panel-title">
+          <div class="kicker">Temporal Lobe</div>
+          <h2>Knowledge Graph</h2>
+          <p class="quip">Works as neurons, shared tags as dendrites. Hover to fire, click to open the engram.</p>
+        </div>
+      </div>
+      <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+      <div class="graph-box"><svg id="graph-svg" viewBox="0 0 940 640"></svg></div>
+      <div class="legend">
+        <span><i style="background:var(--blue)"></i>book</span>
+        <span><i style="background:var(--violet)"></i>essay</span>
+        <span><i style="background:var(--amber)"></i>article</span>
+        <span><i style="background:var(--coral)"></i>podcast</span>
+        <span style="margin-left:auto">edge thickness = shared tags</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERENDIPITY ============ -->
+  <section class="view" id="view-spark" style="--tint:var(--coral)">
+    <div class="panel-wrap">
+      <div class="panel-head">
+        <button class="back-btn" data-home>← Back to cortex</button>
+        <div class="panel-title">
+          <div class="kicker">Brainstem</div>
+          <h2>Serendipity</h2>
+          <p class="quip">Spontaneous firing: an old note or reflection, resurfaced without being asked.</p>
+        </div>
+      </div>
+      <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+      <div class="spark-stage">
+        <p style="font-size:.88rem;color:var(--ink-dim);line-height:1.6">
+          The brainstem never sleeps. Neither does your archive — it keeps a slow background hum of
+          everything you once wrote down. Press the button to let one memory fire at random.
+        </p>
+        <div class="btn-row" style="justify-content:center">
+          <button class="btn" id="spark-fire" style="--tint:var(--coral)">⚡ Fire a spontaneous memory</button>
+        </div>
+        <div id="spark-out"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>CORTEX v19 · a knowledge system wearing its own anatomy · all data lives in this page's working memory</footer>
+
+<!-- minimap -->
+<div id="minimap" title="Back to cortex" role="button" tabindex="0" aria-label="Brain minimap — back to cortex">
+  <div id="minimap-svg-slot"></div>
+  <div class="mm-cap">you are here</div>
+</div>
+
+<!-- serendipity toast -->
+<div class="toast" id="toast" role="status">
+  <button class="toast-x" id="toast-x" aria-label="Dismiss">×</button>
+  <div class="tk"><span class="zap"></span> Spontaneous firing</div>
+  <div class="tt" id="toast-text"></div>
+  <div class="ts" id="toast-src"></div>
+  <div class="toast-actions">
+    <button class="mini-btn" id="toast-another">Another</button>
+    <button class="mini-btn" id="toast-open">Open</button>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================
+   CORTEX v19 — the brain as the interface
+   All data in memory. No storage, no network.
+===================================================================== */
+
+const DAY = 86400000;
+const NOW = Date.now();
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const embedded = (function(){ try { return window.self !== window.top; } catch(e){ return true; } })();
+
+/* ---------------- mock data ---------------- */
+const WORKS = [
+  { id:'tfs', type:'book', title:'Thinking, Fast and Slow', author:'Daniel Kahneman', pub:'2011', consumed:'2025-02-14',
+    tags:['psychology','decision-making','learning'],
+    notes:[{text:"System 1 explains why a first read of anything feels like understanding but doesn't survive the week. Pairing this with retrieval practice: if recall feels effortful, that's System 2 actually doing the encoding.", date:'2025-02-20'}],
+    quotes:["Nothing in life is as important as you think it is, while you are thinking about it.",
+            "A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth."],
+    cards:[
+      {q:'What are System 1 and System 2?', a:'System 1 is fast, automatic, intuitive thinking; System 2 is slow, deliberate, effortful reasoning. Most judgments start in System 1, and System 2 mostly endorses them.'},
+      {q:'What is the availability heuristic?', a:'Judging frequency or probability by how easily examples come to mind — vivid, recent, or emotional events feel far more common than they are.'},
+      {q:'What does WYSIATI stand for, and what does it mean?', a:'"What You See Is All There Is" — the mind builds confident stories from whatever limited information is present and never flags what is missing.'}
+    ]},
+  { id:'ah', type:'book', title:'Atomic Habits', author:'James Clear', pub:'2018', consumed:'2025-01-06',
+    tags:['habits','systems','psychology'],
+    notes:[{text:"Identity-based habits reframed the review streak: I'm not 'doing flashcards', I'm a person who remembers what he reads. The vote metaphor makes a missed day feel recoverable instead of fatal.", date:'2025-01-10'}],
+    quotes:["You do not rise to the level of your goals. You fall to the level of your systems.",
+            "Every action you take is a vote for the type of person you wish to become."],
+    cards:[
+      {q:'What are the four laws of behavior change?', a:'Make it obvious, make it attractive, make it easy, make it satisfying — inverted (invisible, unattractive, hard, unsatisfying) to break bad habits.'},
+      {q:'What is habit stacking?', a:'Anchoring a new habit to an existing one with the formula: "After [current habit], I will [new habit]." The old habit becomes the cue.'}
+    ]},
+  { id:'dw', type:'book', title:'Deep Work', author:'Cal Newport', pub:'2016', consumed:'2025-03-02',
+    tags:['focus','habits','systems'],
+    notes:[{text:"Scheduled two 90-minute deep blocks before noon and the afternoon stopped mattering. Shallow work expands to fill whatever attention you leave unguarded.", date:'2025-03-08'}],
+    quotes:["Who you are, what you think, feel, and do, what you love — is the sum of what you focus on."],
+    cards:[
+      {q:"What is Newport's definition of deep work?", a:'Professional activity performed in a state of distraction-free concentration that pushes cognitive capabilities to their limit, creating new value and skills that are hard to replicate.'},
+      {q:'What is attention residue?', a:'When you switch tasks, a residue of attention stays stuck on the previous task, degrading performance on the next one — the case against constant context switching.'}
+    ]},
+  { id:'mis', type:'book', title:'Make It Stick', author:'Brown, Roediger & McDaniel', pub:'2014', consumed:'2025-04-18',
+    tags:['learning','memory','psychology'],
+    notes:[{text:"The uncomfortable truth: rereading and highlighting feel productive precisely because they're easy. This entire app exists because of chapter one.", date:'2025-04-22'}],
+    quotes:["Learning is deeper and more durable when it's effortful.",
+            "Rereading text and massed practice of a skill are among the least productive study strategies — and the most popular."],
+    cards:[
+      {q:'Why is retrieval practice superior to rereading?', a:'The act of recalling interrupts forgetting and strengthens the memory trace; rereading only builds fluency, which creates an illusion of knowing without durable learning.'},
+      {q:'What are "desirable difficulties"?', a:'Conditions like spacing, interleaving, and self-testing that make learning feel slower and harder but produce stronger retention and better transfer.'},
+      {q:'What is interleaving?', a:'Mixing different topics or problem types within one practice session. It feels worse than blocked practice but builds the ability to discriminate and apply knowledge.'}
+    ]},
+  { id:'doet', type:'book', title:'The Design of Everyday Things', author:'Don Norman', pub:'1988', consumed:'2025-06-01',
+    tags:['design','psychology','systems'],
+    notes:[{text:"Knowledge in the world vs. knowledge in the head maps directly onto this app: the graph is knowledge in the world, the SRS pushes it into the head. Good tools decide which side each fact belongs on.", date:'2025-06-05'}],
+    quotes:["Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible."],
+    cards:[
+      {q:'What is an affordance?', a:'The relationship between an object’s properties and a user’s capabilities that suggests how it can be used — a flat plate affords pushing, a handle affords pulling.'},
+      {q:'Norman: knowledge in the head vs. knowledge in the world?', a:'We offload memory onto the environment — labels, constraints, conventions. Good design puts knowledge in the world so less has to be held in the head.'}
+    ]},
+  { id:'med', type:'book', title:'Meditations', author:'Marcus Aurelius', pub:'c. 180 AD', consumed:'2025-07-12',
+    tags:['philosophy','focus','habits'],
+    notes:[{text:"Less a book than a 2,000-year-old reflection engine. He was running spaced self-quizzing on his own principles, nightly, with an audience of none.", date:'2025-07-15'}],
+    quotes:["You have power over your mind — not outside events. Realize this, and you will find strength.",
+            "The impediment to action advances action. What stands in the way becomes the way."],
+    cards:[
+      {q:'What is the Stoic "inner citadel"?', a:'The idea that your ruling faculty — judgment — is untouchable by externals. Events cannot harm you; only your opinion about events can, and that opinion is yours to revise.'}
+    ]},
+  { id:'gw', type:'essay', title:'How to Do Great Work', author:'Paul Graham', pub:'2023', consumed:'2025-08-03',
+    tags:['creativity','focus','philosophy'],
+    notes:[{text:"His compounding argument applies to a knowledge base: it's work that grows by exponential returns if you keep tending it, and looks embarrassingly flat for the first year.", date:'2025-08-04'}],
+    quotes:["The way to figure out what to work on is by working. If you're not sure what to work on, guess."],
+    cards:[
+      {q:'Per PG, what three things must the work you choose have?', a:'Natural aptitude, deep interest, and scope for great work — and you discover them by working, not by introspection alone.'},
+      {q:'Why does great work compound?', a:'Exciting work generates learning and new questions, which expand your ability and ambition — exponential growth that looks flat early, so most people underrate it.'}
+    ]},
+  { id:'awmt', type:'essay', title:'As We May Think', author:'Vannevar Bush', pub:'1945', consumed:'2025-09-10',
+    tags:['design','systems','memory'],
+    notes:[{text:"The memex is this app's great-grandfather. Bush's 'associative trails' are literally the knowledge graph tab, eighty years early and built out of microfilm.", date:'2025-09-11'}],
+    quotes:["The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts."],
+    cards:[
+      {q:'What was the memex?', a:'Bush’s hypothetical desk device storing all of one’s books and records, navigable by associative trails linking item to item — a mechanical ancestor of hypertext and the knowledge graph.'}
+    ]},
+  { id:'sr', type:'essay', title:'Self-Reliance', author:'Ralph Waldo Emerson', pub:'1841', consumed:'2025-10-05',
+    tags:['philosophy','creativity'],
+    notes:[{text:"'In every work of genius we recognize our own rejected thoughts' — the strongest argument I know for writing reflections immediately instead of waiting to be sure.", date:'2025-10-06'}],
+    quotes:["In every work of genius we recognize our own rejected thoughts: they come back to us with a certain alienated majesty."],
+    cards:[
+      {q:'What does Emerson mean by "alienated majesty"?', a:'Ideas we dismissed in ourselves return with authority when spoken by someone else. The lesson: trust and record your own thinking before the world hands it back.'}
+    ]},
+  { id:'wbd', type:'article', title:"Why Books Don't Work", author:'Andy Matuschak', pub:'2019', consumed:'2025-11-20',
+    tags:['learning','memory','design'],
+    notes:[{text:"Read this twice, remembered it once — the irony is the proof. Books assume transmissionism; real understanding needs engagement the medium never demands.", date:'2025-11-22'}],
+    quotes:["As a medium, books are surprisingly bad at conveying knowledge, and readers mostly don't realize it."],
+    cards:[
+      {q:'What is "transmissionism"?', a:'The implicit (and wrong) model that knowledge transfers by exposition alone: the author explains clearly, the reader absorbs. Lectures and books both quietly assume it.'},
+      {q:"What is Matuschak's proposed fix for books?", a:'A "mnemonic medium" — reading experiences with cognition built in, embedding retrieval practice directly into the text so remembering is part of reading.'}
+    ]},
+  { id:'alm', type:'article', title:'Augmenting Long-term Memory', author:'Michael Nielsen', pub:'2018', consumed:'2026-01-08',
+    tags:['memory','learning','systems'],
+    notes:[{text:"Nielsen treats Anki as a skill to be developed, not an app to be installed. His rule that cards must be atomic fixed half of my bad cards this month.", date:'2026-01-12'}],
+    quotes:["Anki makes memory a choice, rather than a haphazard event, to be left to chance."],
+    cards:[
+      {q:'Why should flashcards be atomic?', a:'One idea per card gives a precise retrieval target, clean feedback, and reliable scheduling. Compound cards fail in lumps and hide which part you actually forgot.'},
+      {q:"Nielsen's method for deeply reading a paper with spaced repetition?", a:'Convert it into many small questions over several passes, each pass adding finer-grained cards — understanding emerges from the layering, not a single heroic read.'}
+    ]},
+  { id:'hub', type:'podcast', title:'Huberman Lab: Understand & Improve Memory', author:'Andrew Huberman', pub:'2022', consumed:'2026-02-15',
+    tags:['memory','learning','habits'],
+    notes:[{text:"Key protocol: emotional salience right after learning timestamps the memory. Also, mentally walking through familiar spaces is free hippocampus exercise — the method of loci is just a workout.", date:'2026-02-16'}],
+    quotes:["Repetition works, but the real lever is the state of your nervous system in the moments right after learning."],
+    cards:[
+      {q:'How does adrenaline affect memory consolidation?', a:'Emotional arousal and adrenaline released just after learning signal "this mattered," selectively strengthening consolidation of the material that came right before.'},
+      {q:'What is the hippocampus’s role in memory?', a:'It binds new episodic and declarative memories and replays them — especially during sleep — gradually training the cortex to hold them long term.'}
+    ]},
+  { id:'tkp', type:'podcast', title:'The Knowledge Project: Mental Models', author:'Shane Parrish', pub:'2021', consumed:'2026-03-22',
+    tags:['decision-making','systems','psychology'],
+    notes:[{text:"A latticework of models is just a knowledge graph you can run offline. Inversion is the one I actually use weekly: ask what would guarantee failure, then don't.", date:'2026-03-25'}],
+    quotes:["You can't really know anything if you just remember isolated facts. The models have to hang together on a latticework of theory."],
+    cards:[
+      {q:'What is inversion as a mental model?', a:'Solving problems backward: instead of asking how to succeed, ask what would guarantee failure — then systematically avoid it.'},
+      {q:'What is a circle of competence?', a:'The domain where you genuinely understand the terrain. The skill is knowing the boundary precisely and being ruthless about staying honest outside it.'}
+    ]}
+];
+
+const TYPE_COLOR = { book:'var(--blue)', essay:'var(--violet)', article:'var(--amber)', podcast:'var(--coral)' };
+const TYPE_LABEL = { book:'Book', essay:'Essay', article:'Article', podcast:'Podcast' };
+
+/* reflections (seeded) */
+const reflections = [
+  { quote:"The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.",
+    source:'Vannevar Bush — As We May Think', workId:'awmt',
+    text:"The graph view keeps proving Bush right: I went in looking for a note on habits and came out holding Norman's knowledge-in-the-world idea. Maybe serendipity isn't noise — it's the index working the way minds actually work.",
+    date:'2026-02-01' },
+  { quote:"A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.",
+    source:'Daniel Kahneman — Thinking, Fast and Slow', workId:'tfs',
+    text:"Caught myself 'knowing' something this week purely because I'd seen it three times. Familiarity isn't truth — which is exactly why honest SRS grades matter: rating a card Good because the answer merely looked familiar is the availability heuristic eating my review queue from the inside.",
+    date:'2025-05-02' }
+];
+
+/* ---------------- SRS (SM-2 style) ---------------- */
+const cards = [];
+WORKS.forEach(w => w.cards.forEach((c, j) => {
+  cards.push({ id:w.id + '-' + j, workId:w.id, q:c.q, a:c.a, ef:2.5, reps:0, interval:0, due:NOW });
+}));
+/* seed: a mix of mature, young, and due-now cards */
+cards.forEach((c, i) => {
+  const m = i % 3;
+  if (m === 0) {            // mature and overdue — due now
+    c.reps = 2 + (i % 3); c.ef = 2.2 + (i % 4) * 0.1; c.interval = 6;
+    c.due = NOW - ((i % 4) + 1) * DAY;
+  } else if (m === 1) {     // young, due soon-ish
+    c.reps = 1; c.ef = 2.4; c.interval = 3;
+    c.due = NOW + ((i % 5) + 1) * DAY;
+  } else {                  // learned recently, further out
+    c.reps = 3; c.ef = 2.6; c.interval = 14;
+    c.due = NOW + (7 + (i % 9)) * DAY;
+  }
+});
+/* make one brand-new card due immediately for flavor */
+if (cards.length) { cards[1].reps = 0; cards[1].interval = 0; cards[1].due = NOW - DAY / 2; }
+
+function gradeCard(c, q) {          // q: 0 again, 3 hard, 4 good, 5 easy
+  if (q < 3) {
+    c.reps = 0; c.interval = 0;
+    c.due = Date.now() + 600000;    // 10 minutes
+  } else {
+    if (c.reps === 0) c.interval = 1;
+    else if (c.reps === 1) c.interval = 6;
+    else c.interval = Math.round(c.interval * c.ef);
+    c.reps += 1;
+    c.ef = Math.max(1.3, c.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+    if (q === 3 && c.interval > 1) c.interval = Math.max(1, Math.round(c.interval * 0.8));
+    c.due = Date.now() + c.interval * DAY;
+  }
+}
+const dueCards = () => cards.filter(c => c.due <= Date.now());
+function intervalText(c, q) {
+  if (q < 3) return '10 min';
+  let ivl, reps = c.reps;
+  if (reps === 0) ivl = 1; else if (reps === 1) ivl = 6; else ivl = Math.round(c.interval * c.ef);
+  if (q === 3 && ivl > 1) ivl = Math.max(1, Math.round(ivl * 0.8));
+  return ivl + (ivl === 1 ? ' day' : ' days');
+}
+
+/* ---------------- helpers ---------------- */
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const workById = id => WORKS.find(w => w.id === id);
+const esc = s => String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function fmtDate(iso) {
+  const d = new Date(iso + 'T12:00:00');
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+/* ---------------- routing / zoom ---------------- */
+const SECTIONS = {
+  library:{ el:'view-library', nav:'Library',     tint:'var(--blue)',   dotVar:'--blue'   },
+  cards:  { el:'view-cards',   nav:'Flashcards',  tint:'var(--teal)',   dotVar:'--teal'   },
+  recall: { el:'view-recall',  nav:'Recall',      tint:'var(--violet)', dotVar:'--violet' },
+  reflect:{ el:'view-reflect', nav:'Reflections', tint:'var(--amber)',  dotVar:'--amber'  },
+  graph:  { el:'view-graph',   nav:'Graph',       tint:'var(--green)',  dotVar:'--green'  },
+  spark:  { el:'view-spark',   nav:'Serendipity', tint:'var(--coral)',  dotVar:'--coral'  }
+};
+let currentView = 'home';
+let zooming = false;
+
+function setView(name) {
+  currentView = name;
+  $$('.view').forEach(v => v.classList.remove('on'));
+  const id = name === 'home' ? 'view-home' : (name === 'detail' ? 'view-detail' : SECTIONS[name].el);
+  document.getElementById(id).classList.add('on');
+  document.body.classList.toggle('in-section', name !== 'home');
+  updateNav();
+  updateMinimap();
+  window.scrollTo(0, 0);
+}
+
+function zoomInto(key) {
+  if (zooming) return;
+  const stage = $('#brain-stage');
+  const regionEl = document.querySelector('#brain-svg .zone[data-key="' + key + '"] .region');
+  if (reduced || !regionEl || currentView !== 'home') { setView(key); return; }
+  zooming = true;
+  const rb = regionEl.getBoundingClientRect(), sb = stage.getBoundingClientRect();
+  stage.style.transformOrigin =
+    (rb.left + rb.width / 2 - sb.left) + 'px ' + (rb.top + rb.height / 2 - sb.top) + 'px';
+  stage.classList.add('zoomed');
+  setTimeout(() => {
+    stage.classList.remove('zoomed');
+    zooming = false;
+    setView(key);
+  }, 540);
+}
+
+function goHome() {
+  stopSparks();
+  const stage = $('#brain-stage');
+  if (reduced) { setView('home'); return; }
+  setView('home');
+  stage.classList.add('zoomed');            // start zoomed-in, animate out
+  requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.remove('zoomed')));
+}
+
+/* nav */
+function buildNav() {
+  const nav = $('#topnav');
+  nav.innerHTML = '';
+  const home = document.createElement('button');
+  home.innerHTML = '<span class="dot" style="background:var(--cortex-1)"></span>Cortex';
+  home.addEventListener('click', goHome);
+  home.dataset.key = 'home';
+  nav.appendChild(home);
+  Object.keys(SECTIONS).forEach(key => {
+    const s = SECTIONS[key];
+    const b = document.createElement('button');
+    b.dataset.key = key;
+    b.innerHTML = '<span class="dot" style="background:var(' + s.dotVar + ')"></span>' + s.nav +
+      (key === 'cards' ? ' <span class="nav-badge" id="nav-badge">0</span>' : '');
+    b.addEventListener('click', () => { if (currentView === 'home') zoomInto(key); else setView(key); });
+    nav.appendChild(b);
+  });
+}
+function updateNav() {
+  $$('#topnav button').forEach(b => {
+    const k = b.dataset.key;
+    b.classList.toggle('active', k === currentView || (currentView === 'detail' && k === 'library'));
+  });
+}
+function updateBadges() {
+  const n = dueCards().length;
+  const nb = $('#nav-badge'); if (nb) nb.textContent = n;
+  const pb = $('#pin-badge-n'); if (pb) pb.textContent = n;
+  const badge = $('#pin-badge'); if (badge) badge.style.display = 'block';
+  const mmH = document.querySelector('#view-cards .quip');
+  if (mmH) mmH.textContent = n > 0
+    ? n + (n === 1 ? ' synapse is' : ' synapses are') + ' due to fire. SM-2 decides when each fires next.'
+    : 'All synapses consolidated. SM-2 decides when each fires next.';
+}
+
+/* minimap */
+function buildMinimap() {
+  const src = $('#brain-svg');
+  const clone = src.cloneNode(true);
+  clone.removeAttribute('id');
+  /* solid fills: the clone must not depend on the main svg's defs */
+  const base = clone.querySelector('#cortex-base'); if (base) base.setAttribute('fill', '#55404f');
+  const halo = clone.querySelector('ellipse'); if (halo) halo.setAttribute('fill', 'none');
+  clone.querySelectorAll('[id]').forEach(el => el.removeAttribute('id'));
+  clone.querySelectorAll('.region').forEach(el => { el.removeAttribute('tabindex'); el.removeAttribute('role'); });
+  /* reuse the main svg's defs (filters/gradients) by id — keep references working */
+  const defs = clone.querySelector('defs'); if (defs) defs.remove();
+  $('#minimap-svg-slot').appendChild(clone);
+  const mm = $('#minimap');
+  mm.addEventListener('click', goHome);
+  mm.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goHome(); } });
+}
+function updateMinimap() {
+  const key = currentView === 'detail' ? 'library' : currentView;
+  $$('#minimap .zone').forEach(z => z.classList.toggle('mm-here', z.dataset.key === key));
+}
+
+/* ---------------- brain interactivity ---------------- */
+let sparkRAF = null, sparkDots = [];
+function startSparks(key) {
+  if (reduced) return;
+  stopSparks();
+  const zone = document.querySelector('#brain-svg .zone[data-key="' + key + '"]');
+  if (!zone) return;
+  const path = zone.querySelector('.region');
+  if (!path || typeof path.getTotalLength !== 'function') return;
+  let len; try { len = path.getTotalLength(); } catch(e) { return; }
+  const g = $('#sparks');
+  const N = 7;
+  for (let i = 0; i < N; i++) {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('class', 'spark-dot');
+    c.setAttribute('r', (1.6 + Math.random() * 2.2).toFixed(1));
+    g.appendChild(c);
+    sparkDots.push({ el:c, off:Math.random() * len, speed:1.4 + Math.random() * 2.4, path, len });
+  }
+  const step = () => {
+    sparkDots.forEach(d => {
+      d.off = (d.off + d.speed) % d.len;
+      const p = d.path.getPointAtLength(d.off);
+      d.el.setAttribute('cx', p.x); d.el.setAttribute('cy', p.y);
+      d.el.setAttribute('opacity', (0.35 + 0.65 * Math.abs(Math.sin(d.off / 30))).toFixed(2));
+    });
+    sparkRAF = requestAnimationFrame(step);
+  };
+  sparkRAF = requestAnimationFrame(step);
+}
+function stopSparks() {
+  if (sparkRAF) cancelAnimationFrame(sparkRAF);
+  sparkRAF = null;
+  sparkDots.forEach(d => d.el.remove());
+  sparkDots = [];
+}
+
+function wireBrain() {
+  $$('#brain-svg .zone').forEach(zone => {
+    const key = zone.dataset.key;
+    zone.addEventListener('mouseenter', () => { zone.classList.add('hot'); startSparks(key); });
+    zone.addEventListener('mouseleave', () => { zone.classList.remove('hot'); stopSparks(); });
+    zone.addEventListener('click', () => zoomInto(key));
+    const r = zone.querySelector('.region');
+    if (r) r.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); zoomInto(key); }
+    });
+  });
+  $$('#brain-svg .pin').forEach(pin => {
+    const key = pin.dataset.key;
+    const zone = document.querySelector('#brain-svg .zone[data-key="' + key + '"]');
+    pin.addEventListener('mouseenter', () => { if (zone) zone.classList.add('hot'); startSparks(key); });
+    pin.addEventListener('mouseleave', () => { if (zone) zone.classList.remove('hot'); stopSparks(); });
+    pin.addEventListener('click', () => zoomInto(key));
+    pin.style.cursor = 'pointer';
+  });
+}
+
+/* ---------------- LIBRARY ---------------- */
+let libType = 'all', libTag = null;
+function renderLibraryChips() {
+  const box = $('#lib-chips');
+  const types = [['all','All'],['book','Books'],['essay','Essays'],['article','Articles'],['podcast','Podcasts']];
+  let html = types.map(([v, l]) => {
+    const n = v === 'all' ? WORKS.length : WORKS.filter(w => w.type === v).length;
+    return '<button class="chip' + (libType === v ? ' active' : '') + '" data-type="' + v + '">' + l + ' · ' + n + '</button>';
+  }).join('');
+  if (libTag) html += '<button class="chip tagchip active" data-cleartag="1">#' + esc(libTag) + ' ×</button>';
+  box.innerHTML = html;
+  box.querySelectorAll('[data-type]').forEach(b =>
+    b.addEventListener('click', () => { libType = b.dataset.type; renderLibrary(); }));
+  const ct = box.querySelector('[data-cleartag]');
+  if (ct) ct.addEventListener('click', () => { libTag = null; renderLibrary(); });
+}
+function renderLibrary() {
+  renderLibraryChips();
+  const grid = $('#lib-grid');
+  const list = WORKS.filter(w =>
+    (libType === 'all' || w.type === libType) && (!libTag || w.tags.includes(libTag)));
+  grid.innerHTML = list.map(w => `
+    <button class="work-card" data-open="${w.id}">
+      <span class="type-pill" style="background:${TYPE_COLOR[w.type]}">${TYPE_LABEL[w.type]}</span>
+      <h3>${esc(w.title)}</h3>
+      <div class="work-meta">${esc(w.author)} · ${esc(w.pub)}<br><em>consumed ${fmtDate(w.consumed)}</em></div>
+      <div class="tagrow">${w.tags.map(t => '<span class="tag" data-tag="' + esc(t) + '">#' + esc(t) + '</span>').join('')}</div>
+      <div class="work-counts">${w.notes.length} note${w.notes.length === 1 ? '' : 's'} · ${w.quotes.length} quote${w.quotes.length === 1 ? '' : 's'} · ${w.cards.length} card${w.cards.length === 1 ? '' : 's'}</div>
+    </button>`).join('');
+  grid.querySelectorAll('.work-card').forEach(card => {
+    card.addEventListener('click', e => {
+      const tagEl = e.target.closest('.tag');
+      if (tagEl) { libTag = tagEl.dataset.tag; renderLibrary(); return; }
+      openDetail(card.dataset.open);
+    });
+  });
+}
+
+/* ---------------- DETAIL / ENGRAM ---------------- */
+let detailId = null;
+function openDetail(id, viaZoom) {
+  detailId = id;
+  renderDetail();
+  if (currentView === 'home' && viaZoom) zoomInto('library');
+  setView('detail');
+}
+function renderDetail() {
+  const w = workById(detailId);
+  if (!w) return;
+  const wrap = $('#detail-wrap');
+  wrap.innerHTML = `
+    <div class="panel-head">
+      <button class="back-btn" id="detail-back">← Library</button>
+      <div class="panel-title">
+        <div class="kicker">Engram · ${TYPE_LABEL[w.type]}</div>
+        <h2>${esc(w.title)}</h2>
+        <p class="quip">A memory trace, reconstructed on retrieval. Edit it — that's what brains do.</p>
+      </div>
+    </div>
+    <svg class="eeg" viewBox="0 0 900 26" preserveAspectRatio="none" aria-hidden="true"><path d="M0 13 H250 l7 -9 7 17 7 -16 7 12 5 -5 H420 l6 -7 6 12 6 -11 6 7 H640 l7 -10 7 18 7 -15 7 9 H900"/></svg>
+    <div class="engram-meta">
+      <div class="meta-item"><div class="k">Author</div><div class="v">${esc(w.author)}</div></div>
+      <div class="meta-item"><div class="k">Published</div><div class="v">${esc(w.pub)}</div></div>
+      <div class="meta-item"><div class="k">Consumed</div><div class="v">${fmtDate(w.consumed)}</div></div>
+      <div class="meta-item"><div class="k">Cards in SRS</div><div class="v">${w.cards.length}</div></div>
+    </div>
+    <div class="tagrow" id="detail-tags">${w.tags.map(t => '<span class="tag" data-tag="' + esc(t) + '">#' + esc(t) + '</span>').join('')}</div>
+    <div class="section-label">Quotes</div>
+    ${w.quotes.map(q => '<blockquote>“' + esc(q) + '”</blockquote>').join('')}
+    <div class="section-label">Personal notes</div>
+    <div id="detail-notes"></div>
+    <div class="section-label">Add a note</div>
+    <textarea id="new-note" rows="3" placeholder="A thought worth keeping…"></textarea>
+    <div class="btn-row"><button class="btn" id="add-note-btn">Add note</button></div>`;
+  $('#detail-back').addEventListener('click', () => setView('library'));
+  wrap.querySelectorAll('#detail-tags .tag').forEach(t =>
+    t.addEventListener('click', () => { libTag = t.dataset.tag; libType = 'all'; renderLibrary(); setView('library'); }));
+  $('#add-note-btn').addEventListener('click', () => {
+    const ta = $('#new-note');
+    const txt = ta.value.trim();
+    if (!txt) { ta.focus(); return; }
+    w.notes.push({ text: txt, date: todayISO() });
+    ta.value = '';
+    renderNotes(w);
+  });
+  renderNotes(w);
+}
+function renderNotes(w) {
+  const box = $('#detail-notes');
+  box.innerHTML = '';
+  w.notes.forEach((n, i) => {
+    const div = document.createElement('div');
+    div.className = 'note';
+    div.innerHTML = `<p>${esc(n.text)}</p>
+      <div class="note-foot"><span class="note-date">${fmtDate(n.date)}</span>
+      <button class="mini-btn" data-edit="${i}">Edit</button></div>`;
+    div.querySelector('[data-edit]').addEventListener('click', () => {
+      div.innerHTML = `<textarea rows="4">${esc(n.text)}</textarea>
+        <div class="btn-row"><button class="btn" data-save>Save</button>
+        <button class="btn ghost" data-cancel>Cancel</button></div>`;
+      const ta = div.querySelector('textarea'); ta.focus();
+      div.querySelector('[data-save]').addEventListener('click', () => {
+        const v = ta.value.trim();
+        if (v) { n.text = v; n.date = todayISO(); }
+        renderNotes(w);
+      });
+      div.querySelector('[data-cancel]').addEventListener('click', () => renderNotes(w));
+    });
+    box.appendChild(div);
+  });
+  if (!w.notes.length) box.innerHTML = '<p style="color:var(--ink-faint);font-size:.84rem">No notes yet — add the first trace below.</p>';
+}
+
+/* ---------------- FLASHCARDS ---------------- */
+let fcQueue = [], fcIdx = 0, fcReviewAhead = false, fcDone = 0;
+function startFlashcards() {
+  const due = dueCards();
+  fcReviewAhead = false; fcDone = 0;
+  fcQueue = due.length ? due.slice().sort((a, b) => a.due - b.due) : [];
+  fcIdx = 0;
+  renderSrsStrip();
+  renderFlashcard();
+}
+function renderSrsStrip() {
+  const due = dueCards().length;
+  const mature = cards.filter(c => c.reps >= 3).length;
+  const avgEf = (cards.reduce((s, c) => s + c.ef, 0) / cards.length).toFixed(2);
+  $('#srs-strip').innerHTML = `
+    <div class="srs-stat"><div class="n">${due}</div><div class="k">due now</div></div>
+    <div class="srs-stat"><div class="n">${cards.length}</div><div class="k">total cards</div></div>
+    <div class="srs-stat"><div class="n">${mature}</div><div class="k">mature (3+ reps)</div></div>
+    <div class="srs-stat"><div class="n">${avgEf}</div><div class="k">avg ease</div></div>
+    <div class="srs-stat"><div class="n">${fcDone}</div><div class="k">reviewed today</div></div>`;
+}
+function renderFlashcard() {
+  const zone = $('#fc-zone');
+  if (fcIdx >= fcQueue.length) {
+    const due = dueCards();
+    if (due.length && !fcReviewAhead) { fcQueue = due.slice().sort((a,b) => a.due - b.due); fcIdx = 0; }
+    else {
+      zone.innerHTML = `<div class="all-done">
+        <p style="font-size:1.4rem;margin-bottom:8px">🧠 Consolidated.</p>
+        <p>No cards due. The hippocampus hands off to the cortex and takes a nap.</p>
+        <div class="btn-row" style="justify-content:center;margin-top:16px">
+          <button class="btn ghost" id="fc-ahead">Review ahead anyway</button></div></div>`;
+      $('#fc-ahead').addEventListener('click', () => {
+        fcReviewAhead = true;
+        fcQueue = cards.slice().sort(() => Math.random() - 0.5);
+        fcIdx = 0;
+        renderFlashcard();
+      });
+      return;
+    }
+  }
+  const c = fcQueue[fcIdx];
+  const w = workById(c.workId);
+  zone.innerHTML = `
+    <div class="fc-src">${esc(w.title)} · ${esc(w.author)}</div>
+    <div class="fc" id="fc">
+      <div class="fc-inner">
+        <div class="fc-face fc-front"><span class="side">Cue</span><span class="txt">${esc(c.q)}</span></div>
+        <div class="fc-face fc-back"><span class="side">Trace</span><span class="txt">${esc(c.a)}</span></div>
+      </div>
+    </div>
+    <div class="fc-hint" id="fc-hint">click the card to retrieve</div>
+    <div class="grades" id="fc-grades" style="visibility:hidden">
+      <button class="g-again" data-q="0">Again<small>10 min</small></button>
+      <button class="g-hard" data-q="3">Hard<small>${intervalText(c,3)}</small></button>
+      <button class="g-good" data-q="4">Good<small>${intervalText(c,4)}</small></button>
+      <button class="g-easy" data-q="5">Easy<small>${intervalText(c,5)}</small></button>
+    </div>
+    <p class="progress" style="margin-top:16px">card ${Math.min(fcIdx + 1, fcQueue.length)} of ${fcQueue.length}${fcReviewAhead ? ' · reviewing ahead' : ''}</p>`;
+  const fc = $('#fc');
+  fc.addEventListener('click', () => {
+    fc.classList.toggle('flipped');
+    $('#fc-grades').style.visibility = 'visible';
+    $('#fc-hint').textContent = 'how hard was the retrieval?';
+  });
+  $('#fc-grades').querySelectorAll('button').forEach(b =>
+    b.addEventListener('click', e => {
+      e.stopPropagation();
+      gradeCard(c, +b.dataset.q);
+      fcDone++;
+      fcIdx++;
+      updateBadges();
+      renderSrsStrip();
+      renderFlashcard();
+    }));
+}
+
+/* ---------------- ACTIVE RECALL ---------------- */
+let rcQueue = [], rcIdx = 0, rcGraded = 0;
+function buildRecallSelectors() {
+  const ws = $('#recall-work'), ts = $('#recall-tag');
+  WORKS.forEach(w => {
+    const o = document.createElement('option');
+    o.value = w.id; o.textContent = w.title;
+    ws.appendChild(o);
+  });
+  const tags = Array.from(new Set(WORKS.flatMap(w => w.tags))).sort();
+  tags.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = '#' + t + ' (' + WORKS.filter(w => w.tags.includes(t)).length + ' works)';
+    ts.appendChild(o);
+  });
+  ws.addEventListener('change', () => { if (ws.value) ts.value = ''; });
+  ts.addEventListener('change', () => { if (ts.value) ws.value = ''; });
+  $('#recall-start').addEventListener('click', startRecall);
+}
+function startRecall() {
+  const wid = $('#recall-work').value, tag = $('#recall-tag').value;
+  const stage = $('#recall-stage');
+  let pool;
+  if (wid) pool = cards.filter(c => c.workId === wid);
+  else if (tag) pool = cards.filter(c => workById(c.workId).tags.includes(tag));
+  else {
+    stage.innerHTML = '<p style="margin-top:18px;color:var(--ink-dim);font-size:.86rem">Pick a work or a subject first — the prefrontal cortex needs a target.</p>';
+    return;
+  }
+  rcQueue = pool.slice().sort(() => Math.random() - 0.5);
+  rcIdx = 0; rcGraded = 0;
+  renderRecallCard();
+}
+function renderRecallCard() {
+  const stage = $('#recall-stage');
+  if (rcIdx >= rcQueue.length) {
+    stage.innerHTML = `<div class="recall-card" style="text-align:center">
+      <p style="font-size:1.1rem">Session complete — ${rcGraded} retrieval${rcGraded === 1 ? '' : 's'}.</p>
+      <p style="color:var(--ink-dim);font-size:.84rem;margin-top:8px">Every grade fed the same SM-2 scheduler the flashcards use.</p>
+      <div class="btn-row" style="justify-content:center"><button class="btn" style="--tint:var(--violet)" id="rc-again">New session</button></div>
+    </div>`;
+    $('#rc-again').addEventListener('click', () => { stage.innerHTML = ''; });
+    return;
+  }
+  const c = rcQueue[rcIdx];
+  const w = workById(c.workId);
+  stage.innerHTML = `
+    <div class="recall-card">
+      <div class="progress">prompt ${rcIdx + 1} / ${rcQueue.length} · ${esc(w.title)}</div>
+      <div class="recall-q">${esc(c.q)}</div>
+      <textarea id="rc-answer" rows="4" placeholder="Type your answer from memory — producing it is the point…"></textarea>
+      <div class="btn-row"><button class="btn" style="--tint:var(--violet)" id="rc-reveal">Reveal answer</button></div>
+      <div id="rc-reveal-zone"></div>
+    </div>`;
+  $('#rc-answer').focus();
+  $('#rc-reveal').addEventListener('click', () => {
+    $('#rc-reveal').style.display = 'none';
+    $('#rc-reveal-zone').innerHTML = `
+      <div class="recall-a"><span class="k">The trace</span>${esc(c.a)}</div>
+      <p style="font-size:.74rem;color:var(--ink-faint);margin:14px 0 8px">Compare against what you typed, then grade yourself honestly:</p>
+      <div class="grades">
+        <button class="g-again" data-q="0">Again<small>10 min</small></button>
+        <button class="g-hard" data-q="3">Hard<small>${intervalText(c,3)}</small></button>
+        <button class="g-good" data-q="4">Good<small>${intervalText(c,4)}</small></button>
+        <button class="g-easy" data-q="5">Easy<small>${intervalText(c,5)}</small></button>
+      </div>`;
+    $('#rc-reveal-zone').querySelectorAll('.grades button').forEach(b =>
+      b.addEventListener('click', () => {
+        gradeCard(c, +b.dataset.q);
+        rcGraded++; rcIdx++;
+        updateBadges();
+        renderRecallCard();
+      }));
+  });
+}
+
+/* ---------------- REFLECTIONS ---------------- */
+const quotePool = WORKS.flatMap(w => w.quotes.map(q => ({ q, w })));
+let currentQuote = null;
+function shuffleQuote() {
+  let next = rand(quotePool);
+  if (quotePool.length > 1) { while (currentQuote && next.q === currentQuote.q) next = rand(quotePool); }
+  currentQuote = next;
+  $('#reflect-quote').innerHTML = `
+    <div class="q">“${esc(currentQuote.q)}”</div>
+    <div class="attr">${esc(currentQuote.w.author)} · ${esc(currentQuote.w.title)}</div>`;
+}
+function renderReflections() {
+  $('#reflect-list').innerHTML = reflections.map(r => `
+    <div class="reflection">
+      <div class="rq">“${esc(r.quote)}” — ${esc(r.source)}</div>
+      <div class="rt">${esc(r.text)}</div>
+      <div class="rd">${fmtDate(r.date)}</div>
+    </div>`).join('');
+}
+function wireReflections() {
+  shuffleQuote();
+  renderReflections();
+  $('#reflect-shuffle').addEventListener('click', shuffleQuote);
+  $('#reflect-save').addEventListener('click', () => {
+    const ta = $('#reflect-text');
+    const txt = ta.value.trim();
+    if (!txt) { ta.focus(); return; }
+    reflections.unshift({
+      quote: currentQuote.q,
+      source: currentQuote.w.author + ' — ' + currentQuote.w.title,
+      workId: currentQuote.w.id,
+      text: txt,
+      date: todayISO()
+    });
+    ta.value = '';
+    renderReflections();
+  });
+}
+
+/* ---------------- KNOWLEDGE GRAPH ---------------- */
+const GPOS = {
+  tfs:[200,195], ah:[430,110], dw:[665,125], mis:[360,285], doet:[165,470],
+  med:[845,415], gw:[790,250], awmt:[300,545], sr:[760,545], wbd:[455,460],
+  alm:[560,350], hub:[625,235], tkp:[175,330]
+};
+const GEDGES = [];
+for (let i = 0; i < WORKS.length; i++) {
+  for (let j = i + 1; j < WORKS.length; j++) {
+    const shared = WORKS[i].tags.filter(t => WORKS[j].tags.includes(t));
+    if (shared.length) GEDGES.push({ a: WORKS[i].id, b: WORKS[j].id, w: shared.length, tags: shared });
+  }
+}
+let graphRAF = null, graphPulses = [];
+function buildGraph() {
+  const svg = $('#graph-svg');
+  const NS = 'http://www.w3.org/2000/svg';
+  svg.innerHTML = '';
+  const edgeG = document.createElementNS(NS, 'g');
+  const pulseG = document.createElementNS(NS, 'g');
+  const nodeG = document.createElementNS(NS, 'g');
+  svg.appendChild(edgeG); svg.appendChild(pulseG); svg.appendChild(nodeG);
+  const edgeEls = [];
+  GEDGES.forEach(e => {
+    const [x1, y1] = GPOS[e.a], [x2, y2] = GPOS[e.b];
+    const mx = (x1 + x2) / 2 + (y2 - y1) * 0.12, my = (y1 + y2) / 2 + (x1 - x2) * 0.12;
+    const p = document.createElementNS(NS, 'path');
+    p.setAttribute('class', 'gedge');
+    p.setAttribute('d', `M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`);
+    p.setAttribute('stroke-width', 0.8 + e.w * 1.1);
+    const title = document.createElementNS(NS, 'title');
+    title.textContent = e.tags.map(t => '#' + t).join('  ');
+    p.appendChild(title);
+    edgeG.appendChild(p);
+    edgeEls.push({ e, el: p });
+  });
+  const nodeEls = {};
+  WORKS.forEach(w => {
+    const [x, y] = GPOS[w.id];
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'gnode');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'button');
+    g.setAttribute('aria-label', w.title);
+    const r = { book:19, essay:15, article:13, podcast:14 }[w.type];
+    const halo = document.createElementNS(NS, 'circle');
+    halo.setAttribute('class', 'halo');
+    halo.setAttribute('cx', x); halo.setAttribute('cy', y); halo.setAttribute('r', r + 7);
+    halo.setAttribute('stroke', 'var(--spark)');
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', r);
+    c.setAttribute('fill', TYPE_COLOR[w.type]);
+    c.setAttribute('stroke', '#17141e'); c.setAttribute('stroke-width', '3');
+    const t = document.createElementNS(NS, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y + r + 17);
+    t.setAttribute('text-anchor', 'middle');
+    const short = w.title.length > 26 ? w.title.slice(0, 24) + '…' : w.title;
+    t.textContent = short;
+    g.appendChild(halo); g.appendChild(c); g.appendChild(t);
+    nodeG.appendChild(g);
+    nodeEls[w.id] = g;
+    g.addEventListener('mouseenter', () => fireNode(w.id, edgeEls, nodeEls, pulseG));
+    g.addEventListener('mouseleave', () => calmGraph(edgeEls, nodeEls));
+    g.addEventListener('click', () => { calmGraph(edgeEls, nodeEls); openDetail(w.id); });
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openDetail(w.id); } });
+  });
+}
+function fireNode(id, edgeEls, nodeEls, pulseG) {
+  const linked = new Set([id]);
+  edgeEls.forEach(({ e, el }) => {
+    const hit = e.a === id || e.b === id;
+    el.classList.toggle('lit-e', hit);
+    el.classList.toggle('dim', !hit);
+    if (hit) { linked.add(e.a); linked.add(e.b); }
+  });
+  Object.keys(nodeEls).forEach(k => {
+    nodeEls[k].classList.toggle('lit', k === id);
+    nodeEls[k].classList.toggle('dim', !linked.has(k));
+  });
+  if (reduced) return;
+  stopGraphPulses();
+  const NS = 'http://www.w3.org/2000/svg';
+  edgeEls.filter(({ e }) => e.a === id || e.b === id).forEach(({ e, el }) => {
+    let len; try { len = el.getTotalLength(); } catch(err) { return; }
+    const dot = document.createElementNS(NS, 'circle');
+    dot.setAttribute('r', '3.2'); dot.setAttribute('fill', 'var(--spark)');
+    pulseG.appendChild(dot);
+    graphPulses.push({ el: dot, path: el, len, off: 0, speed: 2 + Math.random() * 2, fromA: e.a === id });
+  });
+  const step = () => {
+    graphPulses.forEach(p => {
+      p.off = (p.off + p.speed) % p.len;
+      const at = p.fromA ? p.off : p.len - p.off;
+      const pt = p.path.getPointAtLength(at);
+      p.el.setAttribute('cx', pt.x); p.el.setAttribute('cy', pt.y);
+    });
+    graphRAF = requestAnimationFrame(step);
+  };
+  graphRAF = requestAnimationFrame(step);
+}
+function stopGraphPulses() {
+  if (graphRAF) cancelAnimationFrame(graphRAF);
+  graphRAF = null;
+  graphPulses.forEach(p => p.el.remove());
+  graphPulses = [];
+}
+function calmGraph(edgeEls, nodeEls) {
+  edgeEls.forEach(({ el }) => { el.classList.remove('lit-e', 'dim'); });
+  Object.keys(nodeEls).forEach(k => nodeEls[k].classList.remove('lit', 'dim'));
+  stopGraphPulses();
+}
+
+/* ---------------- SERENDIPITY ---------------- */
+function memoryPool() {
+  const pool = [];
+  WORKS.forEach(w => w.notes.forEach(n =>
+    pool.push({ kind:'note', text:n.text, date:n.date, source:w.title + ' · ' + w.author, workId:w.id })));
+  reflections.forEach(r =>
+    pool.push({ kind:'reflection', text:r.text, date:r.date, source:'Reflection on ' + r.source, workId:r.workId || null }));
+  return pool;
+}
+let currentMemory = null;
+function pickMemory() {
+  const pool = memoryPool();
+  let next = rand(pool);
+  if (pool.length > 1 && currentMemory) { while (next.text === currentMemory.text) next = rand(pool); }
+  currentMemory = next;
+  return next;
+}
+function openMemory(m) {
+  hideToast();
+  if (m.kind === 'note' && m.workId) openDetail(m.workId);
+  else setView('reflect');
+}
+function renderSparkPanel(m) {
+  $('#spark-out').innerHTML = `
+    <div class="memory-card">
+      <div class="mk">${m.kind === 'note' ? 'Resurfaced note' : 'Resurfaced reflection'}</div>
+      <div class="mt">${esc(m.text)}</div>
+      <div class="ms">${esc(m.source)} · ${fmtDate(m.date)}</div>
+      <div class="btn-row">
+        <button class="mini-btn" id="mem-another" style="--tint:var(--coral)">Another</button>
+        <button class="mini-btn" id="mem-open" style="--tint:var(--coral)">Open</button>
+      </div>
+    </div>`;
+  $('#mem-another').addEventListener('click', () => renderSparkPanel(pickMemory()));
+  $('#mem-open').addEventListener('click', () => openMemory(m));
+}
+/* toast */
+let toastMemory = null;
+function showToast(m) {
+  toastMemory = m;
+  $('#toast-text').textContent = '“' + m.text + '”';
+  $('#toast-src').textContent = (m.kind === 'note' ? 'Note · ' : 'Reflection · ') + m.source + ' · ' + fmtDate(m.date);
+  $('#toast').classList.add('show');
+}
+function hideToast() { $('#toast').classList.remove('show'); }
+function wireSerendipity() {
+  $('#spark-fire').addEventListener('click', () => renderSparkPanel(pickMemory()));
+  $('#toast-x').addEventListener('click', hideToast);
+  $('#toast-another').addEventListener('click', () => showToast(pickMemory()));
+  $('#toast-open').addEventListener('click', () => { if (toastMemory) openMemory(toastMemory); });
+  if (!embedded) setTimeout(() => { if (!$('#toast').classList.contains('show')) showToast(pickMemory()); }, 4500);
+}
+
+/* ---------------- global keys ---------------- */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if ($('#toast').classList.contains('show')) { hideToast(); return; }
+  if (currentView === 'detail') { setView('library'); return; }
+  if (currentView !== 'home') goHome();
+});
+
+/* ---------------- init ---------------- */
+buildNav();
+wireBrain();
+buildMinimap();
+renderLibrary();
+startFlashcards();
+buildRecallSelectors();
+wireReflections();
+buildGraph();
+wireSerendipity();
+updateBadges();
+updateNav();
+$('#brand-btn').addEventListener('click', goHome);
+$$('[data-home]').forEach(b => b.addEventListener('click', goHome));
+/* deep link: #library, #cards, #recall, #reflect, #graph, #spark, #work-<id> */
+(function(){
+  const h = (location.hash || '').replace('#', '');
+  if (SECTIONS[h]) setView(h);
+  else if (h.indexOf('work-') === 0 && workById(h.slice(5))) openDetail(h.slice(5));
+})();
+/* refresh flashcards view when entering it */
+$$('#topnav button').forEach(b => {
+  if (b.dataset.key === 'cards') b.addEventListener('click', () => { renderSrsStrip(); });
+});
+</script>
+</body>
+</html>

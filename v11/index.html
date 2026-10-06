@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>v11 · The Geiling Collection — Walkable Museum</title>
+<style>
+  :root{
+    --ink:#2b2318;
+    --ivory:#f7f1e4;
+    --paper:#faf5ea;
+    --brass:#a8864b;
+    --brass-lt:#cfa75f;
+    --brass-dk:#7c6133;
+    --stone:#e9e2d2;
+    --oxblood:#6e3a32;
+    --olive:#5c6b4a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:#171210;color:var(--ink);
+    font-family:Georgia,'Iowan Old Style','Times New Roman',serif;
+    overflow:hidden;
+  }
+  [hidden]{display:none !important}
+  button{font-family:inherit;cursor:pointer}
+
+  /* ============ 3D VIEWPORT ============ */
+  #viewport{
+    position:fixed;inset:0;overflow:hidden;
+    perspective:700px;perspective-origin:50% 50%;
+    background:#0e0b08;
+    touch-action:none;user-select:none;-webkit-user-select:none;
+    cursor:grab;
+  }
+  #viewport.dragging{cursor:grabbing}
+  #world{
+    position:absolute;left:50%;top:50%;width:0;height:0;
+    transform-style:preserve-3d;will-change:transform;
+  }
+  .pl{
+    position:absolute;left:0;top:0;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  }
+
+  /* --- architecture --- */
+  .wall{
+    background:
+      radial-gradient(ellipse 140% 90% at 50% 45%, rgba(255,243,219,.22), rgba(31,22,12,.26) 92%),
+      repeating-linear-gradient(90deg, rgba(120,100,70,.05) 0 2px, transparent 2px 230px),
+      linear-gradient(180deg,
+        #f4efe3 0, #efe9da 30px, #c9bda3 33px, #b3a584 35px,
+        #f0eadc 36px, #ede6d7 86px,
+        #b89a63 88px, #8f7440 91px,
+        #ece4d4 92px, #e7dfcd 316px,
+        #cdc1a7 318px, #bfb192 321px,
+        #ddd3bd 322px, #d7cdb5 410px,
+        #6e5d45 412px, #514334 428px, #3a2f24 440px);
+  }
+  .floor{
+    background:
+      radial-gradient(ellipse 60% 55% at 50% 50%, rgba(255,241,210,.14), rgba(20,12,6,.38) 96%),
+      repeating-linear-gradient(45deg, rgba(62,38,18,.15) 0 2px, transparent 2px 34px),
+      repeating-linear-gradient(-45deg, rgba(62,38,18,.12) 0 2px, transparent 2px 34px),
+      repeating-linear-gradient(90deg, rgba(255,228,180,.05) 0 3px, transparent 3px 68px),
+      linear-gradient(180deg,#9c7c55,#866745);
+    box-shadow:inset 0 0 0 52px rgba(214,201,174,.5), inset 0 0 0 56px rgba(74,54,32,.55);
+  }
+  .rug{
+    background:
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,210,160,.07), transparent 70%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 2px, transparent 2px 14px),
+      linear-gradient(180deg,#643933,#57302b);
+    box-shadow:inset 0 0 0 9px #46251f, inset 0 0 0 12px #bd9757, inset 0 0 0 24px #46251f;
+  }
+  .ceiling{
+    background:
+      radial-gradient(ellipse 45% 30% at 50% 28%, rgba(255,244,214,.5), transparent 70%),
+      radial-gradient(ellipse 45% 30% at 50% 72%, rgba(255,244,214,.5), transparent 70%),
+      linear-gradient(90deg,#c9c0ae 0 30%, #efe9da 42% 58%, #c9c0ae 70%);
+  }
+
+  /* --- paintings --- */
+  .art{cursor:pointer}
+  .art .spot{
+    position:absolute;left:50%;top:-150px;width:380px;height:520px;
+    transform:translateX(-50%);pointer-events:none;
+    background:radial-gradient(ellipse 50% 42% at 50% 24%, rgba(255,240,205,.5), rgba(255,240,205,0) 68%);
+  }
+  .art .frame{
+    position:relative;margin:0 auto;padding:13px;
+    background:linear-gradient(145deg,#6b5126,#9c7a3d 30%,#5d4720 60%,#8a6c35);
+    border:1px solid #3c2e14;
+    box-shadow:
+      inset 0 0 0 4px #43340f,
+      inset 0 0 0 6px #c9a75d,
+      0 14px 26px rgba(0,0,0,.45);
+    transition:box-shadow .25s;
+  }
+  .art:hover .frame{
+    box-shadow:
+      inset 0 0 0 4px #43340f,
+      inset 0 0 0 6px #e4c478,
+      0 0 0 3px rgba(255,222,150,.55),
+      0 14px 30px rgba(0,0,0,.5);
+  }
+  .art .canvas{
+    width:100%;height:100%;position:relative;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:7px;text-align:center;padding:12px;overflow:hidden;
+    box-shadow:inset 0 0 26px rgba(0,0,0,.35);
+  }
+  .art .canvas::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:
+      radial-gradient(ellipse at 30% 18%, rgba(255,255,255,.2), transparent 55%),
+      repeating-linear-gradient(0deg, rgba(0,0,0,.035) 0 1px, transparent 1px 3px);
+  }
+  .c-type{font-size:9px;letter-spacing:3px;color:rgba(255,250,240,.75);text-transform:uppercase}
+  .c-title{font-size:17px;line-height:1.25;color:#fffdf6;font-style:italic;text-shadow:0 1px 4px rgba(0,0,0,.6)}
+  .c-author{font-size:10px;letter-spacing:2px;color:rgba(255,250,240,.85);text-transform:uppercase}
+  .canvas.lightface .c-type,.canvas.lightface .c-author{color:rgba(50,38,20,.8)}
+  .canvas.lightface .c-title{color:#33281a;text-shadow:0 1px 2px rgba(255,255,255,.5)}
+  .art .plaque{
+    width:82%;margin:12px auto 0;padding:7px 8px 8px;text-align:center;
+    background:linear-gradient(180deg,#e0c183,#b8924e 55%,#a07c3c);
+    border:1px solid #6e5527;border-radius:2px;
+    box-shadow:0 3px 7px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,240,200,.6);
+    color:#3a2b10;
+  }
+  .plaque b{display:block;font-size:14px;line-height:1.2;text-shadow:0 1px 0 rgba(255,236,190,.5)}
+  .plaque span{display:block;font-size:10.5px;margin-top:2px;letter-spacing:.4px}
+  .plaque .pq-c{font-style:italic;opacity:.85}
+
+  /* --- wall signs / wing labels --- */
+  .wing-sign{
+    display:flex;align-items:center;justify-content:center;
+    font-size:19px;letter-spacing:5px;color:#4a3a18;
+    background:linear-gradient(180deg,#dcc088,#b8924e);
+    border:1px solid #6e5527;border-radius:3px;
+    box-shadow:0 4px 9px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,240,200,.6);
+    text-shadow:0 1px 0 rgba(255,236,190,.55);
+    white-space:nowrap;
+  }
+  .wing-sign small{font-size:11px;letter-spacing:3px;margin-left:12px;opacity:.75}
+
+  /* --- study room doorway --- */
+  .door{
+    cursor:pointer;
+    background:
+      radial-gradient(ellipse 80% 45% at 50% 96%, rgba(255,190,110,.4), transparent 70%),
+      linear-gradient(180deg,#191109 0,#0f0a05 100%);
+    border:7px solid #4a3621;border-bottom:none;
+    box-shadow:inset 0 0 36px rgba(0,0,0,.9), 0 0 0 2px #2e2213;
+  }
+  .door .door-desk{
+    position:absolute;left:22%;right:22%;bottom:18%;height:7px;background:#3a2412;
+    box-shadow:0 10px 0 -3px #2a1a0c, 0 -16px 14px rgba(255,180,100,.18);
+  }
+  .door .door-lamp{
+    position:absolute;left:50%;bottom:27%;width:34px;height:34px;transform:translateX(-50%);
+    background:radial-gradient(circle, rgba(255,214,140,.95), rgba(255,180,90,.25) 55%, transparent 72%);
+    border-radius:50%;
+  }
+  .door .door-plate{
+    position:absolute;left:50%;top:-58px;transform:translateX(-50%);
+    padding:6px 16px;white-space:nowrap;
+    font-size:15px;letter-spacing:4px;color:#4a3a18;
+    background:linear-gradient(180deg,#dcc088,#b8924e);
+    border:1px solid #6e5527;border-radius:3px;
+    box-shadow:0 3px 7px rgba(0,0,0,.4);
+  }
+  .door .door-sub{
+    position:absolute;left:50%;top:-24px;transform:translateX(-50%);
+    font-size:10px;letter-spacing:3px;color:#d9c08b;white-space:nowrap;
+  }
+
+  /* --- stations: wood, glass, pages --- */
+  .wood{background:linear-gradient(180deg,#5f4631,#4c3826);box-shadow:inset 0 0 0 2px rgba(30,18,8,.55), inset 0 6px 14px rgba(255,220,170,.12);cursor:pointer}
+  .wood.f-n,.wood.f-w{filter:brightness(.78)}
+  .wood.f-e{filter:brightness(.9)}
+  .wood.f-t{background:linear-gradient(135deg,#75583c,#5d462e);box-shadow:inset 0 0 0 2px rgba(30,18,8,.5)}
+  .ped{background:linear-gradient(180deg,#d8d0bd,#b8ae96);box-shadow:inset 0 0 0 2px rgba(90,80,60,.4), inset 0 -16px 22px rgba(60,48,30,.25);cursor:pointer}
+  .ped.f-n,.ped.f-w{filter:brightness(.82)}
+  .ped.f-t{background:linear-gradient(135deg,#e4dccb,#cfc6ae)}
+  .glass{
+    background:linear-gradient(160deg, rgba(216,236,242,.22), rgba(190,214,224,.08) 55%, rgba(255,255,255,.16));
+    border:1px solid rgba(240,250,255,.5);
+    backface-visibility:visible;-webkit-backface-visibility:visible;
+    cursor:pointer;
+  }
+  .page{
+    background:linear-gradient(90deg,#f1e8d6 0 49%, #cdbf9f 49% 51%, #e6dbc2 51% 100%);
+    border:1px solid #9c8c6a;box-shadow:0 4px 8px rgba(0,0,0,.35);cursor:pointer;
+  }
+  .relic{
+    background:linear-gradient(135deg,#f6efdd,#e8ddc2);
+    border:1px solid #a89468;box-shadow:0 6px 10px rgba(0,0,0,.3);
+    display:flex;align-items:center;justify-content:center;
+    font-size:8px;letter-spacing:1px;color:#6e5c3a;text-align:center;padding:4px;
+    cursor:pointer;
+  }
+  .case-plate{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    padding:4px 10px;font-size:9px;letter-spacing:2.5px;white-space:nowrap;color:#3a2b10;
+    background:linear-gradient(180deg,#dcc088,#b8924e);border:1px solid #6e5527;border-radius:2px;
+  }
+
+  /* --- collection map frame --- */
+  .map-frame{
+    cursor:pointer;padding:16px;
+    background:linear-gradient(145deg,#6b5126,#9c7a3d 30%,#5d4720 60%,#8a6c35);
+    border:1px solid #3c2e14;
+    box-shadow:inset 0 0 0 4px #43340f, inset 0 0 0 6px #c9a75d, 0 16px 30px rgba(0,0,0,.5);
+  }
+  .map-inner{
+    width:100%;height:100%;background:linear-gradient(160deg,#20301f,#17241a);
+    box-shadow:inset 0 0 30px rgba(0,0,0,.6);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:10px;
+  }
+  .map-inner h3{font-size:17px;letter-spacing:5px;color:#d9c08b;font-weight:normal}
+  .map-inner p{font-size:10px;letter-spacing:2px;color:#9cab8c}
+  .map-inner svg{width:62%;height:auto}
+  .map-frame .spot{
+    position:absolute;left:50%;top:-150px;width:560px;height:560px;
+    transform:translateX(-50%);pointer-events:none;
+    background:radial-gradient(ellipse 50% 40% at 50% 24%, rgba(255,240,205,.45), transparent 68%);
+  }
+
+  /* minimap svg shared classes */
+  .mm-hall{fill:rgba(250,244,230,.92);stroke:#a8864b;stroke-width:2}
+  .mm-w{fill:#a8864b;cursor:pointer}
+  .mm-w:hover{fill:#6e3a32}
+  .mm-st{fill:#5c6b4a;cursor:pointer}
+  .mm-st:hover{fill:#6e3a32}
+  .mm-rug{fill:rgba(110,58,50,.25)}
+  #mm-cam{fill:#6e3a32;stroke:#f7f1e4;stroke-width:1}
+  .wallmap .mm-hall{fill:rgba(20,32,20,.3);stroke:#c9a75d;stroke-width:3}
+  .wallmap .mm-w{fill:#d9c08b}
+  .wallmap .mm-st{fill:#8fa37c}
+  .wallmap .mm-rug{fill:rgba(217,192,139,.12)}
+
+  /* ============ HUD ============ */
+  #hud{
+    position:fixed;top:0;left:0;right:0;z-index:45;
+    display:flex;align-items:center;gap:14px;padding:9px 16px;
+    background:linear-gradient(180deg, rgba(27,20,12,.92), rgba(27,20,12,.78));
+    border-bottom:1px solid rgba(201,167,93,.55);
+    color:var(--ivory);
+    backdrop-filter:blur(4px);
+  }
+  #hud .gal{
+    color:#e5cf9d;text-decoration:none;font-size:13.5px;letter-spacing:.5px;
+    padding:5px 10px;border:1px solid rgba(201,167,93,.6);border-radius:3px;white-space:nowrap;
+  }
+  #hud .gal:hover{background:rgba(201,167,93,.18)}
+  #hud .hud-title{line-height:1.1;min-width:0}
+  #hud .hud-title b{display:block;font-size:14.5px;letter-spacing:3px;font-weight:normal;color:#f3e7c8;white-space:nowrap}
+  #hud .hud-title span{display:block;font-size:10px;letter-spacing:1.5px;color:#b9a87f;font-style:italic;white-space:nowrap}
+  #hud .spacer{flex:1}
+  #hud .hint{font-size:11px;color:#b9a87f;letter-spacing:.5px;white-space:nowrap}
+  #badge{
+    display:flex;align-items:center;gap:6px;white-space:nowrap;
+    background:linear-gradient(180deg,#dcc088,#b8924e);color:#3a2b10;border:1px solid #6e5527;
+    padding:5px 11px;border-radius:20px;font-size:12.5px;font-family:inherit;letter-spacing:.5px;
+    box-shadow:inset 0 1px 0 rgba(255,240,200,.6);
+  }
+  #badge:hover{filter:brightness(1.08)}
+  #badge .dot{width:8px;height:8px;border-radius:50%;background:#6e3a32;box-shadow:0 0 5px rgba(110,30,20,.8)}
+  #fp-btn{
+    background:transparent;color:#e5cf9d;border:1px solid rgba(201,167,93,.6);
+    padding:5px 11px;border-radius:3px;font-size:12.5px;letter-spacing:.5px;white-space:nowrap;
+  }
+  #fp-btn:hover{background:rgba(201,167,93,.18)}
+
+  /* ============ MINIMAP PANEL ============ */
+  #mapwrap{
+    position:fixed;top:64px;right:14px;z-index:25;width:128px;
+    display:flex;flex-direction:column;gap:6px;
+  }
+  #minimap{
+    background:rgba(27,20,12,.85);border:1px solid rgba(201,167,93,.55);border-radius:4px;padding:6px;
+  }
+  #minimap svg{display:block;width:100%;height:auto}
+  .qbtn{
+    background:rgba(27,20,12,.85);color:#e5cf9d;border:1px solid rgba(201,167,93,.5);
+    border-radius:3px;padding:5px 8px;font-size:11.5px;letter-spacing:1px;text-align:left;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .qbtn:hover{background:rgba(201,167,93,.22)}
+  .qbtn em{font-style:normal;font-size:9px;opacity:.65}
+
+  /* ============ VIGNETTE ============ */
+  #vignette{
+    position:fixed;inset:0;pointer-events:none;z-index:10;
+    background:radial-gradient(ellipse 75% 70% at 50% 46%, transparent 55%, rgba(10,6,3,.5) 100%);
+  }
+
+  /* ============ OVERLAY PANELS ============ */
+  #overlay{
+    position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;
+    background:rgba(16,11,6,.6);padding:66px 18px 18px;
+  }
+  .panel{
+    width:min(780px,100%);max-height:min(calc(100vh - 92px),860px);overflow:auto;
+    background:linear-gradient(180deg,#fbf6eb,#f4edda);
+    border:1px solid #b99a5e;border-radius:5px;
+    box-shadow:0 24px 70px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,250,235,.7);
+  }
+  .panel>header{
+    position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:12px;
+    padding:15px 20px 12px;background:linear-gradient(180deg,#fbf6eb 70%, rgba(251,246,235,.92));
+    border-bottom:2px solid var(--brass);
+  }
+  .panel>header h2{
+    font-size:19px;font-weight:normal;letter-spacing:2.5px;text-transform:uppercase;color:#4a3a1c;flex:1;min-width:0
+  }
+  .panel>header .sub{font-size:11px;letter-spacing:1px;color:#8a7850;font-style:italic;white-space:nowrap}
+  #ov-close{
+    background:transparent;border:1px solid #b99a5e;border-radius:3px;color:#7c6133;
+    width:30px;height:30px;font-size:17px;line-height:1;flex:none;
+  }
+  #ov-close:hover{background:#efe3c8}
+  .panel .body{padding:18px 22px 24px}
+
+  .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-bottom:14px}
+  .meta-grid dt{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#8a7850}
+  .meta-grid dd{font-size:14.5px;margin-top:2px}
+  .tags{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 4px}
+  .tag{
+    font-size:11px;letter-spacing:1px;padding:3px 10px;border-radius:12px;border:1px solid #b99a5e;
+    background:#f3ead2;color:#6e5527;cursor:pointer;
+  }
+  .tag:hover{background:#e8d9b4}
+  .sect{margin-top:20px}
+  .sect>h3{
+    font-size:12px;letter-spacing:2.5px;text-transform:uppercase;color:#7c6133;
+    border-bottom:1px solid #d9c8a2;padding-bottom:5px;margin-bottom:10px;font-weight:normal;
+  }
+  blockquote{
+    margin:10px 0;padding:10px 14px;border-left:3px solid var(--brass);
+    background:rgba(201,167,93,.1);font-style:italic;font-size:14.5px;line-height:1.5;
+  }
+  .note{border:1px solid #ddcda6;border-radius:4px;padding:10px 12px;margin-bottom:9px;background:#fdfaf2}
+  .note-meta{font-size:10.5px;letter-spacing:1px;color:#8a7850;text-transform:uppercase;margin-bottom:4px;display:flex;justify-content:space-between;align-items:center}
+  .note-text{font-size:14px;line-height:1.55;white-space:pre-wrap}
+  .mini{
+    background:transparent;border:1px solid #b99a5e;border-radius:3px;color:#7c6133;
+    font-size:10.5px;letter-spacing:1px;padding:2px 9px;text-transform:uppercase;
+  }
+  .mini:hover{background:#efe3c8}
+  textarea,select,input{
+    width:100%;font-family:inherit;font-size:14px;color:var(--ink);
+    background:#fffdf6;border:1px solid #c0ab7c;border-radius:4px;padding:9px 11px;
+  }
+  textarea{min-height:88px;resize:vertical;line-height:1.5}
+  textarea:focus,select:focus{outline:2px solid rgba(168,134,75,.5)}
+  .btn{
+    background:linear-gradient(180deg,#dcc088,#b8924e);color:#3a2b10;border:1px solid #6e5527;
+    border-radius:4px;padding:8px 18px;font-size:13.5px;letter-spacing:1px;
+    box-shadow:inset 0 1px 0 rgba(255,240,200,.6), 0 2px 4px rgba(0,0,0,.15);
+  }
+  .btn:hover{filter:brightness(1.07)}
+  .btn.ghost{background:#f6efdc;color:#6e5527;box-shadow:none}
+  .btn:disabled{opacity:.45;cursor:default}
+  .row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+  .muted{color:#8a7850;font-size:12.5px;font-style:italic}
+
+  /* flashcard flip */
+  .fc{perspective:1100px;height:250px;cursor:pointer;margin:14px 0}
+  .fc-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .55s}
+  .fc.flip .fc-inner{transform:rotateY(180deg)}
+  .fc-face{
+    position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    border:1px solid #b99a5e;border-radius:6px;padding:22px 26px;text-align:center;
+    background:linear-gradient(180deg,#fffdf6,#f6edd6);
+    box-shadow:0 8px 20px rgba(60,40,10,.18), inset 0 0 0 5px rgba(201,167,93,.22);
+  }
+  .fc-face.fc-back{transform:rotateY(180deg);background:linear-gradient(180deg,#f8f1de,#efe3c4)}
+  .fc-k{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#a8864b}
+  .fc-q{font-size:17.5px;line-height:1.45}
+  .fc-a{font-size:15px;line-height:1.5}
+  .grade-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+  .grade{
+    border-radius:4px;border:1px solid;padding:7px 13px;font-size:13px;min-width:86px;
+    display:flex;flex-direction:column;align-items:center;gap:1px;background:#fffdf6;
+  }
+  .grade small{font-size:10px;opacity:.7}
+  .g0{border-color:#9c4a3c;color:#8a3a2c}.g0:hover{background:#f6e0da}
+  .g1{border-color:#b0803a;color:#8a6226}.g1:hover{background:#f6ecd8}
+  .g2{border-color:#6b7d4a;color:#53633a}.g2:hover{background:#eaf0da}
+  .g3{border-color:#3f6b52;color:#2f5540}.g3:hover{background:#dcefe3}
+
+  .fp-item{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    padding:8px 4px;border-bottom:1px solid #e6d9b8;
+  }
+  .fp-item b{font-size:14.5px;font-weight:normal;font-style:italic}
+  .fp-item .fp-meta{font-size:11.5px;color:#8a7850}
+  .fp-item .row{margin-left:auto}
+
+  .refl{border:1px solid #ddcda6;border-radius:4px;padding:11px 13px;margin-bottom:10px;background:#fdfaf2}
+  .refl .rq{font-size:12.5px;font-style:italic;color:#7c6133;margin:4px 0 7px;line-height:1.45}
+
+  /* graph */
+  #graph-wrap svg{width:100%;height:auto;display:block;background:#fdfaf2;border:1px solid #ddcda6;border-radius:5px}
+  .gnode{cursor:pointer}
+  .gnode circle{stroke:#5b4720;stroke-width:1.2;transition:opacity .15s}
+  .gnode text{font-size:10.5px;fill:#4a3a1c;text-anchor:middle;pointer-events:none}
+  .gedge{stroke:#a8864b;fill:none;transition:opacity .15s}
+  svg.hl .gnode{opacity:.16}
+  svg.hl .gnode.on{opacity:1}
+  svg.hl .gedge{opacity:.05 !important}
+  svg.hl .gedge.on{opacity:.85 !important}
+  #graph-cap{min-height:20px;margin-top:9px;font-size:13px;color:#6e5527;font-style:italic}
+
+  /* ============ SERENDIPITY TOAST ============ */
+  #toast{
+    position:fixed;right:16px;bottom:16px;z-index:50;width:min(350px,calc(100vw - 32px));
+    background:linear-gradient(180deg,#fbf6eb,#f3ebd6);
+    border:1px solid #b99a5e;border-left:4px solid var(--brass);border-radius:5px;
+    box-shadow:0 16px 40px rgba(0,0,0,.5);
+    padding:13px 14px 12px;
+    animation:toast-in .45s ease-out;
+  }
+  @keyframes toast-in{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+  #toast .t-kicker{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#a8864b;display:flex;justify-content:space-between;gap:8px}
+  #toast .t-kicker button{background:none;border:none;color:#a8864b;font-size:15px;line-height:1;padding:0 2px}
+  #toast .t-src{font-size:12px;color:#6e5527;margin-top:5px;font-style:italic}
+  #toast .t-text{font-size:13.5px;line-height:1.5;margin-top:6px}
+  #toast .row{margin-top:10px}
+  #toast .mini{font-size:11px;padding:4px 12px}
+
+  @media (max-width:860px){
+    #hud .hint{display:none}
+    #hud .hud-title span{display:none}
+  }
+  @media (max-width:768px){
+    #hud{gap:8px;padding:8px 10px}
+    #hud .hud-title b{font-size:12px;letter-spacing:2px}
+    #mapwrap{width:104px;top:56px}
+    .panel .body{padding:14px 14px 20px}
+    .panel>header{padding:12px 14px 10px}
+    .panel>header h2{font-size:15.5px}
+    .panel>header .sub{display:none}
+    .fc{height:290px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .fc-inner{transition:none}
+    #toast{animation:none}
+    .art .frame{transition:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="viewport"><div id="world"></div></div>
+<div id="vignette"></div>
+
+<header id="hud">
+  <a class="gal" href="../index.html">&#8592; Gallery</a>
+  <div class="hud-title">
+    <b>THE GEILING COLLECTION</b>
+    <span>a memory palace &middot; curated by Matthew Geiling</span>
+  </div>
+  <div class="spacer"></div>
+  <span class="hint">WASD / arrows to walk &middot; drag to look &middot; click to approach</span>
+  <button id="badge" title="Open flashcards"><span class="dot"></span><span id="badge-n">0 due</span></button>
+  <button id="fp-btn" title="Index of all works">Floor Plan</button>
+</header>
+
+<div id="mapwrap">
+  <div id="minimap"></div>
+  <button class="qbtn" data-open="flash">Flashcards <em>STUDY</em></button>
+  <button class="qbtn" data-open="recall">Recall <em>EXAM</em></button>
+  <button class="qbtn" data-open="reflect">Reflect <em>READING</em></button>
+  <button class="qbtn" data-open="graph">Graph <em>MAP</em></button>
+</div>
+
+<div id="overlay" hidden>
+  <div class="panel" role="dialog" aria-modal="true">
+    <header>
+      <h2 id="ov-title"></h2>
+      <span class="sub" id="ov-sub"></span>
+      <button id="ov-close" aria-label="Close">&#215;</button>
+    </header>
+    <div class="body" id="ov-body"></div>
+  </div>
+</div>
+
+<div id="toast" hidden></div>
+
+<script>
+'use strict';
+/* =====================================================================
+   THE GEILING COLLECTION — v11 · 3D walkable museum
+   Plain HTML/CSS/JS. All data below is in-memory mock data.
+   ===================================================================== */
+
+var RM = false;
+try { RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch(e){}
+
+var DAY = 86400000;
+var NOW0 = Date.now();
+var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ---------------------- MOCK LIBRARY DATA ---------------------- */
+var WORKS = [
+{ id:'tfs', type:'book', title:'Thinking, Fast and Slow', author:'Daniel Kahneman', pub:'2011',
+  consumed:'2025-02-11', tags:['psychology','decision-making','memory'],
+  art:'radial-gradient(circle at 72% 22%, rgba(255,255,255,.35), transparent 40%), linear-gradient(135deg,#1c2a44,#44699e 55%,#b8cbe0)',
+  notes:[
+    {d:'2025-02-14', t:'System 1 is not the villain — it is the default. The practical move is a short checklist for the handful of decisions where System 2 is actually worth the fuel.'},
+    {d:'2025-02-20', t:'Anchoring shows up in every estimate conversation I have. New rule: write down my own number before I hear anyone else’s.'}
+  ],
+  quotes:[
+    'Nothing in life is as important as you think it is, while you are thinking about it.',
+    'A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.'
+  ],
+  cards:[
+    {q:'What are System 1 and System 2?', a:'System 1 is fast, automatic, intuitive thought; System 2 is slow, deliberate, effortful reasoning. System 2 is lazy and defers to System 1 unless forced to engage.', seed:1},
+    {q:'What is the anchoring effect?', a:'Estimates drift toward an initial reference number — even an arbitrary or irrelevant one — and adjust away from it insufficiently.'},
+    {q:'State the peak-end rule.', a:'We judge a past experience mostly by its most intense moment and its ending, not by the average of every moment.'}
+  ]},
+{ id:'ah', type:'book', title:'Atomic Habits', author:'James Clear', pub:'2018',
+  consumed:'2025-01-18', tags:['habits','systems','psychology'],
+  art:'radial-gradient(circle at 30% 30%, #d9b55a 0 11%, transparent 12%), radial-gradient(circle at 30% 30%, rgba(217,181,90,.35) 0 20%, transparent 21%), linear-gradient(160deg,#23272f,#3c424d)',
+  notes:[
+    {d:'2025-01-25', t:'Identity-based habits reframed the whole book for me: every rep is a vote for the person you want to be. “I am someone who reviews his notes daily” beats “I should study more.”'}
+  ],
+  quotes:[
+    'You do not rise to the level of your goals. You fall to the level of your systems.',
+    'Every action you take is a vote for the type of person you wish to become.'
+  ],
+  cards:[
+    {q:'What are the four laws of behavior change?', a:'Make it obvious, make it attractive, make it easy, make it satisfying — inverted (invisible, unattractive, hard, unsatisfying) to break a bad habit.', seed:1},
+    {q:'What is the two-minute rule?', a:'Scale any new habit down to a version that takes two minutes or less, so you master the art of showing up before you optimize the habit itself.'}
+  ]},
+{ id:'dw', type:'book', title:'Deep Work', author:'Cal Newport', pub:'2016',
+  consumed:'2025-03-07', tags:['focus','habits','systems'],
+  art:'linear-gradient(180deg,#0e2235 0 58%,#17415e 58% 86%,#e0a84b 86%)',
+  notes:[
+    {d:'2025-03-10', t:'Scheduled every minute of three workdays as an experiment. The plan broke by 10am each day — but re-planning turned out to be the focus mechanism Newport is actually selling.'},
+    {d:'2025-03-18', t:'Attention residue explains my bad afternoons: checking email “for one second” quietly taxes the next twenty minutes.'}
+  ],
+  quotes:[
+    'Clarity about what matters provides clarity about what does not.'
+  ],
+  cards:[
+    {q:'How does Newport define deep work?', a:'Professional activity performed in a distraction-free state that pushes cognitive capability to its limit, creating new value that is hard to replicate.'},
+    {q:'What is attention residue?', a:'When you switch tasks, part of your attention stays stuck on the previous task, degrading performance on the next one — even after a brief glance at an inbox.', seed:1}
+  ]},
+{ id:'mis', type:'book', title:'Make It Stick', author:'Brown, Roediger & McDaniel', pub:'2014',
+  consumed:'2025-04-02', tags:['learning','memory','psychology'],
+  art:'linear-gradient(120deg,#8c2f28,#c25a3a 58%,#f0d9a8)',
+  notes:[
+    {d:'2025-04-05', t:'The core indictment: rereading and highlighting feel productive precisely because they are easy. This entire app exists because of chapter one.'}
+  ],
+  quotes:[
+    'Learning is deeper and more durable when it is effortful.',
+    'Retrieval practice — recalling facts or concepts from memory — is a more effective learning strategy than review by rereading.'
+  ],
+  cards:[
+    {q:'Why does retrieval practice beat rereading?', a:'Effortful recall strengthens the memory trace and exposes gaps; rereading creates fluency that masquerades as mastery.', seed:1},
+    {q:'What is interleaving?', a:'Mixing different topics or problem types within one study session. It feels harder in the moment but produces better retention and transfer than blocked practice.'},
+    {q:'What are desirable difficulties?', a:'Deliberate challenges — spacing, retrieval, interleaving, variation — that slow down apparent learning but substantially improve long-term retention.', seed:1}
+  ]},
+{ id:'det', type:'book', title:'The Design of Everyday Things', author:'Don Norman', pub:'1988',
+  consumed:'2025-05-21', tags:['design','psychology','systems'],
+  art:'radial-gradient(circle at 68% 62%, #b5433a 0 16%, transparent 17%), linear-gradient(135deg,#eadfcd,#d2c2a4)',
+  light:true,
+  notes:[
+    {d:'2025-05-24', t:'Norman doors are everywhere once you see them. Applied the affordance test to this very app: can you tell what is clickable without a label?'}
+  ],
+  quotes:[
+    'Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.'
+  ],
+  cards:[
+    {q:'What is an affordance?', a:'The relationship between an object and a user that makes possible actions perceivable — a flat plate affords pushing, a handle affords pulling.', seed:1},
+    {q:'Gulf of execution vs. gulf of evaluation?', a:'Execution: the gap between what a user intends and the actions the system allows. Evaluation: the gap between the system’s state and the user’s ability to perceive and interpret it.'}
+  ]},
+{ id:'med', type:'book', title:'Meditations', author:'Marcus Aurelius', pub:'c. 180',
+  consumed:'2025-06-15', tags:['philosophy','focus','habits'],
+  art:'repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 6px, transparent 6px 26px), linear-gradient(180deg,#6b6356,#9a9183 55%,#c8bfae)',
+  notes:[
+    {d:'2025-06-20', t:'Reads less like philosophy and more like a man leaving himself flashcards. The original spaced repetition: the same lessons re-derived every morning, forever.'}
+  ],
+  quotes:[
+    'You have power over your mind — not outside events. Realize this, and you will find strength.',
+    'The impediment to action advances action. What stands in the way becomes the way.'
+  ],
+  cards:[
+    {q:'What is the Stoic discipline of perception?', a:'Seeing events plainly, stripped of the value judgments we attach to them — distress comes from the judgment, not the event itself.'}
+  ]},
+
+{ id:'pg', type:'essay', title:'How to Do Great Work', author:'Paul Graham', pub:'2023',
+  consumed:'2025-07-09', tags:['creativity','focus','learning'],
+  art:'linear-gradient(0deg, #d86b27 0 12%, transparent 12%), linear-gradient(160deg,#f4efe2,#e0d4b6)',
+  light:true,
+  notes:[
+    {d:'2025-07-11', t:'The compounding argument: work on what you are genuinely curious about, because only genuine interest survives the boring middle stretch of anything hard.'}
+  ],
+  quotes:[
+    'The way to figure out what to work on is by working. If you’re not sure what to work on, guess.'
+  ],
+  cards:[
+    {q:'What three qualities should the work you choose have, per Paul Graham?', a:'It should be something you have a natural aptitude for, a deep interest in, and that offers scope to do great work.', seed:1},
+    {q:'Why does Graham argue curiosity beats discipline for great work?', a:'Great work requires sustained attention over years; discipline runs out, but genuine curiosity is the only renewable fuel for that long a haul.'}
+  ]},
+{ id:'bush', type:'essay', title:'As We May Think', author:'Vannevar Bush', pub:'1945',
+  consumed:'2025-08-03', tags:['memory','systems','design'],
+  art:'repeating-linear-gradient(0deg, rgba(190,220,250,.14) 0 1px, transparent 1px 22px), repeating-linear-gradient(90deg, rgba(190,220,250,.14) 0 1px, transparent 1px 22px), linear-gradient(135deg,#17324e,#265f8c)',
+  notes:[
+    {d:'2025-08-06', t:'The memex is basically this app plus eighty years. Bush’s “associative trails” are my tag graph — selection by association rather than by indexing.'}
+  ],
+  quotes:[
+    'The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.'
+  ],
+  cards:[
+    {q:'What was the memex?', a:'Bush’s hypothetical desk-sized device storing all of one’s books and records, navigated by associative trails linking items together — an ancestor of hypertext and personal knowledge tools.'}
+  ]},
+{ id:'emer', type:'essay', title:'Self-Reliance', author:'Ralph Waldo Emerson', pub:'1841',
+  consumed:'2025-09-12', tags:['philosophy','creativity'],
+  art:'linear-gradient(170deg,#3f5a3a,#7c9469 60%,#d9e2c8)',
+  notes:[
+    {d:'2025-09-15', t:'“Foolish consistency” pairs surprisingly well with spaced repetition: review the facts relentlessly, but let the conclusions stay revisable.'}
+  ],
+  quotes:[
+    'A foolish consistency is the hobgoblin of little minds.',
+    'Envy is ignorance; imitation is suicide.'
+  ],
+  cards:[
+    {q:'What does Emerson mean by “a foolish consistency is the hobgoblin of little minds”?', a:'Clinging to past positions merely to appear consistent blocks growth; great thinkers contradict their earlier selves freely as understanding improves.'}
+  ]},
+
+{ id:'wbd', type:'article', title:'Why Books Don’t Work', author:'Andy Matuschak', pub:'2019',
+  consumed:'2025-10-05', tags:['learning','memory','design'],
+  art:'radial-gradient(circle at 26% 70%, #b5433a 0 9%, transparent 10%), linear-gradient(135deg,#faf6ee,#e8dcc0)',
+  light:true,
+  notes:[
+    {d:'2025-10-07', t:'His claim: books assume “transmissionism” — that reading equals absorbing. My retention from most books supports the accusation. Hence: cards for everything that matters.'}
+  ],
+  quotes:[
+    'Books don’t work for the same reason that lectures don’t work: neither medium has any explicit theory of how people actually learn.'
+  ],
+  cards:[
+    {q:'What is “transmissionism,” per Matuschak?', a:'The implicit, mistaken assumption that knowledge transfers directly from text or speaker into a reader’s mind simply through exposure.', seed:1},
+    {q:'What does Matuschak propose instead of plain books?', a:'A “mnemonic medium” — prose with spaced-repetition prompts woven directly into the text, so remembering is part of reading.'}
+  ]},
+{ id:'nls', type:'article', title:'Augmenting Long-term Memory', author:'Michael Nielsen', pub:'2018',
+  consumed:'2025-11-20', tags:['memory','learning','systems'],
+  art:'radial-gradient(circle at 70% 25%, rgba(255,255,255,.3), transparent 42%), linear-gradient(140deg,#30243f,#6a4f8c 60%,#c9b8e0)',
+  notes:[
+    {d:'2025-11-23', t:'Nielsen’s rule of thumb — a card costs about five minutes of lifetime review — changed my card-writing from exhaustive to selective. If a fact is not worth five minutes, it is not worth a card.'}
+  ],
+  quotes:[
+    'Anki makes memory a choice, rather than a haphazard event, to be left to chance.'
+  ],
+  cards:[
+    {q:'What is Nielsen’s estimate of the lifetime cost of one spaced-repetition card?', a:'Roughly five minutes of total review time over twenty years — cheap enough that remembering almost anything becomes a deliberate choice.'},
+    {q:'Why should flashcards be atomic?', a:'One fact per card: failures then become precise diagnostics, and each retrieval strengthens a single clean association instead of a blurry bundle.'}
+  ]},
+
+{ id:'hub', type:'podcast', title:'Huberman Lab: Improve Memory', author:'Andrew Huberman', pub:'2022',
+  consumed:'2026-01-14', tags:['memory','learning','psychology'],
+  art:'radial-gradient(circle at 50% 80%, rgba(63,176,196,.5), transparent 55%), linear-gradient(135deg,#101418,#243a4a 60%,#3fb0c4)',
+  notes:[
+    {d:'2026-01-16', t:'Protocol takeaway: a brief adrenaline spike after learning (cold water, hard exercise) improves consolidation — emotion stamps memory. Also, mentally walking this museum counts as a repetition.'}
+  ],
+  quotes:[
+    'Repetition works, but what the brain really responds to is salience — the nervous system remembers what it flags as important.'
+  ],
+  cards:[
+    {q:'Per Huberman, what two things after learning most strengthen a new memory?', a:'Emotional salience or an adrenaline spike shortly after encoding enhances consolidation, and deep sleep that night is when the actual rewiring occurs.', seed:1},
+    {q:'What is the hippocampus’s role in memory?', a:'It binds new episodic information together; during sleep its replay gradually transfers those memories to the cortex for long-term storage.'}
+  ]},
+{ id:'tkp', type:'podcast', title:'The Knowledge Project: Mental Models', author:'Shane Parrish', pub:'2021',
+  consumed:'2026-02-08', tags:['decision-making','systems','learning'],
+  art:'repeating-linear-gradient(60deg, rgba(255,255,255,.05) 0 2px, transparent 2px 18px), linear-gradient(150deg,#1f2d26,#3c5a47 60%,#88a98f)',
+  notes:[
+    {d:'2026-02-10', t:'The latticework idea: a model is only useful when connected to others. That is the tag-graph argument again — the third source this year converging on the same point.'}
+  ],
+  quotes:[
+    'You can’t make good decisions with a single lens. The world is multidisciplinary, and your map of it has to be too.'
+  ],
+  cards:[
+    {q:'What is a “latticework of mental models”?', a:'Munger’s idea, via Parrish: the core models of many disciplines, deliberately connected, so that new facts have a structure to stick to instead of floating free.'},
+    {q:'What is inversion?', a:'Solving problems backward: ask what would guarantee failure, then systematically avoid it.', seed:1}
+  ]}
+];
+
+var TYPE_LABEL = {book:'Book', essay:'Essay', article:'Article', podcast:'Podcast'};
+var TYPE_WING  = {book:'Books Wing · west wall', essay:'Essays Wing · east wall', article:'Articles · north wall', podcast:'Podcasts · north wall'};
+
+var REFLECTIONS = [
+  { date:'2026-01-20', workId:'med', source:'Meditations',
+    quote:'The impediment to action advances action. What stands in the way becomes the way.',
+    text:'Kept circling back to this during the January slump. The obstacle this month was boredom with my own review queue — and the obstacle-as-way reading is that boredom is data: the cards are either too easy or too trivial to deserve memory. Pruned forty of them. The queue is interesting again.' },
+  { date:'2025-10-07', workId:'wbd', source:'Why Books Don’t Work',
+    quote:'Books don’t work for the same reason that lectures don’t work: neither medium has any explicit theory of how people actually learn.',
+    text:'Matuschak is right that I finish books with a feeling of understanding rather than the understanding itself. But the fix isn’t abandoning books — it’s treating the book as raw material and the cards plus these reflections as the actual artifact. The reading was never the learning; the retrieval is.' }
+];
+
+/* ---------------------- SRS (SM-2 style) ---------------------- */
+var allCards = [];
+(function seedSRS(){
+  var k = 0;
+  WORKS.forEach(function(w){
+    w.cards.forEach(function(c, i){
+      c.id = 'c' + (k++);
+      c.work = w;
+      c.ease = 2.5 - (i % 3) * 0.08;
+      if (c.seed){
+        c.reps = 2;
+        c.interval = [1,2,4][k % 3];
+        c.due = NOW0 - (1 + (k % 5)) * 7 * 3600e3;  /* overdue by 7–35 h */
+      } else {
+        c.reps = 1;
+        c.interval = 3 + (k % 6);
+        c.due = NOW0 + (1 + (k % 9)) * DAY;
+      }
+      allCards.push(c);
+    });
+  });
+})();
+
+function nextState(c, g){
+  var now = Date.now();
+  if (g === 0){
+    return { ease: Math.max(1.3, c.ease - 0.2), interval: 0, reps: 0, due: now + 10 * 60000 };
+  }
+  var ease = Math.min(2.8, Math.max(1.3, c.ease + (g === 1 ? -0.15 : g === 3 ? 0.15 : 0)));
+  var interval;
+  if (c.reps === 0) interval = g === 1 ? 1 : g === 2 ? 2 : 4;
+  else interval = Math.max(1, Math.round(c.interval * (g === 1 ? 1.2 : g === 2 ? ease : ease * 1.35)));
+  return { ease: ease, interval: interval, reps: c.reps + 1, due: now + interval * DAY };
+}
+function previewLabel(c, g){
+  var s = nextState(c, g);
+  return s.interval === 0 ? '10 min' : s.interval + (s.interval === 1 ? ' day' : ' days');
+}
+function gradeCard(c, g){
+  var s = nextState(c, g);
+  c.ease = s.ease; c.interval = s.interval; c.reps = s.reps; c.due = s.due;
+  updateBadge();
+}
+function dueCards(){
+  return allCards.filter(function(c){ return c.due <= Date.now(); })
+                 .sort(function(a,b){ return a.due - b.due; });
+}
+function updateBadge(){
+  var n = dueCards().length;
+  document.getElementById('badge-n').textContent = n + ' due';
+}
+
+/* ---------------------- helpers ---------------------- */
+function $(s){ return document.querySelector(s); }
+function byId(id){ for (var i=0;i<WORKS.length;i++) if (WORKS[i].id===id) return WORKS[i]; return null; }
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtMonth(iso){ var d = new Date(iso + 'T12:00:00'); return MON[d.getMonth()] + ' ' + d.getFullYear(); }
+function fmtDate(iso){ var d = new Date(iso + 'T12:00:00'); return MON[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear(); }
+function todayISO(){ var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function dueStr(c){
+  var diff = c.due - Date.now();
+  if (diff <= 0) return 'due now';
+  if (diff < DAY) return 'due in ' + Math.max(1, Math.round(diff/3600e3)) + ' h';
+  return 'due in ' + Math.round(diff/DAY) + ' d';
+}
+function clamp(v, lo, hi){ return v < lo ? lo : v > hi ? hi : v; }
+function shortAngle(a){ a = (a + Math.PI) % (2*Math.PI); if (a < 0) a += 2*Math.PI; return a - Math.PI; }
+function sharedTags(a, b){ return a.tags.filter(function(t){ return b.tags.indexOf(t) >= 0; }); }
+
+/* ---------------------- WORLD BUILD ---------------------- */
+var world = document.getElementById('world');
+var HALF_W = 1100, HALF_D = 1800, WALL_H = 440;
+
+function plane(w, h, x, y, z, ry, rx, cls, html){
+  var d = document.createElement('div');
+  d.className = 'pl ' + (cls || '');
+  d.style.width = w + 'px';
+  d.style.height = h + 'px';
+  d.style.marginLeft = (-w/2) + 'px';
+  d.style.marginTop = (-h/2) + 'px';
+  d.style.transform = 'translate3d(' + x + 'px,' + y + 'px,' + z + 'px) rotateY(' + ry + 'deg) rotateX(' + rx + 'deg)';
+  if (html) d.innerHTML = html;
+  world.appendChild(d);
+  return d;
+}
+function boxObj(cx, cz, w, d, h, cls, act){
+  var faces = [
+    plane(w, h, cx, -h/2, cz + d/2,   0, 0, cls + ' f-s'),
+    plane(w, h, cx, -h/2, cz - d/2, 180, 0, cls + ' f-n'),
+    plane(d, h, cx - w/2, -h/2, cz, -90, 0, cls + ' f-w'),
+    plane(d, h, cx + w/2, -h/2, cz,  90, 0, cls + ' f-e'),
+    plane(w, d, cx, -h, cz, 0, 90, cls + ' f-t')
+  ];
+  if (act) faces.forEach(function(f){ f.dataset.act = act; });
+  return faces;
+}
+
+/* architecture */
+plane(2*HALF_W, WALL_H, 0, -WALL_H/2, -HALF_D,   0, 0, 'wall');
+plane(2*HALF_W, WALL_H, 0, -WALL_H/2,  HALF_D, 180, 0, 'wall');
+plane(2*HALF_D, WALL_H, -HALF_W, -WALL_H/2, 0,  90, 0, 'wall');
+plane(2*HALF_D, WALL_H,  HALF_W, -WALL_H/2, 0, -90, 0, 'wall');
+plane(2*HALF_W, 2*HALF_D, 0, 0, 0, 0, 90, 'floor');
+plane(340, 2680, 0, -1, -140, 0, 90, 'rug');
+plane(2*HALF_W, 2*HALF_D, 0, -WALL_H, 0, 0, -90, 'ceiling');
+
+/* painting placement: [x, z, rotateY] */
+var PLACE = {
+  tfs:[-HALF_W,-1500,90], ah:[-HALF_W,-1040,90], dw:[-HALF_W,-580,90],
+  mis:[-HALF_W,-120,90], det:[-HALF_W,340,90],  med:[-HALF_W,800,90],
+  pg:[HALF_W,-1200,-90],  bush:[HALF_W,-650,-90], emer:[HALF_W,-100,-90],
+  wbd:[-780,-HALF_D,0],   nls:[-420,-HALF_D,0],
+  hub:[420,-HALF_D,0],    tkp:[780,-HALF_D,0]
+};
+var DIMS = { book:{cw:180,ch:236}, essay:{cw:212,ch:150}, article:{cw:186,ch:136}, podcast:{cw:168,ch:168} };
+var STATION_POS = { flash:[-HALF_W,1280], recall:[680,-1620], reflect:[-350,1700], graph:[0,-HALF_D], seren:[0,0] };
+var STATION_NAME = { flash:'Study Room · Flashcards', recall:'Examination Hall · Recall', reflect:'Reading Room · Reflections', graph:'Collection Map · Graph', seren:'Display Case · Serendipity' };
+
+function addArt(w){
+  var p = PLACE[w.id], x = p[0], z = p[1], ry = p[2];
+  var dim = DIMS[w.type];
+  var fw = dim.cw + 26, fh = dim.ch + 26;
+  var off = 3;
+  var px = x, pz = z;
+  if (ry === 90) px += off; else if (ry === -90) px -= off;
+  else if (ry === 0) pz += off; else pz -= off;
+  var html =
+    '<div class="spot"></div>' +
+    '<div class="frame" style="width:' + fw + 'px;height:' + fh + 'px">' +
+      '<div class="canvas' + (w.light ? ' lightface' : '') + '" style="background:' + w.art + '">' +
+        '<span class="c-type">' + TYPE_LABEL[w.type] + '</span>' +
+        '<span class="c-title">' + esc(w.title) + '</span>' +
+        '<span class="c-author">' + esc(w.author) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="plaque"><b>' + esc(w.title) + '</b>' +
+      '<span>' + esc(w.author) + ', ' + esc(w.pub) + '</span>' +
+      '<span class="pq-c">Acquired ' + fmtMonth(w.consumed) + '</span></div>';
+  var el = plane(fw, fh + 86, px, -238, pz, ry, 0, 'art', html);
+  el.dataset.act = 'work:' + w.id;
+  el.title = w.title;
+}
+WORKS.forEach(addArt);
+
+/* wing labels */
+plane(300, 46, -HALF_W+3, -398, -350, 90, 0, 'wing-sign', 'BOOKS WING');
+plane(300, 46,  HALF_W-3, -398, -650, -90, 0, 'wing-sign', 'ESSAYS WING');
+plane(240, 42, -600, -398, -HALF_D+3, 0, 0, 'wing-sign', 'ARTICLES');
+plane(240, 42,  600, -398, -HALF_D+3, 0, 0, 'wing-sign', 'PODCASTS');
+plane(420, 46,  HALF_W-3, -366, -1620, -90, 0, 'wing-sign', 'EXAMINATION HALL <small>ACTIVE RECALL</small>');
+plane(400, 46, -350, -366, HALF_D-3, 180, 0, 'wing-sign', 'READING ROOM <small>REFLECTIONS</small>');
+
+/* Study Room doorway (flashcards) — west wall, south end */
+(function(){
+  var d = plane(200, 312, -HALF_W+3, -156, 1280, 90, 0, 'door',
+    '<div class="door-plate">STUDY ROOM</div><div class="door-sub">FLASHCARDS</div>' +
+    '<div class="door-lamp"></div><div class="door-desk"></div>');
+  d.dataset.act = 'station:flash';
+})();
+
+/* Examination lectern (recall) — near east wall */
+boxObj(680, -1620, 84, 70, 118, 'wood', 'station:recall');
+(function(){
+  var b = plane(76, 54, 672, -140, -1620, -90, 72, 'page');
+  b.dataset.act = 'station:recall';
+})();
+
+/* Reading Room bench + journal (reflections) — south wall */
+boxObj(-350, 1700, 270, 72, 58, 'wood', 'station:reflect');
+(function(){
+  var j = plane(72, 52, -392, -60, 1700, 0, 90, 'page');
+  j.dataset.act = 'station:reflect';
+})();
+
+/* Collection Map (knowledge graph) — north wall center */
+(function(){
+  var m = plane(460, 318, 0, -248, -HALF_D+3, 0, 0, 'map-frame',
+    '<div class="spot"></div><div class="map-inner"><h3>COLLECTION MAP</h3>' +
+    mapSVG(220, 340, false, 'wallmap') +
+    '<p>HOW THE COLLECTION CONNECTS</p></div>');
+  m.dataset.act = 'station:graph';
+})();
+
+/* Display case (serendipity) — center of hall */
+boxObj(0, 0, 150, 150, 96, 'ped', 'station:seren');
+(function(){
+  var gy = -96;
+  var g1 = plane(130, 128, 0, gy-64,  65,   0, 0, 'glass');
+  var g2 = plane(130, 128, 0, gy-64, -65, 180, 0, 'glass');
+  var g3 = plane(130, 128, -65, gy-64, 0, -90, 0, 'glass');
+  var g4 = plane(130, 128,  65, gy-64, 0,  90, 0, 'glass');
+  var g5 = plane(130, 130, 0, gy-128, 0, 0, 90, 'glass');
+  var r  = plane(74, 52, 0, gy-28, 0, 24, 0, 'relic', 'A FORGOTTEN<br>NOTE RESTS HERE');
+  var plt = plane(150, 1, 0, gy+48, 76, 0, 0, '', '<div class="case-plate">SERENDIPITY</div>');
+  [g1,g2,g3,g4,g5,r,plt].forEach(function(e){ e.dataset.act = 'station:seren'; });
+})();
+
+/* ---------------------- MINIMAP ---------------------- */
+function mapPt(x, z, w, h){
+  return [ (x + HALF_W) / (2*HALF_W) * (w - 16) + 8,
+           (z + HALF_D) / (2*HALF_D) * (h - 16) + 8 ];
+}
+function mapSVG(w, h, interactive, cls){
+  var s = '<svg viewBox="0 0 ' + w + ' ' + h + '" class="' + (cls||'') + '" xmlns="http://www.w3.org/2000/svg">';
+  s += '<rect x="8" y="8" width="' + (w-16) + '" height="' + (h-16) + '" class="mm-hall" rx="2"/>';
+  var rp = mapPt(-190, -1500, w, h), rp2 = mapPt(190, 1600, w, h);
+  s += '<rect x="' + rp[0] + '" y="' + rp[1] + '" width="' + (rp2[0]-rp[0]) + '" height="' + (rp2[1]-rp[1]) + '" class="mm-rug"/>';
+  WORKS.forEach(function(wk){
+    var p = PLACE[wk.id], pt = mapPt(p[0], p[1], w, h);
+    s += '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="4.5" class="mm-w"' +
+         (interactive ? ' data-act="work:' + wk.id + '"' : '') + '><title>' + esc(wk.title) + '</title></circle>';
+  });
+  Object.keys(STATION_POS).forEach(function(id){
+    var sp = STATION_POS[id], pt = mapPt(sp[0], sp[1], w, h);
+    s += '<rect x="' + (pt[0]-4.5).toFixed(1) + '" y="' + (pt[1]-4.5).toFixed(1) + '" width="9" height="9" class="mm-st"' +
+         (interactive ? ' data-act="station:' + id + '"' : '') + '><title>' + STATION_NAME[id] + '</title></rect>';
+  });
+  if (interactive) s += '<polygon id="mm-cam" points="0,-7 5,5 0,2.5 -5,5"/>';
+  s += '</svg>';
+  return s;
+}
+var MM_W = 150, MM_H = 236;
+document.getElementById('minimap').innerHTML = mapSVG(MM_W, MM_H, true, '');
+var mmCam = document.getElementById('mm-cam');
+
+/* ---------------------- CAMERA / MOVEMENT ---------------------- */
+var PERSP = 700;
+var cam = { x:0, z:1480, yaw:0 };
+var tgt = { x:0, z:1480, yaw:0 };
+var keys = {};
+var glide = null, pendingOpen = null;
+var lastTs = 0;
+
+function clampPos(p){
+  p.x = clamp(p.x, -(HALF_W-230), HALF_W-230);
+  p.z = clamp(p.z, -(HALF_D-220), HALF_D-220);
+  if (Math.abs(p.x) < 200 && Math.abs(p.z) < 200){
+    if (Math.abs(p.x) > Math.abs(p.z)) p.x = (p.x >= 0 ? 1 : -1) * 200;
+    else p.z = (p.z >= 0 ? 1 : -1) * 200;
+  }
+}
+function glideTo(stand, open){
+  glide = { x: stand.x, z: stand.z, yaw: stand.yaw };
+  pendingOpen = open || null;
+  tgt.x = stand.x; tgt.z = stand.z;
+  clampPos(tgt);
+  tgt.yaw = cam.yaw + shortAngle(stand.yaw - cam.yaw);
+}
+function cancelGlide(){ glide = null; pendingOpen = null; }
+
+function standForWork(w){
+  var p = PLACE[w.id], x = p[0], z = p[1], ry = p[2], d = 290;
+  if (ry === 90)  return { x: x + d, z: z, yaw:  Math.PI/2 };
+  if (ry === -90) return { x: x - d, z: z, yaw: -Math.PI/2 };
+  if (ry === 0)   return { x: x, z: z + d, yaw: 0 };
+  return { x: x, z: z - d, yaw: Math.PI };
+}
+var STATIONS = {
+  flash:   { stand:{ x:-770, z:1280, yaw: Math.PI/2 },  open: function(){ showFlashcards(); } },
+  recall:  { stand:{ x: 360, z:-1620, yaw:-Math.PI/2 }, open: function(){ showRecall(); } },
+  reflect: { stand:{ x:-350, z:1400, yaw: Math.PI },    open: function(){ showReflections(); } },
+  graph:   { stand:{ x: 0, z:-1300, yaw: 0 },           open: function(){ showGraph(); } },
+  seren:   { stand:{ x: 0, z: 330, yaw: 0 },            open: function(){ showSerendipity(); } }
+};
+function approach(kind, id){
+  var stand, open;
+  if (kind === 'work'){
+    var w = byId(id);
+    if (!w) return;
+    stand = standForWork(w);
+    open = function(){ showDetail(id); };
+  } else {
+    var s = STATIONS[id];
+    if (!s) return;
+    stand = s.stand;
+    open = s.open;
+  }
+  var d = Math.hypot(cam.x - stand.x, cam.z - stand.z);
+  if (d < 150 && Math.abs(shortAngle(stand.yaw - cam.yaw)) < 1.2){ open(); }
+  else glideTo(stand, open);
+}
+
+/* input */
+window.addEventListener('keydown', function(e){
+  if (e.key === 'Escape'){
+    if (!$('#overlay').hidden){ closePanel(); e.preventDefault(); return; }
+    if (!$('#toast').hidden){ hideToast(); e.preventDefault(); return; }
+  }
+  if (e.target && e.target.closest && e.target.closest('input,textarea,select,[contenteditable]')) return;
+  if (!$('#overlay').hidden) return;
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].indexOf(e.code) >= 0){
+    keys[e.code] = true;
+    cancelGlide();
+    e.preventDefault();
+  }
+});
+window.addEventListener('keyup', function(e){ keys[e.code] = false; });
+window.addEventListener('blur', function(){ keys = {}; });
+
+/* drag to look + click to approach */
+var vp = document.getElementById('viewport');
+var dragState = null, dragMoved = false;
+vp.addEventListener('pointerdown', function(e){
+  if (!$('#overlay').hidden) return;
+  dragState = { id: e.pointerId, lx: e.clientX, total: 0 };
+  dragMoved = false;
+  try { vp.setPointerCapture(e.pointerId); } catch(err){}
+});
+vp.addEventListener('pointermove', function(e){
+  if (!dragState || e.pointerId !== dragState.id) return;
+  var dx = e.clientX - dragState.lx;
+  dragState.lx = e.clientX;
+  dragState.total += Math.abs(dx);
+  if (dragState.total > 6){
+    dragMoved = true;
+    vp.classList.add('dragging');
+    cancelGlide();
+    tgt.yaw -= dx * 0.0042;
+  }
+});
+function endDrag(e){
+  if (dragState && e.pointerId === dragState.id){
+    dragState = null;
+    vp.classList.remove('dragging');
+    if (dragMoved) setTimeout(function(){ dragMoved = false; }, 0);
+  }
+}
+vp.addEventListener('pointerup', endDrag);
+vp.addEventListener('pointercancel', endDrag);
+
+function actClickHandler(e){
+  if (dragMoved) return;
+  var t = e.target.closest ? e.target.closest('[data-act]') : null;
+  if (!t) return;
+  var parts = t.dataset.act.split(':');
+  approach(parts[0], parts[1]);
+}
+vp.addEventListener('click', actClickHandler);
+document.getElementById('minimap').addEventListener('click', actClickHandler);
+
+document.getElementById('badge').addEventListener('click', function(){ showFlashcards(); });
+document.getElementById('fp-btn').addEventListener('click', function(){ showFloorplan(); });
+document.querySelectorAll('.qbtn').forEach(function(b){
+  b.addEventListener('click', function(){ STATIONS[b.dataset.open].open(); });
+});
+
+/* main loop */
+function tick(ts){
+  var dt = lastTs ? Math.min(0.05, (ts - lastTs) / 1000) : 0.016;
+  lastTs = ts;
+  var overlayUp = !$('#overlay').hidden;
+
+  if (!overlayUp){
+    var f = ((keys.KeyW || keys.ArrowUp) ? 1 : 0) - ((keys.KeyS || keys.ArrowDown) ? 1 : 0);
+    var r = ((keys.KeyD || keys.ArrowRight) ? 1 : 0) - ((keys.KeyA || keys.ArrowLeft) ? 1 : 0);
+    if (f || r){
+      cancelGlide();
+      tgt.yaw -= r * 1.85 * dt;
+      if (f){
+        tgt.x += -Math.sin(tgt.yaw) * f * 580 * dt;
+        tgt.z += -Math.cos(tgt.yaw) * f * 580 * dt;
+      }
+      clampPos(tgt);
+    }
+  }
+
+  var k = 1 - Math.exp(-dt * (RM ? 12 : 5.2));
+  cam.x += (tgt.x - cam.x) * k;
+  cam.z += (tgt.z - cam.z) * k;
+  cam.yaw += (tgt.yaw - cam.yaw) * k;
+
+  if (glide){
+    if (Math.hypot(cam.x - tgt.x, cam.z - tgt.z) < 12 && Math.abs(tgt.yaw - cam.yaw) < 0.05){
+      var open = pendingOpen;
+      cancelGlide();
+      if (open) open();
+    }
+  }
+
+  var yawOff = 0, yOff = 0;
+  if (!RM && !overlayUp){
+    yawOff = Math.sin(ts * 0.00042) * 0.0045;
+    yOff = Math.sin(ts * 0.00085) * 2.0;
+  }
+  world.style.transform =
+    'translateZ(' + PERSP + 'px) rotateY(' + (-(cam.yaw + yawOff)) + 'rad) ' +
+    'translate3d(' + (-cam.x) + 'px,' + (170 + yOff) + 'px,' + (-cam.z) + 'px)';
+
+  if (mmCam){
+    var pt = mapPt(cam.x, cam.z, MM_W, MM_H);
+    mmCam.setAttribute('transform', 'translate(' + pt[0].toFixed(1) + ',' + pt[1].toFixed(1) + ') rotate(' + (-cam.yaw * 180 / Math.PI).toFixed(1) + ')');
+  }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+/* ---------------------- OVERLAY SYSTEM ---------------------- */
+var ovEl = $('#overlay');
+function openPanel(title, sub, bodyHTML){
+  $('#ov-title').textContent = title;
+  $('#ov-sub').textContent = sub || '';
+  $('#ov-body').innerHTML = bodyHTML;
+  ovEl.hidden = false;
+  keys = {};
+  ovEl.querySelector('.panel').scrollTop = 0;
+}
+function closePanel(){ ovEl.hidden = true; }
+$('#ov-close').addEventListener('click', closePanel);
+ovEl.addEventListener('click', function(e){ if (e.target === ovEl) closePanel(); });
+
+/* ---------------------- DETAIL VIEW ---------------------- */
+var detailState = { id:null, editing:-1 };
+function showDetail(id){
+  detailState = { id:id, editing:-1 };
+  var w = byId(id);
+  openPanel(w.title, TYPE_LABEL[w.type] + ' · museum placard', detailHTML(w));
+  bindDetail();
+}
+function detailHTML(w){
+  var h = '<dl class="meta-grid">' +
+    '<div><dt>Author</dt><dd>' + esc(w.author) + '</dd></div>' +
+    '<div><dt>Published</dt><dd>' + esc(w.pub) + '</dd></div>' +
+    '<div><dt>Consumed</dt><dd>' + fmtDate(w.consumed) + '</dd></div>' +
+    '<div><dt>Wing</dt><dd>' + TYPE_WING[w.type] + '</dd></div></dl>';
+  h += '<div class="tags">' + w.tags.map(function(t){
+      return '<button class="tag" data-tag="' + t + '" title="Test recall on ‘' + t + '’">' + t + '</button>';
+    }).join('') + '</div>';
+  h += '<div class="sect"><h3>Quotes</h3>' +
+    w.quotes.map(function(q){ return '<blockquote>“' + esc(q) + '”</blockquote>'; }).join('') + '</div>';
+  h += '<div class="sect"><h3>Personal notes (' + w.notes.length + ')</h3>';
+  w.notes.forEach(function(n, i){
+    if (detailState.editing === i){
+      h += '<div class="note"><div class="note-meta"><span>' + fmtDate(n.d) + ' · editing</span></div>' +
+        '<textarea id="note-edit">' + esc(n.t) + '</textarea>' +
+        '<div class="row" style="margin-top:8px"><button class="btn" data-save="' + i + '">Save</button>' +
+        '<button class="btn ghost" data-cancel="1">Cancel</button></div></div>';
+    } else {
+      h += '<div class="note"><div class="note-meta"><span>' + fmtDate(n.d) + '</span>' +
+        '<button class="mini" data-edit="' + i + '">Edit</button></div>' +
+        '<div class="note-text">' + esc(n.t) + '</div></div>';
+    }
+  });
+  h += '<div class="note" style="background:transparent">' +
+    '<div class="note-meta"><span>Add a note</span></div>' +
+    '<textarea id="note-new" placeholder="What do you want your future self to remember about this?"></textarea>' +
+    '<div class="row" style="margin-top:8px"><button class="btn" id="note-add">Add note</button></div></div></div>';
+  var due = w.cards.filter(function(c){ return c.due <= Date.now(); }).length;
+  h += '<div class="sect"><h3>In the vault</h3><p class="muted">' + w.cards.length +
+    (w.cards.length === 1 ? ' flashcard' : ' flashcards') + ' from this work · ' +
+    (due ? due + ' due now' : 'none due') + '</p>' +
+    '<div class="row" style="margin-top:10px">' +
+    '<button class="btn" id="det-test">Test me on this</button>' +
+    '<button class="btn ghost" id="det-walk">Walk to it in the hall</button></div></div>';
+  return h;
+}
+function bindDetail(){
+  var w = byId(detailState.id);
+  var body = $('#ov-body');
+  body.querySelectorAll('[data-edit]').forEach(function(b){
+    b.addEventListener('click', function(){
+      detailState.editing = +b.dataset.edit;
+      body.innerHTML = detailHTML(w); bindDetail();
+      var ta = $('#note-edit'); if (ta){ ta.focus(); }
+    });
+  });
+  body.querySelectorAll('[data-save]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var ta = $('#note-edit');
+      var v = ta ? ta.value.trim() : '';
+      if (v) w.notes[+b.dataset.save].t = v;
+      detailState.editing = -1;
+      body.innerHTML = detailHTML(w); bindDetail();
+    });
+  });
+  body.querySelectorAll('[data-cancel]').forEach(function(b){
+    b.addEventListener('click', function(){
+      detailState.editing = -1;
+      body.innerHTML = detailHTML(w); bindDetail();
+    });
+  });
+  var add = $('#note-add');
+  if (add) add.addEventListener('click', function(){
+    var ta = $('#note-new');
+    var v = ta.value.trim();
+    if (!v) return;
+    w.notes.push({ d: todayISO(), t: v });
+    body.innerHTML = detailHTML(w); bindDetail();
+  });
+  body.querySelectorAll('[data-tag]').forEach(function(b){
+    b.addEventListener('click', function(){ showRecall('t:' + b.dataset.tag); });
+  });
+  var test = $('#det-test');
+  if (test) test.addEventListener('click', function(){ showRecall('w:' + w.id); });
+  var walk = $('#det-walk');
+  if (walk) walk.addEventListener('click', function(){
+    closePanel();
+    glideTo(standForWork(w), null);
+  });
+}
+
+/* ---------------------- FLASHCARDS ---------------------- */
+var fcState = null;
+function showFlashcards(){
+  var q = dueCards();
+  fcState = { queue:q, i:0, flipped:false, practice:false, done:0 };
+  openPanel('Study Room', 'flashcards · spaced repetition', '<div id="fc-area"></div>');
+  renderFc();
+}
+function renderFc(){
+  var area = $('#fc-area');
+  if (!area) return;
+  var s = fcState;
+  if (!s.queue.length || s.i >= s.queue.length){
+    var remaining = dueCards().length;
+    var h = '';
+    if (s.done > 0){
+      h += '<p style="font-size:16px">Session complete — <b>' + s.done + '</b> card' + (s.done===1?'':'s') + ' reviewed.</p>';
+      h += '<p class="muted" style="margin-top:6px">' + (remaining ? remaining + ' card' + (remaining===1?' is':'s are') + ' still due (misses return in 10 minutes).' : 'Nothing else is due. The collection rests.') + '</p>';
+    } else {
+      h += '<p style="font-size:16px">Nothing is due right now.</p>' +
+           '<p class="muted" style="margin-top:6px">The scheduler will bring cards back as their intervals lapse.</p>';
+    }
+    h += '<div class="row" style="margin-top:16px">';
+    if (remaining) h += '<button class="btn" id="fc-again">Review due cards</button>';
+    h += '<button class="btn ghost" id="fc-practice">Practice ahead (random 10)</button></div>';
+    area.innerHTML = h;
+    var ag = $('#fc-again');
+    if (ag) ag.addEventListener('click', function(){ fcState = { queue:dueCards(), i:0, flipped:false, practice:false, done:0 }; renderFc(); });
+    $('#fc-practice').addEventListener('click', function(){
+      var pool = allCards.slice().sort(function(){ return Math.random() - 0.5; }).slice(0, 10);
+      fcState = { queue:pool, i:0, flipped:false, practice:true, done:0 };
+      renderFc();
+    });
+    return;
+  }
+  var c = s.queue[s.i];
+  var h2 = '<p class="muted">' + (s.practice ? 'Practice' : 'Due review') + ' · card ' + (s.i+1) + ' of ' + s.queue.length +
+    ' · from <i>' + esc(c.work.title) + '</i> (' + TYPE_LABEL[c.work.type] + ')</p>';
+  h2 += '<div class="fc' + (s.flipped ? ' flip' : '') + '" id="fc-card" title="Click to flip">' +
+    '<div class="fc-inner">' +
+      '<div class="fc-face"><span class="fc-k">Prompt</span><div class="fc-q">' + esc(c.q) + '</div><span class="muted">click to reveal</span></div>' +
+      '<div class="fc-face fc-back"><span class="fc-k">Answer</span><div class="fc-a">' + esc(c.a) + '</div></div>' +
+    '</div></div>';
+  if (s.flipped){
+    h2 += '<div class="grade-row">' + gradeButtonsHTML(c) + '</div>';
+  } else {
+    h2 += '<div class="row" style="justify-content:center"><button class="btn" id="fc-reveal">Reveal answer</button></div>';
+  }
+  h2 += '<p class="muted" style="text-align:center;margin-top:14px">interval ' + (c.interval || 0) + 'd · ease ' + c.ease.toFixed(2) + ' · ' + dueStr(c) + '</p>';
+  area.innerHTML = h2;
+  $('#fc-card').addEventListener('click', function(){ s.flipped = !s.flipped; renderFc(); });
+  var rv = $('#fc-reveal');
+  if (rv) rv.addEventListener('click', function(e){ e.stopPropagation(); s.flipped = true; renderFc(); });
+  bindGradeButtons(c, function(){
+    s.done++; s.i++; s.flipped = false; renderFc();
+  });
+}
+function gradeButtonsHTML(c){
+  var names = ['Again','Hard','Good','Easy'];
+  var out = '';
+  for (var g = 0; g < 4; g++){
+    out += '<button class="grade g' + g + '" data-g="' + g + '"><span>' + names[g] + '</span><small>' + previewLabel(c, g) + '</small></button>';
+  }
+  return out;
+}
+function bindGradeButtons(c, after){
+  $('#ov-body').querySelectorAll('[data-g]').forEach(function(b){
+    b.addEventListener('click', function(){
+      gradeCard(c, +b.dataset.g);
+      after();
+    });
+  });
+}
+
+/* ---------------------- ACTIVE RECALL ---------------------- */
+var rcState = null;
+function showRecall(preset){
+  var opts = '<optgroup label="By work">' + WORKS.map(function(w){
+    return '<option value="w:' + w.id + '">' + esc(w.title) + '</option>';
+  }).join('') + '</optgroup>';
+  var tags = [];
+  WORKS.forEach(function(w){ w.tags.forEach(function(t){ if (tags.indexOf(t) < 0) tags.push(t); }); });
+  tags.sort();
+  opts += '<optgroup label="By subject">' + tags.map(function(t){
+    return '<option value="t:' + t + '">' + t + '</option>';
+  }).join('') + '</optgroup>';
+  openPanel('Examination Hall', 'active recall · type before you peek',
+    '<p class="muted">Choose a single work or a whole subject. Answer from memory in your own words, then compare and grade yourself — results feed the same scheduler as the flashcards.</p>' +
+    '<div class="row" style="margin-top:12px"><div style="flex:1;min-width:220px"><select id="rc-scope">' + opts + '</select></div>' +
+    '<button class="btn" id="rc-begin">Begin examination</button></div>' +
+    '<div id="rc-area" style="margin-top:16px"></div>');
+  $('#rc-begin').addEventListener('click', beginRecall);
+  if (preset){
+    var sel = $('#rc-scope');
+    sel.value = preset;
+    if (sel.value === preset) beginRecall();
+  }
+}
+function beginRecall(){
+  var v = $('#rc-scope').value;
+  var parts = v.split(':');
+  var cards;
+  var label;
+  if (parts[0] === 'w'){
+    var w = byId(parts[1]);
+    cards = w.cards.slice();
+    label = w.title;
+  } else {
+    cards = allCards.filter(function(c){ return c.work.tags.indexOf(parts[1]) >= 0; });
+    label = 'subject · ' + parts[1];
+  }
+  cards.sort(function(a,b){ return a.due - b.due; });
+  rcState = { cards:cards, i:0, revealed:false, label:label, done:0 };
+  renderRecall();
+}
+function renderRecall(){
+  var area = $('#rc-area');
+  if (!area) return;
+  var s = rcState;
+  if (s.i >= s.cards.length){
+    area.innerHTML = '<div class="sect"><h3>' + esc(s.label) + '</h3>' +
+      '<p style="font-size:16px">Examination complete — ' + s.done + ' of ' + s.cards.length + ' prompts answered and graded.</p>' +
+      '<p class="muted" style="margin-top:6px">Each grade rescheduled its card in the spaced-repetition queue.</p></div>';
+    return;
+  }
+  var c = s.cards[s.i];
+  var h = '<div class="sect"><h3>' + esc(s.label) + ' · prompt ' + (s.i+1) + ' of ' + s.cards.length + '</h3>' +
+    '<p class="muted">from <i>' + esc(c.work.title) + '</i> · ' + dueStr(c) + '</p>' +
+    '<p style="font-size:17px;line-height:1.5;margin:12px 0">' + esc(c.q) + '</p>';
+  if (!s.revealed){
+    h += '<textarea id="rc-answer" placeholder="Type your answer from memory…"></textarea>' +
+      '<div class="row" style="margin-top:10px"><button class="btn" id="rc-reveal">Reveal answer</button>' +
+      '<button class="btn ghost" id="rc-skip">Skip</button></div>';
+  } else {
+    h += '<div class="note"><div class="note-meta"><span>Your answer</span></div>' +
+      '<div class="note-text">' + (s.typed ? esc(s.typed) : '<span class="muted">(left blank)</span>') + '</div></div>' +
+      '<div class="note" style="background:#f3ecd8"><div class="note-meta"><span>Reference answer</span></div>' +
+      '<div class="note-text">' + esc(c.a) + '</div></div>' +
+      '<p class="muted" style="margin:10px 0 6px">How close were you?</p>' +
+      '<div class="grade-row" style="justify-content:flex-start">' + gradeButtonsHTML(c) + '</div>';
+  }
+  h += '</div>';
+  area.innerHTML = h;
+  if (!s.revealed){
+    var ta = $('#rc-answer');
+    ta.focus();
+    $('#rc-reveal').addEventListener('click', function(){
+      s.typed = ta.value.trim(); s.revealed = true; renderRecall();
+    });
+    $('#rc-skip').addEventListener('click', function(){ s.i++; s.revealed = false; s.typed=''; renderRecall(); });
+  } else {
+    bindGradeButtons(c, function(){ s.done++; s.i++; s.revealed = false; s.typed=''; renderRecall(); });
+  }
+}
+
+/* ---------------------- REFLECTIONS ---------------------- */
+var quotePool = [];
+WORKS.forEach(function(w){ w.quotes.forEach(function(q){ quotePool.push({ w:w, q:q }); }); });
+var curQuote = null;
+function pickQuote(){
+  var i, prev = curQuote;
+  do { i = Math.floor(Math.random() * quotePool.length); } while (quotePool.length > 1 && quotePool[i] === prev);
+  curQuote = quotePool[i];
+}
+function showReflections(){
+  pickQuote();
+  openPanel('Reading Room', 'reflections · synthesis over storage', reflHTML());
+  bindRefl();
+}
+function reflHTML(){
+  var h = '<p class="muted">The room offers you a passage from the collection. Sit with it, then write what it means to you now.</p>' +
+    '<blockquote id="rf-quote">“' + esc(curQuote.q) + '”<br>' +
+    '<span style="font-style:normal;font-size:12px;color:#8a7850">— ' + esc(curQuote.w.author) + ', <i>' + esc(curQuote.w.title) + '</i></span></blockquote>' +
+    '<div class="row" style="margin-bottom:10px"><button class="btn ghost" id="rf-another">Offer me another</button></div>' +
+    '<textarea id="rf-text" placeholder="Write your reflection… What does this change about how you think or act?"></textarea>' +
+    '<div class="row" style="margin-top:10px"><button class="btn" id="rf-save">Save reflection</button></div>' +
+    '<div class="sect"><h3>Past reflections (' + REFLECTIONS.length + ')</h3><div id="rf-list">' + reflListHTML() + '</div></div>';
+  return h;
+}
+function reflListHTML(){
+  return REFLECTIONS.map(function(r){
+    return '<div class="refl"><div class="note-meta"><span>' + fmtDate(r.date) + ' · on <i>' + esc(r.source) + '</i></span></div>' +
+      '<div class="rq">“' + esc(r.quote) + '”</div>' +
+      '<div class="note-text">' + esc(r.text) + '</div></div>';
+  }).join('');
+}
+function bindRefl(){
+  $('#rf-another').addEventListener('click', function(){
+    pickQuote();
+    $('#ov-body').innerHTML = reflHTML();
+    bindRefl();
+  });
+  $('#rf-save').addEventListener('click', function(){
+    var ta = $('#rf-text');
+    var v = ta.value.trim();
+    if (!v) return;
+    REFLECTIONS.unshift({ date: todayISO(), workId: curQuote.w.id, source: curQuote.w.title, quote: curQuote.q, text: v });
+    $('#ov-body').innerHTML = reflHTML();
+    bindRefl();
+  });
+}
+
+/* ---------------------- KNOWLEDGE GRAPH ---------------------- */
+function showGraph(){
+  openPanel('Collection Map', 'knowledge graph · linked by shared tags',
+    '<p class="muted">Each frame in the hall, drawn as a node. Lines bind works that share tags — thicker lines, more shared ground. Hover to isolate a work’s neighborhood; click to open its placard.</p>' +
+    '<div id="graph-wrap" style="margin-top:12px"></div><div id="graph-cap"></div>');
+  buildGraphSVG();
+}
+var TYPE_COLOR = { book:'#a8864b', essay:'#5c6b4a', article:'#58708f', podcast:'#8a5a6e' };
+function buildGraphSVG(){
+  var W = 720, H = 540;
+  var N = WORKS.map(function(w, i){
+    var a = i / WORKS.length * 2 * Math.PI;
+    return { w:w, x: W/2 + Math.cos(a) * 200, y: H/2 + Math.sin(a) * 150, vx:0, vy:0 };
+  });
+  var E = [];
+  for (var i = 0; i < N.length; i++)
+    for (var j = i+1; j < N.length; j++){
+      var s = sharedTags(N[i].w, N[j].w);
+      if (s.length) E.push({ a:i, b:j, s:s });
+    }
+  for (var it = 0; it < 320; it++){
+    for (i = 0; i < N.length; i++)
+      for (j = i+1; j < N.length; j++){
+        var dx = N[j].x - N[i].x, dy = N[j].y - N[i].y;
+        var d2 = dx*dx + dy*dy || 1, d = Math.sqrt(d2);
+        var f = 3400 / d2;
+        dx /= d; dy /= d;
+        N[i].vx -= dx*f; N[i].vy -= dy*f;
+        N[j].vx += dx*f; N[j].vy += dy*f;
+      }
+    E.forEach(function(e){
+      var a = N[e.a], b = N[e.b];
+      var dx = b.x - a.x, dy = b.y - a.y;
+      var d = Math.hypot(dx, dy) || 1;
+      var rest = 230 - 45 * e.s.length;
+      var f = (d - rest) * 0.014;
+      dx /= d; dy /= d;
+      a.vx += dx*f; a.vy += dy*f;
+      b.vx -= dx*f; b.vy -= dy*f;
+    });
+    N.forEach(function(n){
+      n.vx += (W/2 - n.x) * 0.0035;
+      n.vy += (H/2 - n.y) * 0.0045;
+      n.x = clamp(n.x + n.vx, 55, W-55);
+      n.y = clamp(n.y + n.vy, 40, H-46);
+      n.vx *= 0.42; n.vy *= 0.42;
+    });
+  }
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" id="gsvg" xmlns="http://www.w3.org/2000/svg">';
+  E.forEach(function(e, idx){
+    var a = N[e.a], b = N[e.b];
+    svg += '<line class="gedge" data-e="' + idx + '" x1="' + a.x.toFixed(1) + '" y1="' + a.y.toFixed(1) +
+      '" x2="' + b.x.toFixed(1) + '" y2="' + b.y.toFixed(1) +
+      '" stroke-width="' + (e.s.length * 1.4) + '" opacity="' + (0.14 + e.s.length * 0.1) + '"/>';
+  });
+  N.forEach(function(n, idx){
+    var short = n.w.title.length > 22 ? n.w.title.slice(0, 20) + '…' : n.w.title;
+    svg += '<g class="gnode" data-n="' + idx + '" data-view="' + n.w.id + '">' +
+      '<circle cx="' + n.x.toFixed(1) + '" cy="' + n.y.toFixed(1) + '" r="' + (13 + n.w.cards.length * 1.5) + '" fill="' + TYPE_COLOR[n.w.type] + '"/>' +
+      '<text x="' + n.x.toFixed(1) + '" y="' + (n.y + 30).toFixed(1) + '">' + esc(short) + '</text></g>';
+  });
+  svg += '</svg>';
+  svg += '<div class="row" style="margin-top:8px;font-size:11.5px;color:#6e5527">' +
+    Object.keys(TYPE_COLOR).map(function(t){
+      return '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + TYPE_COLOR[t] + ';margin-right:4px"></span>' + TYPE_LABEL[t] + 's</span>';
+    }).join('') + '</div>';
+  $('#graph-wrap').innerHTML = svg;
+  var gsvg = $('#gsvg');
+  var cap = $('#graph-cap');
+  var nodes = gsvg.querySelectorAll('.gnode');
+  var edges = gsvg.querySelectorAll('.gedge');
+  nodes.forEach(function(g){
+    var ni = +g.dataset.n;
+    g.addEventListener('mouseenter', function(){
+      gsvg.classList.add('hl');
+      var neigh = {}; neigh[ni] = true;
+      var tags = [];
+      E.forEach(function(e, idx){
+        if (e.a === ni || e.b === ni){
+          neigh[e.a] = neigh[e.b] = true;
+          edges[idx].classList.add('on');
+          e.s.forEach(function(t){ if (tags.indexOf(t) < 0) tags.push(t); });
+        }
+      });
+      nodes.forEach(function(g2){ if (neigh[+g2.dataset.n]) g2.classList.add('on'); });
+      var count = Object.keys(neigh).length - 1;
+      cap.textContent = N[ni].w.title + ' — linked to ' + count + ' work' + (count===1?'':'s') + ' through: ' + tags.join(', ');
+    });
+    g.addEventListener('mouseleave', function(){
+      gsvg.classList.remove('hl');
+      nodes.forEach(function(g2){ g2.classList.remove('on'); });
+      edges.forEach(function(e2){ e2.classList.remove('on'); });
+      cap.textContent = '';
+    });
+    g.addEventListener('click', function(){ showDetail(g.dataset.view); });
+  });
+}
+
+/* ---------------------- FLOOR PLAN (2D fallback) ---------------------- */
+function showFloorplan(){
+  var order = ['book','essay','article','podcast'];
+  var h = '<p class="muted">Every work in the collection, no walking required. “Walk” glides you to its frame in the hall.</p>';
+  order.forEach(function(t){
+    var items = WORKS.filter(function(w){ return w.type === t; });
+    h += '<div class="sect"><h3>' + TYPE_WING[t] + ' (' + items.length + ')</h3>';
+    items.forEach(function(w){
+      h += '<div class="fp-item"><b>' + esc(w.title) + '</b>' +
+        '<span class="fp-meta">' + esc(w.author) + ', ' + esc(w.pub) + ' · consumed ' + fmtMonth(w.consumed) + ' · ' + w.tags.join(', ') + '</span>' +
+        '<span class="row"><button class="mini" data-view="' + w.id + '">View</button>' +
+        '<button class="mini" data-walk="work:' + w.id + '">Walk</button></span></div>';
+    });
+    h += '</div>';
+  });
+  h += '<div class="sect"><h3>Stations</h3>';
+  Object.keys(STATION_NAME).forEach(function(id){
+    h += '<div class="fp-item"><b style="font-style:normal">' + STATION_NAME[id] + '</b>' +
+      '<span class="row"><button class="mini" data-station="' + id + '">Open</button>' +
+      '<button class="mini" data-walk="station:' + id + '">Walk</button></span></div>';
+  });
+  h += '</div>';
+  openPanel('Floor Plan', 'index of the collection', h);
+  var body = $('#ov-body');
+  body.querySelectorAll('[data-view]').forEach(function(b){
+    b.addEventListener('click', function(){ showDetail(b.dataset.view); });
+  });
+  body.querySelectorAll('[data-station]').forEach(function(b){
+    b.addEventListener('click', function(){ STATIONS[b.dataset.station].open(); });
+  });
+  body.querySelectorAll('[data-walk]').forEach(function(b){
+    b.addEventListener('click', function(){
+      closePanel();
+      var parts = b.dataset.walk.split(':');
+      if (parts[0] === 'work') glideTo(standForWork(byId(parts[1])), null);
+      else glideTo(STATIONS[parts[1]].stand, null);
+    });
+  });
+}
+
+/* ---------------------- SERENDIPITY ---------------------- */
+var toastEl = $('#toast');
+var lastSer = null;
+function serendipityPool(){
+  var arr = [];
+  WORKS.forEach(function(w){
+    w.notes.forEach(function(n){ arr.push({ kind:'note', w:w, d:n.d, text:n.t }); });
+  });
+  REFLECTIONS.forEach(function(r){ arr.push({ kind:'refl', r:r, d:r.date, text:r.text }); });
+  return arr;
+}
+function showSerendipity(){
+  var pool = serendipityPool();
+  if (!pool.length) return;
+  var it;
+  do { it = pool[Math.floor(Math.random() * pool.length)]; }
+  while (pool.length > 1 && it.text === lastSer);
+  lastSer = it.text;
+  var label = it.kind === 'note' ? 'From the archives · note' : 'From the archives · reflection';
+  var src = it.kind === 'note' ? it.w.title : it.r.source;
+  var snippet = it.text.length > 175 ? it.text.slice(0, 172).replace(/\s+\S*$/, '') + '…' : it.text;
+  toastEl.innerHTML =
+    '<div class="t-kicker"><span>' + label + '</span><button id="t-x" aria-label="Dismiss">×</button></div>' +
+    '<div class="t-src">' + esc(src) + ' · ' + fmtDate(it.d) + '</div>' +
+    '<div class="t-text">“' + esc(snippet) + '”</div>' +
+    '<div class="row"><button class="mini" id="t-another">Another</button><button class="mini" id="t-open">Open</button></div>';
+  toastEl.hidden = false;
+  $('#t-x').addEventListener('click', hideToast);
+  $('#t-another').addEventListener('click', showSerendipity);
+  $('#t-open').addEventListener('click', function(){
+    hideToast();
+    if (it.kind === 'note') showDetail(it.w.id);
+    else showReflections();
+  });
+}
+function hideToast(){ toastEl.hidden = true; }
+
+/* auto-surface a memory shortly after arrival — but never inside the gallery iframe */
+var embedded = true;
+try { embedded = window.self !== window.top; } catch(e){ embedded = true; }
+if (!embedded){
+  setTimeout(function(){
+    if ($('#overlay').hidden && toastEl.hidden) showSerendipity();
+  }, 5200);
+}
+
+updateBadge();
+</script>
+</body>
+</html>

@@ -1,0 +1,1322 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KNOWLEDGE OPS — v13</title>
+<style>
+  :root{
+    --bg:#10151b;
+    --bg2:#0c1016;
+    --panel:#151c25;
+    --panel-2:#1a2330;
+    --line:#26323f;
+    --line-soft:#1d2733;
+    --text:#e9edf2;
+    --dim:#92a4b8;
+    --mut:#5d7084;
+    --accent:#ffb224;        /* tactical amber — critical states only */
+    --accent-dim:rgba(255,178,36,.14);
+    --olive:#8d9c63;         /* muted olive secondary */
+    --olive-dim:rgba(141,156,99,.14);
+    --steel:#6f8fae;         /* desaturated steel blue */
+    --steel-dim:rgba(111,143,174,.14);
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Cascadia Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scrollbar-color:var(--line) var(--bg)}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.55;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent-dim);color:var(--text)}
+  a{color:var(--steel);text-decoration:none}
+  a:hover{color:var(--text)}
+  button{font-family:inherit;cursor:pointer}
+  textarea,select,input{font-family:inherit}
+
+  /* ---------- scan sweep (load only) ---------- */
+  #scan{
+    position:fixed;inset:0;z-index:999;pointer-events:none;
+    background:linear-gradient(180deg,transparent 0%,rgba(111,143,174,.07) 48%,rgba(255,178,36,.05) 50%,transparent 52%);
+    background-size:100% 220%;
+    animation:sweep 1.1s ease-out forwards;
+  }
+  @keyframes sweep{from{background-position:0 -120%}to{background-position:0 160%;opacity:0}}
+
+  /* ---------- command bar ---------- */
+  .cmdbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(12,16,22,.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .cmdbar-inner{
+    max-width:1280px;margin:0 auto;padding:0 28px;
+    display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+    min-height:58px;
+  }
+  .gallery-link{
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+    color:var(--mut);border:1px solid var(--line);border-radius:3px;
+    padding:4px 10px;transition:color .15s,border-color .15s;white-space:nowrap;
+  }
+  .gallery-link:hover{color:var(--text);border-color:var(--steel)}
+  .wordmark{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+  .wordmark .wm-top{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.22em;color:var(--text);white-space:nowrap}
+  .wordmark .wm-sub{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--mut);white-space:nowrap}
+  .cmd-right{display:flex;align-items:center;gap:14px;margin-left:auto;flex-wrap:wrap}
+  .clock{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--dim);white-space:nowrap}
+  .chip-op{
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    color:var(--olive);border:1px solid rgba(141,156,99,.45);border-radius:3px;
+    padding:4px 10px;background:var(--olive-dim);white-space:nowrap;
+  }
+  .chip-op .dot{width:6px;height:6px;border-radius:1px;background:var(--olive)}
+  .due-counter{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+    border:1px solid var(--line);border-radius:3px;background:none;
+    color:var(--dim);padding:4px 10px;transition:border-color .15s;white-space:nowrap;
+  }
+  .due-counter b{font-size:14px;color:var(--accent);font-weight:700;letter-spacing:0}
+  .due-counter.hot{border-color:rgba(255,178,36,.5);background:var(--accent-dim)}
+  .due-counter:hover{border-color:var(--accent)}
+
+  /* ---------- nav ---------- */
+  .navrow{border-bottom:1px solid var(--line-soft);background:var(--bg2)}
+  .nav{
+    max-width:1280px;margin:0 auto;padding:0 28px;
+    display:flex;gap:2px;overflow-x:auto;
+  }
+  .nav button{
+    background:none;border:none;border-bottom:2px solid transparent;
+    color:var(--mut);font-family:var(--mono);font-size:11px;letter-spacing:.14em;
+    padding:13px 16px 11px;transition:color .15s,border-color .15s;white-space:nowrap;
+  }
+  .nav button:hover{color:var(--dim)}
+  .nav button.on{color:var(--text);border-bottom-color:var(--accent)}
+
+  /* ---------- layout ---------- */
+  .wrap{max-width:1280px;margin:0 auto;padding:34px 28px 90px}
+  .view{display:none}
+  .view.on{display:block}
+  .view-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+  .view-head h1{font-size:21px;font-weight:650;letter-spacing:.02em}
+  .view-head .vh-code{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--mut)}
+  .view-sub{color:var(--mut);font-size:13px;margin-bottom:26px;max-width:640px}
+
+  /* ---------- panels w/ corner ticks ---------- */
+  .panel{
+    position:relative;background:var(--panel);
+    border:1px solid var(--line);border-radius:3px;
+  }
+  .panel::before,.panel::after{
+    content:"";position:absolute;width:9px;height:9px;pointer-events:none;
+  }
+  .panel::before{top:-1px;left:-1px;border-top:1px solid var(--steel);border-left:1px solid var(--steel)}
+  .panel::after{bottom:-1px;right:-1px;border-bottom:1px solid var(--steel);border-right:1px solid var(--steel)}
+  .panel-head{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:13px 18px;border-bottom:1px solid var(--line-soft);
+  }
+  .panel-title{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--dim)}
+  .panel-body{padding:18px}
+
+  /* ---------- chips & labels ---------- */
+  .cls{
+    display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:.12em;
+    padding:3px 8px;border-radius:2px;border:1px solid;white-space:nowrap;
+  }
+  .cls-book{color:var(--steel);border-color:rgba(111,143,174,.5);background:var(--steel-dim)}
+  .cls-essay{color:var(--olive);border-color:rgba(141,156,99,.5);background:var(--olive-dim)}
+  .cls-article{color:#b7a26a;border-color:rgba(183,162,106,.45);background:rgba(183,162,106,.1)}
+  .cls-podcast{color:#9a8fb8;border-color:rgba(154,143,184,.45);background:rgba(154,143,184,.1)}
+  .tag{
+    display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;
+    color:var(--dim);border:1px solid var(--line);border-radius:2px;
+    padding:2px 8px;margin:2px 4px 2px 0;background:var(--bg2);
+  }
+  .desig{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--mut)}
+  .mono-label{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--mut)}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    font-family:var(--mono);font-size:10px;letter-spacing:.12em;
+    color:var(--dim);background:var(--panel-2);
+    border:1px solid var(--line);border-radius:3px;
+    padding:8px 16px;transition:color .15s,border-color .15s,background .15s;
+  }
+  .btn:hover{color:var(--text);border-color:var(--steel)}
+  .btn-acc{color:#10151b;background:var(--accent);border-color:var(--accent);font-weight:700}
+  .btn-acc:hover{color:#10151b;background:#ffc14d;border-color:#ffc14d}
+  .btn-ghost{background:none}
+  .btn-sm{padding:4px 10px;font-size:9px}
+  .btn:disabled{opacity:.4;cursor:default}
+  .btn:disabled:hover{color:var(--dim);border-color:var(--line)}
+
+  /* ---------- archive ---------- */
+  .filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px}
+  .filters .btn.on{color:var(--text);border-color:var(--accent);background:var(--accent-dim)}
+  .archive{display:flex;flex-direction:column}
+  .arch-header,.arch-row{
+    display:grid;
+    grid-template-columns:110px minmax(220px,2.2fr) 120px minmax(160px,1.6fr) 110px 150px 70px;
+    gap:16px;align-items:center;padding:12px 18px;
+  }
+  .arch-header{
+    border-bottom:1px solid var(--line);
+    font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--mut);
+    padding-top:0;
+  }
+  .arch-row{
+    border-bottom:1px solid var(--line-soft);cursor:pointer;
+    transition:background .14s;
+  }
+  .arch-row:last-child{border-bottom:none}
+  .arch-row:hover{background:var(--panel-2)}
+  .arch-title{font-weight:600;font-size:14px}
+  .arch-author{color:var(--mut);font-size:12px}
+  .arch-date{font-family:var(--mono);font-size:11px;color:var(--dim)}
+  .ready-wrap{display:flex;align-items:center;gap:8px}
+  .ready-bar{flex:1;height:4px;background:var(--bg2);border:1px solid var(--line-soft);border-radius:2px;overflow:hidden}
+  .ready-fill{height:100%;background:var(--olive);transition:width .3s}
+  .ready-fill.low{background:var(--accent)}
+  .ready-pct{font-family:var(--mono);font-size:10px;color:var(--mut);min-width:32px;text-align:right}
+  .due-flag{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--accent)}
+  .due-ok{color:var(--mut)}
+  .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .stat{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px 18px}
+  .stat .s-num{font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:.02em}
+  .stat .s-num.amber{color:var(--accent)}
+  .stat .s-lbl{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--mut);margin-top:3px}
+
+  /* ---------- dossier ---------- */
+  .doss-top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+  .doss-top h1{font-size:24px;font-weight:650;letter-spacing:.01em}
+  .meta-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+    background:var(--line-soft);border:1px solid var(--line);border-radius:3px;overflow:hidden;
+    margin-bottom:22px;
+  }
+  .meta-cell{background:var(--panel);padding:13px 16px}
+  .meta-cell .mono-label{display:block;margin-bottom:5px}
+  .meta-cell .m-val{font-size:14px;font-weight:600}
+  .doss-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  .quote-item{
+    border-left:2px solid var(--steel);padding:4px 0 4px 16px;margin-bottom:18px;
+    color:var(--dim);font-size:14px;font-style:italic;
+  }
+  .quote-item:last-child{margin-bottom:0}
+  .note-item{border-bottom:1px solid var(--line-soft);padding:14px 0}
+  .note-item:first-child{padding-top:2px}
+  .note-item:last-child{border-bottom:none;padding-bottom:2px}
+  .note-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .note-date{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--mut)}
+  .note-text{font-size:14px;color:var(--text)}
+  .note-edit-ta,.add-ta,.aar-ta,.ex-ta{
+    width:100%;background:var(--bg2);border:1px solid var(--line);border-radius:3px;
+    color:var(--text);font-size:14px;line-height:1.55;padding:10px 12px;resize:vertical;
+    min-height:76px;
+  }
+  .note-edit-ta:focus,.add-ta:focus,.aar-ta:focus,.ex-ta:focus,select:focus{
+    outline:none;border-color:var(--steel);
+  }
+  .edit-actions{display:flex;gap:8px;margin-top:8px}
+  .drill-inv-row{
+    display:flex;align-items:baseline;gap:12px;justify-content:space-between;
+    border-bottom:1px solid var(--line-soft);padding:9px 0;font-size:13px;
+  }
+  .drill-inv-row:last-child{border-bottom:none}
+  .drill-inv-q{color:var(--dim);flex:1}
+
+  /* ---------- drills (flashcards) ---------- */
+  .drill-stage{max-width:720px;margin:0 auto}
+  .drill-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+  .flip-scene{perspective:1400px;margin-bottom:18px}
+  .flip-card{
+    display:grid;width:100%;min-height:300px;cursor:pointer;
+    transform-style:preserve-3d;transition:transform .45s cubic-bezier(.2,.7,.3,1);
+  }
+  .flip-card.flipped{transform:rotateY(180deg)}
+  .flip-face{
+    grid-row:1;grid-column:1;position:relative;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    display:flex;flex-direction:column;padding:26px 30px;
+  }
+  .flip-face::before{content:"";position:absolute;top:-1px;left:-1px;width:9px;height:9px;border-top:1px solid var(--steel);border-left:1px solid var(--steel)}
+  .flip-face::after{content:"";position:absolute;bottom:-1px;right:-1px;width:9px;height:9px;border-bottom:1px solid var(--steel);border-right:1px solid var(--steel)}
+  .flip-back{transform:rotateY(180deg);border-color:rgba(141,156,99,.45)}
+  .flip-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:auto;gap:10px;flex-wrap:wrap}
+  .flip-body{font-size:18px;line-height:1.6;margin:26px 0 auto;font-weight:500}
+  .flip-back .flip-body{color:var(--text)}
+  .flip-hint{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--mut);margin-top:auto}
+  .grade-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .grade-btn{
+    font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    border-radius:3px;padding:12px 6px;border:1px solid var(--line);
+    background:var(--panel-2);transition:border-color .15s,background .15s,color .15s;
+  }
+  .grade-btn small{display:block;font-size:9px;letter-spacing:.04em;color:var(--mut);margin-top:4px}
+  .g-fail{color:var(--accent)}  .g-fail:hover{border-color:var(--accent);background:var(--accent-dim)}
+  .g-deg{color:#c9a15a}         .g-deg:hover{border-color:#c9a15a;background:rgba(201,161,90,.1)}
+  .g-eff{color:var(--olive)}    .g-eff:hover{border-color:var(--olive);background:var(--olive-dim)}
+  .g-dom{color:var(--steel)}    .g-dom:hover{border-color:var(--steel);background:var(--steel-dim)}
+  .empty-state{
+    border:1px dashed var(--line);border-radius:3px;padding:44px 24px;text-align:center;
+    color:var(--mut);font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+  }
+
+  /* ---------- exercise ---------- */
+  .ex-setup{max-width:720px;margin:0 auto}
+  .ex-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:6px}
+  .ex-field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:200px}
+  select{
+    background:var(--bg2);border:1px solid var(--line);border-radius:3px;
+    color:var(--text);font-size:13px;padding:9px 10px;
+  }
+  .ex-stage{max-width:720px;margin:0 auto}
+  .timerbox{font-family:var(--mono);font-size:12px;letter-spacing:.1em;color:var(--accent)}
+  .ex-answerblock{border-top:1px solid var(--line-soft);margin-top:18px;padding-top:16px}
+  .ex-label{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--mut);display:block;margin-bottom:8px}
+  .ex-model{font-size:15px;color:var(--text);margin-bottom:14px}
+  .ex-user{font-size:13px;color:var(--dim);white-space:pre-wrap;background:var(--bg2);border:1px solid var(--line-soft);border-radius:3px;padding:10px 12px;margin-bottom:14px}
+  .ex-summary td{padding:6px 18px 6px 0;font-size:13px}
+  .ex-summary .mono-label{font-size:9px}
+
+  /* ---------- AAR ---------- */
+  .aar-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start}
+  .aar-quote{font-size:17px;font-style:italic;color:var(--text);line-height:1.65;border-left:2px solid var(--accent);padding-left:18px;margin-bottom:14px}
+  .aar-attr{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--mut);margin-bottom:20px;padding-left:20px}
+  .aar-entry{border-bottom:1px solid var(--line-soft);padding:16px 0}
+  .aar-entry:last-child{border-bottom:none}
+  .aar-entry-quote{font-size:12px;font-style:italic;color:var(--mut);margin:0 0 8px;border-left:2px solid var(--line);padding-left:12px}
+  .aar-entry-text{font-size:14px}
+
+  /* ---------- network ---------- */
+  .net-panel .panel-body{padding:0}
+  .net-canvas{
+    display:block;width:100%;height:auto;
+    background:
+      linear-gradient(rgba(111,143,174,.045) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(111,143,174,.045) 1px,transparent 1px);
+    background-size:34px 34px;background-color:var(--bg2);
+  }
+  .net-edge{stroke:#44576b;transition:stroke .15s,stroke-opacity .15s}
+  .net-node{cursor:pointer}
+  .net-node rect{transition:fill .15s,stroke .15s}
+  .net-node text{font-family:var(--mono);font-size:10px;fill:var(--dim);letter-spacing:.04em;pointer-events:none}
+  .net-node .nn-desig{font-size:8px;fill:var(--mut)}
+  .net-dim .net-edge{stroke-opacity:.12}
+  .net-dim .net-node{opacity:.25}
+  .net-dim .net-edge.lit{stroke:var(--accent);stroke-opacity:.8}
+  .net-dim .net-node.lit{opacity:1}
+  .net-dim .net-node.lit rect{stroke:var(--accent)}
+  .net-legend{display:flex;gap:16px;flex-wrap:wrap;padding:12px 18px;border-top:1px solid var(--line-soft)}
+  .net-hoverinfo{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--dim);margin-left:auto}
+
+  /* ---------- flash traffic toast ---------- */
+  .flash{
+    position:fixed;right:24px;bottom:24px;z-index:200;width:360px;max-width:calc(100vw - 48px);
+    background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    box-shadow:0 14px 44px rgba(0,0,0,.5);
+    display:none;overflow:hidden;
+  }
+  .flash.show{display:block;animation:flash-in .22s ease-out}
+  @keyframes flash-in{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+  .flash .stripe{height:3px;background:repeating-linear-gradient(135deg,var(--accent) 0 10px,#10151b 10px 16px)}
+  .flash-head{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line-soft)}
+  .flash-head .ft{font-family:var(--mono);font-size:10px;letter-spacing:.18em;color:var(--accent)}
+  .flash-x{margin-left:auto;background:none;border:none;color:var(--mut);font-size:15px;line-height:1;padding:2px 4px}
+  .flash-x:hover{color:var(--text)}
+  .flash-body{padding:14px 16px;font-size:13px;color:var(--text)}
+  .flash-src{font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mut);margin-top:10px}
+  .flash-actions{display:flex;gap:8px;padding:0 16px 14px}
+
+  hr.sep{border:none;border-top:1px solid var(--line-soft);margin:18px 0}
+  .mt8{margin-top:8px}.mt14{margin-top:14px}.mt22{margin-top:22px}.mb14{margin-bottom:14px}.mb22{margin-bottom:22px}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:1060px){
+    .arch-header{display:none}
+    .arch-row{
+      grid-template-columns:1fr 1fr;gap:8px 16px;padding:16px 18px;
+    }
+    .arch-row>.c-desig{order:1}.arch-row>.c-cls{order:2;justify-self:end}
+    .arch-row>.c-asset{order:3;grid-column:1/-1}
+    .arch-row>.c-tags{order:4;grid-column:1/-1}
+    .arch-row>.c-date{order:5}.arch-row>.c-due{order:6;justify-self:end}
+    .arch-row>.c-ready{order:7;grid-column:1/-1}
+  }
+  @media (max-width:900px){
+    .doss-grid,.aar-grid{grid-template-columns:1fr}
+    .meta-grid{grid-template-columns:repeat(2,1fr)}
+    .stat-strip{grid-template-columns:repeat(2,1fr)}
+  }
+  @media (max-width:820px){
+    .cmdbar-inner,.nav,.wrap{padding-left:16px;padding-right:16px}
+    .wordmark .wm-sub{display:none}
+    .grade-row{grid-template-columns:repeat(2,1fr)}
+    .flip-body{font-size:16px}
+    .flip-face{padding:20px 20px}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    #scan{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="scan" aria-hidden="true"></div>
+
+<!-- ======== COMMAND BAR ======== -->
+<header class="cmdbar">
+  <div class="cmdbar-inner">
+    <a class="gallery-link" href="../index.html">&larr; GALLERY</a>
+    <div class="wordmark">
+      <span class="wm-top">KNOWLEDGE OPS</span>
+      <span class="wm-sub">SPECIAL COLLECTION // M. GEILING, OPERATOR</span>
+    </div>
+    <div class="cmd-right">
+      <span class="clock" id="utcClock">--:--:--Z</span>
+      <span class="chip-op"><span class="dot"></span>OPERATIONAL</span>
+      <button class="due-counter" id="dueCounter" title="Open drills" onclick="showView('drills')">
+        DUE <b id="dueNum">0</b>
+      </button>
+    </div>
+  </div>
+</header>
+
+<nav class="navrow">
+  <div class="nav" id="mainNav">
+    <button data-v="archive" class="on" onclick="showView('archive')">INTEL ARCHIVE</button>
+    <button data-v="drills" onclick="showView('drills')">DRILLS</button>
+    <button data-v="exercise" onclick="showView('exercise')">LIVE EXERCISE</button>
+    <button data-v="aar" onclick="showView('aar')">AFTER-ACTION</button>
+    <button data-v="network" onclick="showView('network')">NETWORK ANALYSIS</button>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- ======== ARCHIVE ======== -->
+  <section class="view on" id="view-archive">
+    <div class="view-head"><h1>Intel Archive</h1><span class="vh-code">SEC/01 &middot; ASSET REGISTER</span></div>
+    <p class="view-sub">All consumed assets under management. Readiness reflects retrieval strength across each asset's drill inventory.</p>
+    <div class="stat-strip" id="statStrip"></div>
+    <div class="filters" id="filterRow"></div>
+    <div class="panel">
+      <div class="panel-body" style="padding:0 0 4px">
+        <div class="archive" id="archiveList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== DOSSIER ======== -->
+  <section class="view" id="view-dossier">
+    <button class="btn btn-ghost mb14" onclick="showView('archive')">&larr; RETURN TO ARCHIVE</button>
+    <div id="dossierBody"></div>
+  </section>
+
+  <!-- ======== DRILLS ======== -->
+  <section class="view" id="view-drills">
+    <div class="view-head"><h1>Drills</h1><span class="vh-code">SEC/02 &middot; RETENTION PROTOCOL</span></div>
+    <p class="view-sub">Mixed-deck retrieval drills across all assets. Grade each response honestly &mdash; the scheduler adjusts intervals accordingly.</p>
+    <div class="drill-stage" id="drillStage"></div>
+  </section>
+
+  <!-- ======== EXERCISE ======== -->
+  <section class="view" id="view-exercise">
+    <div class="view-head"><h1>Live Exercise</h1><span class="vh-code">SEC/03 &middot; ACTIVE RECALL</span></div>
+    <p class="view-sub">Scoped recall under time. Select a single asset or an entire subject area, write your answer from memory, then self-assess.</p>
+    <div id="exerciseBody"></div>
+  </section>
+
+  <!-- ======== AAR ======== -->
+  <section class="view" id="view-aar">
+    <div class="view-head"><h1>After-Action Review</h1><span class="vh-code">SEC/04 &middot; SYNTHESIS LOG</span></div>
+    <p class="view-sub">A sourced excerpt is surfaced for synthesis. Write the reflection in your own words; entries are filed to the log below.</p>
+    <div class="aar-grid">
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">SURFACED EXCERPT</span>
+          <button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="newAarQuote()">RESHUFFLE</button>
+        </div>
+        <div class="panel-body">
+          <div id="aarQuoteBox"></div>
+          <label class="ex-label" for="aarTa">REFLECTION</label>
+          <textarea id="aarTa" class="aar-ta" rows="5" placeholder="What does this change about how you operate?"></textarea>
+          <div class="edit-actions"><button class="btn btn-acc" onclick="saveReflection()">FILE ENTRY</button></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">LOGGED ENTRIES</span><span class="mono-label" id="aarCount" style="margin-left:auto"></span></div>
+        <div class="panel-body" id="aarLog"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== NETWORK ======== -->
+  <section class="view" id="view-network">
+    <div class="view-head"><h1>Network Analysis</h1><span class="vh-code">SEC/05 &middot; LINK CHART</span></div>
+    <p class="view-sub">Assets linked by shared subject tags. Hover a node to isolate its connections; select a node to open its dossier.</p>
+    <div class="panel net-panel">
+      <div class="panel-head">
+        <span class="panel-title">LINK CHART &mdash; 13 NODES</span>
+        <span class="net-hoverinfo" id="netInfo">HOVER A NODE</span>
+      </div>
+      <div class="panel-body">
+        <svg id="netSvg" class="net-canvas" viewBox="0 0 940 560" role="img" aria-label="Knowledge graph of content linked by shared tags"></svg>
+      </div>
+      <div class="net-legend">
+        <span class="cls cls-book">DOCTRINE / BOOK</span>
+        <span class="cls cls-essay">DISPATCH / ESSAY</span>
+        <span class="cls cls-article">FIELD REPORT / ARTICLE</span>
+        <span class="cls cls-podcast">SIGINT / PODCAST</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ======== FLASH TRAFFIC ======== -->
+<aside class="flash" id="flashToast" role="status" aria-live="polite">
+  <div class="stripe"></div>
+  <div class="flash-head">
+    <span class="ft">&#9650; FLASH TRAFFIC</span>
+    <span class="mono-label" id="flashKind"></span>
+    <button class="flash-x" onclick="hideFlash()" aria-label="Dismiss">&times;</button>
+  </div>
+  <div class="flash-body">
+    <div id="flashText"></div>
+    <div class="flash-src" id="flashSrc"></div>
+  </div>
+  <div class="flash-actions">
+    <button class="btn btn-sm" onclick="anotherFlash()">ANOTHER</button>
+    <button class="btn btn-sm btn-acc" id="flashOpenBtn">OPEN</button>
+  </div>
+</aside>
+
+<script>
+'use strict';
+/* =====================================================================
+   MOCK DATA — all in-memory, no persistence
+===================================================================== */
+const DAY = 86400000;
+const NOW = Date.now();
+
+const ASSETS = [
+  { id:'tfs', desig:'INTEL-001', type:'book', title:'Thinking, Fast and Slow', short:'Thinking F&S',
+    author:'Daniel Kahneman', pub:'2011', consumed:'2025-02-14',
+    tags:['psychology','decision-making','memory'],
+    notes:[
+      {d:'2025-02-15', t:'System 1 pattern-matches before System 2 even wakes up. Most of what I call a "decision" is a post-hoc rationalization of a fast guess. Flag: watch for this in code reviews and interviews.'},
+      {d:'2025-02-20', t:'Anchoring showed up in my salary-negotiation prep — the first number spoken sets the field for everything after. Speak first when the range favors me.'}
+    ],
+    quotes:[
+      {t:'Nothing in life is as important as you think it is, while you are thinking about it.'},
+      {t:'A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.'}
+    ],
+    cards:[
+      {q:'What distinguishes System 1 from System 2 thinking?', a:'System 1 is fast, automatic, associative, and effortless. System 2 is slow, deliberate, and effortful — and it is lazy, engaging only when System 1 hits trouble.'},
+      {q:'What is the anchoring effect?', a:'An initial number or value disproportionately pulls all subsequent estimates toward it, even when the anchor is arbitrary or known to be irrelevant.'}
+    ]},
+  { id:'ah', desig:'INTEL-002', type:'book', title:'Atomic Habits', short:'Atomic Habits',
+    author:'James Clear', pub:'2018', consumed:'2025-01-06',
+    tags:['habits','systems','psychology'],
+    notes:[
+      {d:'2025-01-08', t:'Rebuilt my morning review as environment design instead of willpower: review cards live on the first browser tab, phone charges outside the office. Friction is the real lever.'}
+    ],
+    quotes:[
+      {t:'You do not rise to the level of your goals. You fall to the level of your systems.'},
+      {t:'Every action you take is a vote for the type of person you wish to become.'}
+    ],
+    cards:[
+      {q:'Name the Four Laws of Behavior Change.', a:'Make it obvious, make it attractive, make it easy, make it satisfying — inverted to break a habit: invisible, unattractive, difficult, unsatisfying.'},
+      {q:'What is identity-based habit formation?', a:'Start from who you wish to become, not what you want to achieve. Each small action is a vote for that identity, and identity then sustains the behavior.'}
+    ]},
+  { id:'dw', desig:'INTEL-003', type:'book', title:'Deep Work', short:'Deep Work',
+    author:'Cal Newport', pub:'2016', consumed:'2025-03-21',
+    tags:['focus','habits','creativity'],
+    notes:[
+      {d:'2025-03-23', t:'Scheduled two 90-minute deep blocks before noon; shallow work batched after 1500. Attention residue is real — every context switch costs me ~20 minutes of degraded output.'}
+    ],
+    quotes:[
+      {t:'Clarity about what matters provides clarity about what does not.'}
+    ],
+    cards:[
+      {q:'What is "attention residue" and why does it matter?', a:'When switching tasks, part of your attention stays stuck on the prior task, degrading performance on the next one. It is the core argument for long, unbroken deep-work blocks.'},
+      {q:'Newport’s definition of deep work?', a:'Professional activity performed in a state of distraction-free concentration that pushes cognitive capabilities to their limit, creating new value that is hard to replicate.'}
+    ]},
+  { id:'mis', desig:'INTEL-004', type:'book', title:'Make It Stick', short:'Make It Stick',
+    author:'Brown, Roediger & McDaniel', pub:'2014', consumed:'2025-04-02',
+    tags:['memory','learning','psychology'],
+    notes:[
+      {d:'2025-04-04', t:'Rereading and highlighting are fluency illusions — they feel like learning but encode almost nothing. Retrieval is the encoding event. This app exists because of this book.'},
+      {d:'2025-04-10', t:'Interleaving feels worse and works better. Mixing subjects in one session beats blocked practice on every delayed test. Trust the design, not the feeling.'}
+    ],
+    quotes:[
+      {t:'Learning is deeper and more durable when it is effortful. Learning that is easy is like writing in sand, here today and gone tomorrow.'}
+    ],
+    cards:[
+      {q:'Why is retrieval practice superior to rereading?', a:'The act of effortfully pulling knowledge from memory strengthens the memory trace and its retrieval routes; rereading only builds a fluency illusion of mastery.'},
+      {q:'What is the spacing effect?', a:'Reviews distributed over expanding intervals produce far stronger long-term retention than the same time spent massed together, because some forgetting makes retrieval effortful.'},
+      {q:'Blocked vs. interleaved practice — which wins, and why does it feel wrong?', a:'Interleaved practice wins on delayed tests because discrimination between problem types is itself learned. It feels worse because performance during practice is lower.'}
+    ]},
+  { id:'doet', desig:'INTEL-005', type:'book', title:'The Design of Everyday Things', short:'Everyday Things',
+    author:'Don Norman', pub:'1988', consumed:'2025-05-18',
+    tags:['design','psychology','systems'],
+    notes:[
+      {d:'2025-05-19', t:'When a user errs, the design failed first. "Human error" is almost always a system that demanded precision humans don’t have. Applies directly to my own tooling.'}
+    ],
+    quotes:[
+      {t:'Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.'}
+    ],
+    cards:[
+      {q:'Affordance vs. signifier — what is the difference?', a:'An affordance is what interactions an object actually permits; a signifier is the perceivable cue that communicates where and how to act. Designers mostly control signifiers.'},
+      {q:'What are the gulfs of execution and evaluation?', a:'Execution: the gap between a user’s intent and the actions the system allows. Evaluation: the gap between the system’s state and the user’s ability to perceive and interpret it.'}
+    ]},
+  { id:'med', desig:'INTEL-006', type:'book', title:'Meditations', short:'Meditations',
+    author:'Marcus Aurelius', pub:'c. 180', consumed:'2025-06-30',
+    tags:['philosophy','focus','habits'],
+    notes:[
+      {d:'2025-07-02', t:'The private notebook of the most powerful man alive, and it’s mostly him reminding himself to not be an ass before breakfast. The repetition IS the method — he was running spaced repetition on his own character.'}
+    ],
+    quotes:[
+      {t:'You have power over your mind — not outside events. Realize this, and you will find strength.'},
+      {t:'Confine yourself to the present.'}
+    ],
+    cards:[
+      {q:'What is the Stoic dichotomy of control?', a:'Divide everything into what is up to you (judgments, intentions, responses) and what is not (events, others, outcomes). Spend effort only on the first category.'}
+    ]},
+  { id:'gw', desig:'INTEL-007', type:'essay', title:'How to Do Great Work', short:'Great Work',
+    author:'Paul Graham', pub:'2023', consumed:'2025-07-12',
+    tags:['creativity','focus','decision-making'],
+    notes:[
+      {d:'2025-07-13', t:'Curiosity compounds: follow what feels interestingly anomalous, not what seems impressive. The four steps — pick a field, learn to the frontier, notice gaps, explore them — are a loop, not a line.'}
+    ],
+    quotes:[
+      {t:'The way to figure out what to work on is by working. If you’re not sure what to work on, guess. But pick something and get going.'}
+    ],
+    cards:[
+      {q:'Per Graham, how do you choose what to work on?', a:'You can’t reason your way there in advance — guess, start working, and let the work itself reveal whether your curiosity sustains. Interest compounds like capital.'},
+      {q:'What role do "gaps at the frontier" play in great work?', a:'Once you reach the frontier of a field, the gaps — questions others overlook or assume away — are where original work lives. Noticing them requires being genuinely puzzled.'}
+    ]},
+  { id:'awmt', desig:'INTEL-008', type:'essay', title:'As We May Think', short:'As We May Think',
+    author:'Vannevar Bush', pub:'1945', consumed:'2025-08-09',
+    tags:['systems','design','memory'],
+    notes:[
+      {d:'2025-08-10', t:'The memex is this app, sketched in 1945: personal trails of association through a lifetime of records. Bush saw that storage was solved and retrieval was the bottleneck — eighty years later, still true.'}
+    ],
+    quotes:[
+      {t:'The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.'}
+    ],
+    cards:[
+      {q:'What was the memex?', a:'Bush’s hypothetical desk-sized device for storing a person’s books and records, navigated by associative "trails" linking items together — a direct ancestor of hypertext and personal knowledge tools.'},
+      {q:'What did Bush identify as the real bottleneck of knowledge work?', a:'Not storage but selection: our systems for retrieving the right record at the right moment were primitive compared to how the mind actually works — by association, not indexing.'}
+    ]},
+  { id:'sr', desig:'INTEL-009', type:'essay', title:'Self-Reliance', short:'Self-Reliance',
+    author:'Ralph Waldo Emerson', pub:'1841', consumed:'2025-09-05',
+    tags:['philosophy','creativity'],
+    notes:[
+      {d:'2025-09-06', t:'"In every work of genius we recognize our own rejected thoughts." The cost of deferring to consensus is that your own ideas return to you wearing someone else’s name. Write things down when they’re still mine.'}
+    ],
+    quotes:[
+      {t:'A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.'}
+    ],
+    cards:[
+      {q:'What does Emerson mean by "a foolish consistency is the hobgoblin of little minds"?', a:'Clinging to past positions merely to appear consistent blocks growth. Speak today’s conviction in hard words, even if it contradicts everything you said yesterday.'}
+    ]},
+  { id:'wbdw', desig:'INTEL-010', type:'article', title:'Why Books Don’t Work', short:'Books Don’t Work',
+    author:'Andy Matuschak', pub:'2019', consumed:'2025-10-01',
+    tags:['learning','memory','design'],
+    notes:[
+      {d:'2025-10-02', t:'Books implicitly assume transmissionism — that understanding transfers by reading sentences. Readers of nonfiction retain close to nothing weeks later. The fix isn’t better books; it’s media with a real cognitive model baked in.'}
+    ],
+    quotes:[
+      {t:'Books don’t work for the same reason that lectures don’t work: the medium lacks a functioning cognitive model of how people actually learn.'}
+    ],
+    cards:[
+      {q:'What is "transmissionism," and why does Matuschak attack it?', a:'The implicit belief that knowledge transfers from text to mind simply by reading. It’s false — absorption requires effortful encoding — yet books are designed as if it were true.'},
+      {q:'What does Matuschak propose instead of traditional books?', a:'"Mnemonic media" — formats with a cognitive model built in, interleaving exposition with spaced retrieval so the medium itself does the work of making knowledge stick.'}
+    ]},
+  { id:'altm', desig:'INTEL-011', type:'article', title:'Augmenting Long-term Memory', short:'Augmenting Memory',
+    author:'Michael Nielsen', pub:'2018', consumed:'2025-11-15',
+    tags:['memory','learning','systems'],
+    notes:[
+      {d:'2025-11-16', t:'His deep insight: with SRS, the marginal cost of remembering a fact drops to ~minutes over a lifetime. That changes WHAT is worth memorizing — commit even "look-up-able" facts, because fluent recall changes how you think.'}
+    ],
+    quotes:[
+      {t:'Anki makes memory a choice. The real question is no longer whether you can remember something, but whether it is worth remembering.'}
+    ],
+    cards:[
+      {q:'Why does Nielsen argue memory becomes "a choice" with spaced repetition?', a:'Because SRS reduces the lifetime cost of retaining a card to a few minutes of review, remembering any given fact becomes a deliberate decision rather than a matter of luck.'},
+      {q:'Nielsen’s rule for card quality?', a:'Make cards atomic — one precise fact or distinction each. Vague or compound cards fail unpredictably and corrupt the review signal.'}
+    ]},
+  { id:'hub', desig:'INTEL-012', type:'podcast', title:'Huberman Lab: Improve Memory & Focus', short:'Huberman: Memory',
+    author:'Andrew Huberman', pub:'2022', consumed:'2026-01-10',
+    tags:['memory','learning','psychology'],
+    notes:[
+      {d:'2026-01-11', t:'Protocol takeaways: emotional salience (even a cold plunge post-study) spikes adrenaline and tags the preceding material for consolidation. And the repetitions that matter happen offline — during sleep. Guard the sleep.'}
+    ],
+    quotes:[
+      {t:'Repetition builds memory, but adrenaline released after learning is what stamps the memory in — the emotion doesn’t have to be related to the material at all.'}
+    ],
+    cards:[
+      {q:'Per Huberman, when should arousal/adrenaline spike to enhance memory?', a:'After the learning bout, not during. Post-learning catecholamine release signals the brain that the preceding material mattered, strengthening consolidation.'},
+      {q:'What offline process is required to convert practice into durable memory?', a:'Sleep (and to a lesser degree deep rest). Consolidation — including the neural replay of learned sequences — occurs during sleep, not during practice itself.'}
+    ]},
+  { id:'tkp', desig:'INTEL-013', type:'podcast', title:'The Knowledge Project: Mental Models', short:'TKP: Mental Models',
+    author:'Shane Parrish', pub:'2021', consumed:'2026-02-03',
+    tags:['decision-making','systems','philosophy'],
+    notes:[
+      {d:'2026-02-04', t:'A latticework beats a checklist: models from different disciplines (inversion, second-order effects, margin of safety) only pay off when they’re cross-wired enough to fire automatically on real problems. Which is literally what this graph view is for.'}
+    ],
+    quotes:[
+      {t:'Understanding the world means building a latticework of the best of what other people have already figured out.'}
+    ],
+    cards:[
+      {q:'What is "inversion" as a mental model?', a:'Instead of asking how to achieve an outcome, ask what would guarantee failure and avoid it. Working the problem backwards often exposes the few constraints that actually matter.'},
+      {q:'Why a "latticework" of mental models rather than deep expertise in one?', a:'Single-discipline thinkers force every problem into their one toolkit. A cross-disciplinary lattice lets the structure of the problem select the model, reducing systematic blind spots.'}
+    ]}
+];
+
+const CLS = {
+  book:   {label:'DOCTRINE',     css:'cls-book',    color:'#6f8fae'},
+  essay:  {label:'DISPATCH',     css:'cls-essay',   color:'#8d9c63'},
+  article:{label:'FIELD REPORT', css:'cls-article', color:'#b7a26a'},
+  podcast:{label:'SIGINT',       css:'cls-podcast', color:'#9a8fb8'}
+};
+
+/* Reflections (seeded, in-memory) */
+const REFLECTIONS = [
+  { d:'2026-01-18',
+    q:'Anki makes memory a choice.', src:'Augmenting Long-term Memory — Michael Nielsen',
+    t:'If memory is a choice, then my library is a budget. The real discipline isn’t reviewing cards — it’s refusing to card things that don’t deserve lifetime minutes. Curation upstream, repetition downstream.' },
+  { d:'2025-11-30',
+    q:'You do not rise to the level of your goals. You fall to the level of your systems.', src:'Atomic Habits — James Clear',
+    t:'My reading habit survived this year; my retention habit didn’t, because only one of them had a system. Goals told me to "remember more." A system would have told me exactly what to review at 0700. Building the latter now.' }
+];
+
+/* =====================================================================
+   SRS — SM-2 style scheduler, in-memory
+===================================================================== */
+const CARDS = [];           // flat [{assetId, idx, q, a, key}]
+const SRS = {};             // key -> {ease, interval(days), due(ms), reps, lapses}
+
+ASSETS.forEach(a => a.cards.forEach((c, i) => {
+  CARDS.push({assetId:a.id, idx:i, q:c.q, a:c.a, key:a.id + '#' + i});
+}));
+
+/* Deterministic seed: roughly a third of the deck is due now. */
+CARDS.forEach((c, i) => {
+  const ease = 2.5 - (i % 4) * 0.06;
+  let interval, due, reps;
+  if (i % 3 === 0)      { interval = 3;  reps = 2; due = NOW - ((i % 5) + 2) * 3600000; } // overdue
+  else if (i % 3 === 1) { interval = 8;  reps = 3; due = NOW + ((i % 6) + 1) * DAY; }
+  else                  { interval = 21; reps = 5; due = NOW + ((i % 9) + 4) * DAY; }
+  SRS[c.key] = {ease, interval, due, reps, lapses:0};
+});
+
+function dueCards(){ return CARDS.filter(c => SRS[c.key].due <= Date.now()); }
+function gradeCard(key, g){
+  const s = SRS[key], now = Date.now();
+  if (g === 0){            // FAILED
+    s.ease = Math.max(1.3, s.ease - 0.2);
+    s.interval = 0; s.reps = 0; s.lapses++;
+    s.due = now + 10 * 60000;                    // back in 10 min
+  } else if (g === 1){     // DEGRADED
+    s.ease = Math.max(1.3, s.ease - 0.15);
+    s.interval = Math.max(1, Math.round(s.interval * 1.2) || 1);
+    s.reps++; s.due = now + s.interval * DAY;
+  } else if (g === 2){     // EFFECTIVE
+    s.interval = s.interval < 1 ? 1 : Math.round(s.interval * s.ease);
+    s.reps++; s.due = now + s.interval * DAY;
+  } else {                 // DOMINANT
+    s.ease = Math.min(3.0, s.ease + 0.15);
+    s.interval = Math.max(2, Math.round((s.interval || 1) * s.ease * 1.3));
+    s.reps++; s.due = now + s.interval * DAY;
+  }
+  refreshDueBadge();
+}
+function assetReadiness(a){
+  const now = Date.now();
+  let sum = 0;
+  a.cards.forEach((c, i) => {
+    const s = SRS[a.id + '#' + i];
+    sum += (s.due <= now) ? 0.12 : Math.min(1, s.interval / 30);
+  });
+  return Math.round(100 * sum / a.cards.length);
+}
+function assetDueCount(a){
+  const now = Date.now();
+  return a.cards.reduce((n, c, i) => n + (SRS[a.id + '#' + i].due <= now ? 1 : 0), 0);
+}
+function fmtDue(ms){
+  const d = ms - Date.now();
+  if (d <= 0) return 'DUE NOW';
+  if (d < DAY) return 'IN ' + Math.max(1, Math.round(d / 3600000)) + 'H';
+  return 'IN ' + Math.round(d / DAY) + 'D';
+}
+function refreshDueBadge(){
+  const n = dueCards().length;
+  const el = document.getElementById('dueNum');
+  el.textContent = String(n).padStart(2, '0');
+  document.getElementById('dueCounter').classList.toggle('hot', n > 0);
+}
+
+/* =====================================================================
+   HELPERS
+===================================================================== */
+function esc(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function byId(id){ return ASSETS.find(a => a.id === id); }
+function todayStr(){
+  return new Date().toISOString().slice(0, 10);
+}
+function clsChip(type){
+  return '<span class="cls ' + CLS[type].css + '">' + CLS[type].label + '</span>';
+}
+
+/* =====================================================================
+   VIEWS / NAV
+===================================================================== */
+let currentView = 'archive';
+function showView(v){
+  currentView = v;
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('on'));
+  const target = document.getElementById('view-' + v);
+  if (target) target.classList.add('on');
+  document.querySelectorAll('#mainNav button').forEach(b => {
+    b.classList.toggle('on', b.dataset.v === v || (v === 'dossier' && b.dataset.v === 'archive'));
+  });
+  if (v === 'archive') renderArchive();
+  if (v === 'drills') renderDrill();
+  if (v === 'exercise'){
+    if (!exState.active) renderExerciseSetup();
+    else if (!exState.timer) exState.timer = setInterval(tickExTimer, 1000);
+  }
+  if (v === 'aar') renderAarLog();
+  if (v !== 'exercise') stopExTimer();
+  window.scrollTo({top:0, behavior:'auto'});
+}
+
+/* =====================================================================
+   ARCHIVE
+===================================================================== */
+let archFilter = 'all';
+function setFilter(f){ archFilter = f; renderArchive(); }
+
+function renderArchive(){
+  // stats
+  const totalDue = dueCards().length;
+  const avgReady = Math.round(ASSETS.reduce((s, a) => s + assetReadiness(a), 0) / ASSETS.length);
+  document.getElementById('statStrip').innerHTML =
+    '<div class="stat panel"><div class="s-num">' + ASSETS.length + '</div><div class="s-lbl">ASSETS UNDER MGMT</div></div>' +
+    '<div class="stat panel"><div class="s-num">' + CARDS.length + '</div><div class="s-lbl">DRILL ITEMS</div></div>' +
+    '<div class="stat panel"><div class="s-num amber">' + String(totalDue).padStart(2, '0') + '</div><div class="s-lbl">ITEMS DUE</div></div>' +
+    '<div class="stat panel"><div class="s-num">' + avgReady + '%</div><div class="s-lbl">MEAN READINESS</div></div>';
+
+  // filters
+  const fr = document.getElementById('filterRow');
+  const types = [['all','ALL ASSETS'],['book','DOCTRINE'],['essay','DISPATCH'],['article','FIELD REPORT'],['podcast','SIGINT']];
+  fr.innerHTML = types.map(t =>
+    '<button class="btn btn-sm' + (archFilter === t[0] ? ' on' : '') + '" onclick="setFilter(\'' + t[0] + '\')">' + t[1] + '</button>'
+  ).join('');
+
+  // rows
+  const list = ASSETS.filter(a => archFilter === 'all' || a.type === archFilter);
+  let html = '<div class="arch-header">' +
+    '<span>DESIGNATOR</span><span>ASSET</span><span>CLASS</span><span>TAGS</span><span>CONSUMED</span><span>READINESS</span><span>DUE</span></div>';
+  html += list.map(a => {
+    const r = assetReadiness(a), due = assetDueCount(a);
+    return '<div class="arch-row" onclick="openDossier(\'' + a.id + '\')">' +
+      '<span class="c-desig desig">' + a.desig + '</span>' +
+      '<span class="c-asset"><span class="arch-title">' + esc(a.title) + '</span><br><span class="arch-author">' + esc(a.author) + ' &middot; ' + esc(a.pub) + '</span></span>' +
+      '<span class="c-cls">' + clsChip(a.type) + '</span>' +
+      '<span class="c-tags">' + a.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</span>' +
+      '<span class="c-date arch-date">' + a.consumed + '</span>' +
+      '<span class="c-ready ready-wrap"><span class="ready-bar"><span class="ready-fill' + (r < 40 ? ' low' : '') + '" style="width:' + r + '%"></span></span><span class="ready-pct">' + r + '%</span></span>' +
+      '<span class="c-due ' + (due > 0 ? 'due-flag' : 'due-flag due-ok') + '">' + (due > 0 ? due + ' DUE' : '&mdash;') + '</span>' +
+    '</div>';
+  }).join('');
+  document.getElementById('archiveList').innerHTML = html;
+}
+
+/* =====================================================================
+   DOSSIER (detail + notes view/add/edit)
+===================================================================== */
+let dossierId = null;
+let editingNote = -1;   // index of note under edit, -1 none
+
+function openDossier(id){
+  dossierId = id;
+  editingNote = -1;
+  renderDossier();
+  showView('dossier');
+}
+function renderDossier(){
+  const a = byId(dossierId);
+  if (!a) return;
+  const r = assetReadiness(a), due = assetDueCount(a);
+
+  const notesHtml = a.notes.length ? a.notes.map((n, i) => {
+    if (i === editingNote){
+      return '<div class="note-item">' +
+        '<div class="note-head"><span class="note-date">' + n.d + '</span><span class="mono-label">EDITING</span></div>' +
+        '<textarea id="noteTa" class="note-edit-ta">' + esc(n.t) + '</textarea>' +
+        '<div class="edit-actions">' +
+          '<button class="btn btn-sm btn-acc" onclick="saveNoteEdit(' + i + ')">SAVE</button>' +
+          '<button class="btn btn-sm" onclick="cancelNoteEdit()">CANCEL</button>' +
+        '</div></div>';
+    }
+    return '<div class="note-item">' +
+      '<div class="note-head"><span class="note-date">' + n.d + '</span>' +
+      '<button class="btn btn-sm btn-ghost" style="margin-left:auto" onclick="startNoteEdit(' + i + ')">EDIT</button></div>' +
+      '<div class="note-text">' + esc(n.t) + '</div></div>';
+  }).join('') : '<div class="empty-state">NO ANNOTATIONS ON FILE</div>';
+
+  const invHtml = a.cards.map((c, i) => {
+    const s = SRS[a.id + '#' + i];
+    const dueTxt = fmtDue(s.due);
+    return '<div class="drill-inv-row"><span class="drill-inv-q">' + esc(c.q) + '</span>' +
+      '<span class="' + (dueTxt === 'DUE NOW' ? 'due-flag' : 'note-date') + '">' + dueTxt + '</span></div>';
+  }).join('');
+
+  document.getElementById('dossierBody').innerHTML =
+    '<div class="doss-top">' +
+      '<div><div class="desig mb14" style="margin-bottom:6px">' + a.desig + ' &middot; INTEL DOSSIER</div><h1>' + esc(a.title) + '</h1></div>' +
+      '<div style="margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + clsChip(a.type) +
+      (due > 0 ? '<span class="due-flag" style="font-size:10px">' + due + ' ITEM' + (due > 1 ? 'S' : '') + ' DUE</span>' : '') + '</div>' +
+    '</div>' +
+    '<div class="meta-grid">' +
+      '<div class="meta-cell"><span class="mono-label">AUTHOR / SOURCE</span><span class="m-val">' + esc(a.author) + '</span></div>' +
+      '<div class="meta-cell"><span class="mono-label">PUBLISHED</span><span class="m-val">' + esc(a.pub) + '</span></div>' +
+      '<div class="meta-cell"><span class="mono-label">CONSUMED</span><span class="m-val">' + a.consumed + '</span></div>' +
+      '<div class="meta-cell"><span class="mono-label">READINESS</span><span class="m-val" style="color:' + (r < 40 ? 'var(--accent)' : 'var(--olive)') + '">' + r + '%</span></div>' +
+    '</div>' +
+    '<div class="mb22">' + a.tags.map(t => '<span class="tag">' + t + '</span>').join('') + '</div>' +
+    '<div class="doss-grid">' +
+      '<div style="display:flex;flex-direction:column;gap:22px">' +
+        '<div class="panel"><div class="panel-head"><span class="panel-title">EXTRACTED QUOTES</span></div><div class="panel-body">' +
+          a.quotes.map(q => '<div class="quote-item">&ldquo;' + esc(q.t) + '&rdquo;</div>').join('') +
+        '</div></div>' +
+        '<div class="panel"><div class="panel-head"><span class="panel-title">DRILL INVENTORY &mdash; ' + a.cards.length + ' ITEM' + (a.cards.length > 1 ? 'S' : '') + '</span></div><div class="panel-body">' + invHtml + '</div></div>' +
+      '</div>' +
+      '<div class="panel"><div class="panel-head"><span class="panel-title">ANNOTATIONS</span><span class="mono-label" style="margin-left:auto">' + a.notes.length + ' ON FILE</span></div>' +
+        '<div class="panel-body">' + notesHtml +
+        '<hr class="sep"><span class="ex-label">FILE NEW ANNOTATION</span>' +
+        '<textarea id="addNoteTa" class="add-ta" placeholder="Observation, connection, or disagreement&hellip;"></textarea>' +
+        '<div class="edit-actions"><button class="btn btn-acc" onclick="addNote()">FILE ANNOTATION</button></div>' +
+      '</div></div>' +
+    '</div>';
+}
+function startNoteEdit(i){ editingNote = i; renderDossier(); }
+function cancelNoteEdit(){ editingNote = -1; renderDossier(); }
+function saveNoteEdit(i){
+  const ta = document.getElementById('noteTa');
+  const a = byId(dossierId);
+  const v = ta.value.trim();
+  if (v) a.notes[i].t = v;
+  editingNote = -1;
+  renderDossier();
+}
+function addNote(){
+  const ta = document.getElementById('addNoteTa');
+  const v = ta.value.trim();
+  if (!v) { ta.focus(); return; }
+  byId(dossierId).notes.push({d: todayStr(), t: v});
+  renderDossier();
+}
+
+/* =====================================================================
+   DRILLS (flashcards, mixed deck)
+===================================================================== */
+let drillFlipped = false;
+let drillKey = null;
+let drillDone = 0;
+
+function nextDrillCard(){
+  const now = Date.now();
+  const sorted = CARDS.slice().sort((x, y) => SRS[x.key].due - SRS[y.key].due);
+  const due = sorted.filter(c => SRS[c.key].due <= now && c.key !== drillKey);
+  if (due.length) return due[0];
+  const dueAny = sorted.filter(c => SRS[c.key].due <= now);
+  return dueAny.length ? dueAny[0] : null;
+}
+function renderDrill(){
+  const stage = document.getElementById('drillStage');
+  const card = nextDrillCard();
+  if (!card){
+    stage.innerHTML = '<div class="empty-state">ALL DRILL ITEMS CLEARED &mdash; NOTHING DUE<br><br>' +
+      '<span style="color:var(--olive)">RETENTION PROTOCOL NOMINAL &middot; ' + drillDone + ' ITEM' + (drillDone === 1 ? '' : 'S') + ' PROCESSED THIS SESSION</span></div>';
+    drillKey = null;
+    return;
+  }
+  drillKey = card.key;
+  drillFlipped = false;
+  const a = byId(card.assetId);
+  const nDue = dueCards().length;
+  stage.innerHTML =
+    '<div class="drill-meta">' +
+      '<span class="mono-label">QUEUE &middot; <b style="color:var(--accent)">' + String(nDue).padStart(2, '0') + '</b> DUE</span>' +
+      '<span class="mono-label">SESSION &middot; ' + drillDone + ' PROCESSED</span>' +
+    '</div>' +
+    '<div class="flip-scene"><div class="flip-card" id="flipCard" onclick="flipDrill()">' +
+      '<div class="flip-face flip-front">' +
+        '<div class="flip-head"><span class="desig">' + a.desig + '</span>' + clsChip(a.type) + '</div>' +
+        '<div class="flip-body">' + esc(card.q) + '</div>' +
+        '<div class="flip-hint">TAP TO REVEAL</div>' +
+      '</div>' +
+      '<div class="flip-face flip-back">' +
+        '<div class="flip-head"><span class="desig">' + a.desig + '</span><span class="mono-label" style="color:var(--olive)">VERIFIED ANSWER</span></div>' +
+        '<div class="flip-body">' + esc(card.a) + '</div>' +
+        '<div class="flip-hint">' + esc(a.short).toUpperCase() + ' &middot; ' + esc(a.author).toUpperCase() + '</div>' +
+      '</div>' +
+    '</div></div>' +
+    '<div class="grade-row" id="gradeRow" style="visibility:hidden">' +
+      gradeButtons('gradeDrill') +
+    '</div>';
+}
+function gradeButtons(fn){
+  return '<button class="grade-btn g-fail" onclick="' + fn + '(0)">FAILED<small>&lt;10 MIN</small></button>' +
+    '<button class="grade-btn g-deg" onclick="' + fn + '(1)">DEGRADED<small>SHORT INTERVAL</small></button>' +
+    '<button class="grade-btn g-eff" onclick="' + fn + '(2)">EFFECTIVE<small>STANDARD</small></button>' +
+    '<button class="grade-btn g-dom" onclick="' + fn + '(3)">DOMINANT<small>EXTENDED</small></button>';
+}
+function flipDrill(){
+  drillFlipped = !drillFlipped;
+  document.getElementById('flipCard').classList.toggle('flipped', drillFlipped);
+  document.getElementById('gradeRow').style.visibility = drillFlipped ? 'visible' : 'hidden';
+}
+function gradeDrill(g){
+  if (!drillKey) return;
+  gradeCard(drillKey, g);
+  drillDone++;
+  renderDrill();
+}
+
+/* =====================================================================
+   LIVE EXERCISE (active recall)
+===================================================================== */
+const exState = {active:false, pool:[], i:0, revealed:false, counts:[0,0,0,0], start:0, timer:null};
+
+function renderExerciseSetup(){
+  const allTags = [...new Set(ASSETS.flatMap(a => a.tags))].sort();
+  document.getElementById('exerciseBody').innerHTML =
+    '<div class="ex-setup panel"><div class="panel-head"><span class="panel-title">EXERCISE PARAMETERS</span></div>' +
+    '<div class="panel-body">' +
+      '<div class="ex-row">' +
+        '<div class="ex-field"><label class="ex-label" for="exAsset">TARGET ASSET</label>' +
+          '<select id="exAsset" onchange="document.getElementById(\'exTag\').value=\'\'">' +
+            '<option value="">&mdash; any &mdash;</option>' +
+            ASSETS.map(a => '<option value="' + a.id + '">' + a.desig + ' &middot; ' + esc(a.title) + '</option>').join('') +
+          '</select></div>' +
+        '<div class="ex-field"><label class="ex-label" for="exTag">OR SUBJECT AREA</label>' +
+          '<select id="exTag" onchange="document.getElementById(\'exAsset\').value=\'\'">' +
+            '<option value="">&mdash; any &mdash;</option>' +
+            allTags.map(t => '<option value="' + t + '">' + t.toUpperCase() + '</option>').join('') +
+          '</select></div>' +
+        '<button class="btn btn-acc" style="padding:10px 22px" onclick="startExercise()">COMMENCE</button>' +
+      '</div>' +
+      '<p style="color:var(--mut);font-size:12px;margin-top:12px">Leave both unset to run the full mixed pool. Due items are sequenced first.</p>' +
+    '</div></div>';
+}
+function startExercise(){
+  const aid = document.getElementById('exAsset').value;
+  const tag = document.getElementById('exTag').value;
+  let pool = CARDS.slice();
+  if (aid) pool = pool.filter(c => c.assetId === aid);
+  else if (tag) pool = pool.filter(c => byId(c.assetId).tags.includes(tag));
+  const now = Date.now();
+  pool.sort((x, y) => SRS[x.key].due - SRS[y.key].due); // due-first
+  if (!pool.length) return;
+  exState.active = true; exState.pool = pool; exState.i = 0;
+  exState.revealed = false; exState.counts = [0,0,0,0];
+  exState.start = now;
+  stopExTimer();
+  exState.timer = setInterval(tickExTimer, 1000);
+  renderExercisePrompt();
+}
+function exElapsed(){
+  const s = Math.floor((Date.now() - exState.start) / 1000);
+  return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+}
+function tickExTimer(){
+  const el = document.getElementById('exTimer');
+  if (el) el.textContent = 'T+' + exElapsed();
+}
+function stopExTimer(){
+  if (exState.timer){ clearInterval(exState.timer); exState.timer = null; }
+}
+function renderExercisePrompt(){
+  const c = exState.pool[exState.i];
+  const a = byId(c.assetId);
+  document.getElementById('exerciseBody').innerHTML =
+    '<div class="ex-stage panel"><div class="panel-head">' +
+      '<span class="panel-title">LIVE EXERCISE &mdash; ITEM ' + (exState.i + 1) + '/' + exState.pool.length + '</span>' +
+      '<span class="timerbox" id="exTimer" style="margin-left:auto">T+' + exElapsed() + '</span>' +
+    '</div><div class="panel-body">' +
+      '<div class="flip-head mb14"><span class="desig">' + a.desig + '</span>' + clsChip(a.type) +
+        '<span class="mono-label">' + (SRS[c.key].due <= Date.now() ? '<span style="color:var(--accent)">DUE NOW</span>' : fmtDue(SRS[c.key].due)) + '</span></div>' +
+      '<div style="font-size:18px;font-weight:500;line-height:1.6;margin-bottom:18px">' + esc(c.q) + '</div>' +
+      '<label class="ex-label" for="exTa">YOUR RESPONSE &mdash; FROM MEMORY</label>' +
+      '<textarea id="exTa" class="ex-ta" rows="4" placeholder="Type everything you can recall&hellip;"></textarea>' +
+      '<div class="edit-actions mt14">' +
+        '<button class="btn btn-acc" onclick="revealExercise()">REVEAL VERIFIED ANSWER</button>' +
+        '<button class="btn btn-ghost" onclick="endExercise()">ABORT</button>' +
+      '</div>' +
+      '<div id="exReveal"></div>' +
+    '</div></div>';
+  const ta = document.getElementById('exTa');
+  if (ta) ta.focus();
+}
+function revealExercise(){
+  const c = exState.pool[exState.i];
+  const user = document.getElementById('exTa').value.trim();
+  exState.revealed = true;
+  document.getElementById('exReveal').innerHTML =
+    '<div class="ex-answerblock">' +
+      '<span class="ex-label">VERIFIED ANSWER</span>' +
+      '<div class="ex-model">' + esc(c.a) + '</div>' +
+      '<span class="ex-label">YOUR RESPONSE</span>' +
+      '<div class="ex-user">' + (user ? esc(user) : '<span style="color:var(--mut)">&mdash; no response entered &mdash;</span>') + '</div>' +
+      '<span class="ex-label">SELF-ASSESSMENT</span>' +
+      '<div class="grade-row">' + gradeButtons('gradeExercise') + '</div>' +
+    '</div>';
+  document.getElementById('exReveal').scrollIntoView({block:'nearest'});
+}
+function gradeExercise(g){
+  const c = exState.pool[exState.i];
+  gradeCard(c.key, g);
+  exState.counts[g]++;
+  exState.i++;
+  exState.revealed = false;
+  if (exState.i >= exState.pool.length) endExercise(true);
+  else renderExercisePrompt();
+}
+function endExercise(finished){
+  stopExTimer();
+  exState.active = false;
+  if (!finished){ renderExerciseSetup(); return; }
+  const n = exState.counts.reduce((s, x) => s + x, 0);
+  const labels = ['FAILED','DEGRADED','EFFECTIVE','DOMINANT'];
+  const colors = ['var(--accent)','#c9a15a','var(--olive)','var(--steel)'];
+  document.getElementById('exerciseBody').innerHTML =
+    '<div class="ex-stage panel"><div class="panel-head"><span class="panel-title">EXERCISE COMPLETE &mdash; DEBRIEF</span>' +
+      '<span class="timerbox" style="margin-left:auto">ELAPSED T+' + exElapsed() + '</span></div>' +
+    '<div class="panel-body">' +
+      '<p class="mb14" style="color:var(--dim)">' + n + ' item' + (n === 1 ? '' : 's') + ' assessed. Scheduler updated; intervals adjusted per assessment.</p>' +
+      '<table class="ex-summary">' + exState.counts.map((v, i) =>
+        '<tr><td><span class="mono-label" style="color:' + colors[i] + '">' + labels[i] + '</span></td><td style="font-family:var(--mono)">' + v + '</td></tr>'
+      ).join('') + '</table>' +
+      '<div class="edit-actions mt22"><button class="btn btn-acc" onclick="renderExerciseSetup()">NEW EXERCISE</button>' +
+      '<button class="btn" onclick="showView(\'drills\')">GO TO DRILLS</button></div>' +
+    '</div></div>';
+}
+
+/* =====================================================================
+   AFTER-ACTION REVIEW (reflections)
+===================================================================== */
+let aarQuote = null;
+function allQuotes(){
+  return ASSETS.flatMap(a => a.quotes.map(q => ({t:q.t, src:a.title + ' — ' + a.author, assetId:a.id})));
+}
+function newAarQuote(){
+  const pool = allQuotes();
+  let q = pool[Math.floor(Math.random() * pool.length)];
+  if (aarQuote && pool.length > 1){
+    while (q.t === aarQuote.t) q = pool[Math.floor(Math.random() * pool.length)];
+  }
+  aarQuote = q;
+  document.getElementById('aarQuoteBox').innerHTML =
+    '<div class="aar-quote">&ldquo;' + esc(q.t) + '&rdquo;</div>' +
+    '<div class="aar-attr">' + esc(q.src).toUpperCase() + '</div>';
+}
+function saveReflection(){
+  const ta = document.getElementById('aarTa');
+  const v = ta.value.trim();
+  if (!v){ ta.focus(); return; }
+  REFLECTIONS.unshift({d: todayStr(), q: aarQuote.t, src: aarQuote.src, t: v});
+  ta.value = '';
+  renderAarLog();
+}
+function renderAarLog(){
+  document.getElementById('aarCount').textContent = REFLECTIONS.length + ' ON FILE';
+  document.getElementById('aarLog').innerHTML = REFLECTIONS.map(r =>
+    '<div class="aar-entry">' +
+      '<div class="note-head"><span class="note-date">' + r.d + '</span><span class="mono-label">AAR ENTRY</span></div>' +
+      '<p class="aar-entry-quote">&ldquo;' + esc(r.q) + '&rdquo; &mdash; ' + esc(r.src) + '</p>' +
+      '<div class="aar-entry-text">' + esc(r.t) + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+/* =====================================================================
+   NETWORK ANALYSIS (SVG graph)
+===================================================================== */
+const NET = {nodes:[], edges:[], adj:{}};
+function buildNetwork(){
+  const cx = 470, cy = 268;
+  NET.nodes = ASSETS.map((a, i) => {
+    const ang = -Math.PI / 2 + i * 2 * Math.PI / ASSETS.length;
+    const r = (i % 2 === 0) ? 152 : 222;
+    return {a, x: cx + r * Math.cos(ang), y: cy + r * Math.sin(ang)};
+  });
+  NET.edges = [];
+  NET.adj = {};
+  ASSETS.forEach(a => NET.adj[a.id] = new Set());
+  for (let i = 0; i < ASSETS.length; i++){
+    for (let j = i + 1; j < ASSETS.length; j++){
+      const shared = ASSETS[i].tags.filter(t => ASSETS[j].tags.includes(t));
+      if (shared.length){
+        NET.edges.push({i, j, w: shared.length, tags: shared});
+        NET.adj[ASSETS[i].id].add(ASSETS[j].id);
+        NET.adj[ASSETS[j].id].add(ASSETS[i].id);
+      }
+    }
+  }
+  const svg = document.getElementById('netSvg');
+  let s = '';
+  NET.edges.forEach((e, k) => {
+    const n1 = NET.nodes[e.i], n2 = NET.nodes[e.j];
+    s += '<line class="net-edge" data-e="' + k + '" x1="' + n1.x.toFixed(1) + '" y1="' + n1.y.toFixed(1) +
+         '" x2="' + n2.x.toFixed(1) + '" y2="' + n2.y.toFixed(1) +
+         '" stroke-width="' + (e.w * 0.8) + '" stroke-opacity="' + (0.2 + e.w * 0.12) + '"></line>';
+  });
+  NET.nodes.forEach((n, k) => {
+    const c = CLS[n.a.type].color;
+    const labelBelow = n.y >= cy;
+    const ly = labelBelow ? n.y + 24 : n.y - 24;
+    const dy = labelBelow ? 12 : -26;
+    s += '<g class="net-node" data-n="' + k + '" tabindex="0" role="button" aria-label="Open dossier: ' + esc(n.a.title) + '">' +
+      '<rect x="' + (n.x - 7).toFixed(1) + '" y="' + (n.y - 7).toFixed(1) + '" width="14" height="14" ' +
+        'fill="' + c + '" fill-opacity="0.25" stroke="' + c + '" stroke-width="1.2"></rect>' +
+      '<rect x="' + (n.x - 2.5).toFixed(1) + '" y="' + (n.y - 2.5).toFixed(1) + '" width="5" height="5" fill="' + c + '"></rect>' +
+      '<text text-anchor="middle" x="' + n.x.toFixed(1) + '" y="' + ly.toFixed(1) + '">' + esc(n.a.short) + '</text>' +
+      '<text class="nn-desig" text-anchor="middle" x="' + n.x.toFixed(1) + '" y="' + (n.y + dy + (labelBelow ? 24 : 12)).toFixed(1) + '">' + n.a.desig + '</text>' +
+    '</g>';
+  });
+  svg.innerHTML = s;
+
+  const info = document.getElementById('netInfo');
+  svg.querySelectorAll('.net-node').forEach(g => {
+    const k = +g.dataset.n;
+    const node = NET.nodes[k];
+    g.addEventListener('mouseenter', () => highlightNode(k));
+    g.addEventListener('mouseleave', clearHighlight);
+    g.addEventListener('focus', () => highlightNode(k));
+    g.addEventListener('blur', clearHighlight);
+    g.addEventListener('click', () => openDossier(node.a.id));
+    g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openDossier(node.a.id); } });
+  });
+  function highlightNode(k){
+    const id = NET.nodes[k].a.id;
+    svg.classList.add('net-dim');
+    svg.querySelectorAll('.net-node').forEach(g2 => {
+      const id2 = NET.nodes[+g2.dataset.n].a.id;
+      g2.classList.toggle('lit', id2 === id || NET.adj[id].has(id2));
+    });
+    svg.querySelectorAll('.net-edge').forEach(l => {
+      const e = NET.edges[+l.dataset.e];
+      l.classList.toggle('lit', ASSETS[e.i].id === id || ASSETS[e.j].id === id);
+    });
+    const deg = NET.adj[id].size;
+    info.innerHTML = NET.nodes[k].a.desig + ' &middot; ' + deg + ' LINKED ASSET' + (deg === 1 ? '' : 'S') + ' &middot; CLICK TO OPEN DOSSIER';
+  }
+  function clearHighlight(){
+    svg.classList.remove('net-dim');
+    svg.querySelectorAll('.lit').forEach(el => el.classList.remove('lit'));
+    info.textContent = 'HOVER A NODE';
+  }
+}
+
+/* =====================================================================
+   FLASH TRAFFIC (serendipity)
+===================================================================== */
+let flashItem = null;
+function flashPool(){
+  const pool = [];
+  ASSETS.forEach(a => a.notes.forEach(n =>
+    pool.push({kind:'ARCHIVED NOTE', text:n.t, src:a.title + ' — ' + a.author, date:n.d, assetId:a.id})));
+  REFLECTIONS.forEach(r =>
+    pool.push({kind:'PAST REFLECTION', text:r.t, src:r.src, date:r.d, assetId:null}));
+  return pool;
+}
+function showFlash(item){
+  flashItem = item;
+  document.getElementById('flashKind').textContent = item.kind;
+  const t = item.text.length > 190 ? item.text.slice(0, 187) + '…' : item.text;
+  document.getElementById('flashText').textContent = '“' + t + '”';
+  document.getElementById('flashSrc').innerHTML = esc(item.src).toUpperCase() + ' &middot; FILED ' + item.date;
+  document.getElementById('flashToast').classList.add('show');
+}
+function randomFlash(){
+  const pool = flashPool();
+  let item = pool[Math.floor(Math.random() * pool.length)];
+  if (flashItem && pool.length > 1){
+    while (item.text === flashItem.text) item = pool[Math.floor(Math.random() * pool.length)];
+  }
+  return item;
+}
+function anotherFlash(){ showFlash(randomFlash()); }
+function hideFlash(){ document.getElementById('flashToast').classList.remove('show'); }
+document.getElementById('flashOpenBtn').addEventListener('click', () => {
+  if (!flashItem) return;
+  hideFlash();
+  if (flashItem.assetId) openDossier(flashItem.assetId);
+  else showView('aar');
+});
+
+/* =====================================================================
+   GLOBAL: clock, escape, init
+===================================================================== */
+function tickClock(){
+  const d = new Date();
+  document.getElementById('utcClock').textContent =
+    String(d.getUTCHours()).padStart(2, '0') + ':' +
+    String(d.getUTCMinutes()).padStart(2, '0') + ':' +
+    String(d.getUTCSeconds()).padStart(2, '0') + 'Z';
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const toast = document.getElementById('flashToast');
+  if (toast.classList.contains('show')){ hideFlash(); return; }
+  if (currentView === 'dossier'){
+    if (editingNote >= 0){ cancelNoteEdit(); return; }
+    showView('archive');
+  }
+});
+
+/* remove scan layer after animation */
+setTimeout(() => { const s = document.getElementById('scan'); if (s) s.remove(); }, 1600);
+
+/* init */
+refreshDueBadge();
+renderArchive();
+renderAarLog();
+newAarQuote();
+buildNetwork();
+
+/* serendipity auto-surface — suppressed when embedded (gallery thumbnails) */
+if (window.self === window.top){
+  setTimeout(() => {
+    if (!document.getElementById('flashToast').classList.contains('show')) showFlash(randomFlash());
+  }, 5000);
+}
+</script>
+</body>
+</html>

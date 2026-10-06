@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geiling Private Vault — v12</title>
+<style>
+/* ============================================================
+   V12 — HIGH-SECURITY VAULT
+   Personal knowledge vault for Matthew Geiling
+   ============================================================ */
+:root{
+  --steel-1:#2b2f35;
+  --steel-2:#22262b;
+  --steel-3:#1a1d21;
+  --panel:#24282e;
+  --panel-deep:#1d2025;
+  --line:#3b414a;
+  --line-soft:#33383f;
+  --brass:#c9a35a;
+  --brass-bright:#e3c27e;
+  --brass-dim:#8a7140;
+  --ink:#ece8de;
+  --ink-soft:#c3c0b8;
+  --dim:#98a0aa;
+  --alarm:#e05545;
+  --ok:#73c383;
+  --blueprint:#0d1b30;
+  --blueprint-line:#2a4a78;
+  --blueprint-ink:#9fc3ef;
+  --shadow:0 18px 50px rgba(0,0,0,.55);
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #343941 0%, transparent 60%),
+    linear-gradient(180deg,#24272c 0%, #17191d 100%);
+  background-attachment:fixed;
+  color:var(--ink);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;cursor:pointer}
+textarea,select,input{font-family:inherit}
+::selection{background:var(--brass);color:#161413}
+
+/* ---------- engraved label utility ---------- */
+.engraved{
+  font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--dim);
+}
+.engraved.brass{color:var(--brass)}
+
+/* ============================================================
+   VAULT DOOR LAYER
+   ============================================================ */
+#vaultLayer{
+  position:fixed;inset:0;z-index:200;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  background:
+    radial-gradient(900px 600px at 50% 40%, #30343b 0%, #1b1e22 62%, #101215 100%);
+  overflow:hidden;
+  transition:opacity .55s ease;
+}
+#vaultLayer.gone{opacity:0;pointer-events:none}
+#vaultLayer .frame-ring{
+  position:absolute;width:min(86vmin,760px);height:min(86vmin,760px);border-radius:50%;
+  background:
+    conic-gradient(from 90deg, #3b4047, #262a2f 25%, #41464e 50%, #24282d 75%, #3b4047 100%);
+  box-shadow:
+    0 0 0 10px #16181c,
+    0 0 0 12px #3c4149,
+    0 40px 120px rgba(0,0,0,.8),
+    inset 0 0 40px rgba(0,0,0,.55);
+}
+.door-perspective{
+  position:relative;z-index:2;
+  width:min(74vmin,640px);height:min(74vmin,640px);
+  perspective:1600px;
+}
+.door{
+  position:absolute;inset:0;border-radius:50%;
+  transform-style:preserve-3d;
+  transform-origin:8% 50%;
+  transition:transform 1.15s cubic-bezier(.6,.05,.35,1);
+  background:
+    radial-gradient(circle at 38% 32%, rgba(255,255,255,.14) 0%, transparent 42%),
+    conic-gradient(from 0deg,
+      #4a4f57 0%, #33373d 8%, #51565e 16%, #34383e 24%, #4c5159 32%,
+      #32363c 40%, #50555d 48%, #33373d 56%, #4b5058 64%, #32363c 72%,
+      #4f545c 80%, #34383e 88%, #4a4f57 100%);
+  box-shadow:
+    inset 0 0 0 6px #22252a,
+    inset 0 0 0 9px #585e67,
+    inset 0 0 90px rgba(0,0,0,.5),
+    0 30px 80px rgba(0,0,0,.75);
+}
+#vaultLayer.open .door{transform:rotateY(-104deg)}
+/* bolt heads around rim */
+.bolt{
+  position:absolute;top:50%;left:50%;width:3.2%;height:3.2%;border-radius:50%;
+  background:radial-gradient(circle at 34% 30%, #878d96 0%, #4b5058 55%, #2a2d32 100%);
+  box-shadow:inset 0 -1px 2px rgba(0,0,0,.7), 0 1px 2px rgba(0,0,0,.6);
+}
+/* locking lugs (bars that stick out past the rim) */
+.lug{
+  position:absolute;top:50%;left:50%;width:9.5%;height:3%;
+  background:linear-gradient(180deg,#6a7079 0%, #43484f 45%, #2b2f34 100%);
+  border-radius:3px;
+  box-shadow:0 2px 5px rgba(0,0,0,.65), inset 0 1px 0 rgba(255,255,255,.18);
+  transition:transform .5s cubic-bezier(.5,0,.4,1);
+}
+/* inner dial ring */
+.dial-ring{
+  position:absolute;inset:18%;border-radius:50%;
+  background:
+    radial-gradient(circle at 40% 34%, rgba(255,255,255,.1) 0%, transparent 46%),
+    conic-gradient(from 45deg, #3d4248, #2b2f34 25%, #41464d 50%, #2a2e33 75%, #3d4248 100%);
+  box-shadow:
+    inset 0 0 0 4px #1d2025,
+    inset 0 0 0 6px #565c65,
+    inset 0 10px 40px rgba(0,0,0,.55);
+}
+.dial-ticks{position:absolute;inset:20.5%;border-radius:50%}
+.dial-ticks i{
+  position:absolute;top:50%;left:50%;width:1px;height:5.5%;
+  background:rgba(227,194,126,.55);
+}
+/* rotary spoke handle */
+.handle{
+  position:absolute;inset:30%;
+  transition:transform 1.5s cubic-bezier(.55,.05,.3,1);
+}
+#vaultLayer.spin .handle{transform:rotate(585deg)}
+.spoke{
+  position:absolute;top:50%;left:50%;width:100%;height:7.5%;
+  transform-origin:center;border-radius:99px;
+  background:linear-gradient(180deg,#9aa1aa 0%, #585e67 45%, #33373d 100%);
+  box-shadow:0 2px 6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.3);
+}
+.spoke:nth-child(1){transform:translate(-50%,-50%) rotate(0deg)}
+.spoke:nth-child(2){transform:translate(-50%,-50%) rotate(60deg)}
+.spoke:nth-child(3){transform:translate(-50%,-50%) rotate(120deg)}
+.spoke i{
+  position:absolute;top:50%;width:16%;height:230%;transform:translateY(-50%);
+  border-radius:99px;
+  background:linear-gradient(180deg,#a8aeb7 0%, #5d636c 50%, #383c42 100%);
+  box-shadow:0 2px 5px rgba(0,0,0,.6);
+}
+.spoke i.a{left:-3%}
+.spoke i.b{right:-3%}
+.hub{
+  position:absolute;inset:36%;border-radius:50%;
+  background:radial-gradient(circle at 36% 30%, #b9bfc8 0%, #666c75 45%, #33373d 100%);
+  box-shadow:0 4px 12px rgba(0,0,0,.7), inset 0 -2px 6px rgba(0,0,0,.5);
+}
+.hub::after{
+  content:"";position:absolute;inset:30%;border-radius:50%;
+  background:radial-gradient(circle at 40% 32%, var(--brass-bright) 0%, var(--brass-dim) 70%, #574624 100%);
+  box-shadow:inset 0 -2px 4px rgba(0,0,0,.5);
+}
+.door-plate{
+  position:absolute;left:50%;bottom:7.5%;transform:translateX(-50%);
+  padding:7px 18px;border-radius:4px;white-space:nowrap;
+  background:linear-gradient(180deg,#2e3237,#212428);
+  border:1px solid #4a5058;box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 2px 6px rgba(0,0,0,.5);
+  font-size:min(1.7vmin,11px);font-weight:700;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--brass);text-shadow:0 1px 0 rgba(0,0,0,.8);
+}
+.door-plate small{display:block;text-align:center;margin-top:3px;color:var(--dim);letter-spacing:.24em;font-size:min(1.4vmin,9px);font-weight:600}
+/* interior visible behind the door while it swings */
+.vault-interior-peek{
+  position:absolute;inset:4%;border-radius:50%;z-index:-1;
+  background:
+    repeating-linear-gradient(90deg, #26292e 0 46px, #2c3036 46px 48px),
+    #202329;
+  box-shadow:inset 0 0 80px rgba(0,0,0,.9);
+}
+.door-status{
+  position:relative;z-index:3;margin-top:34px;min-height:22px;
+  font-size:12px;font-weight:700;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--brass-bright);text-align:center;padding:0 20px;
+}
+.door-status .cursor{display:inline-block;width:8px;height:12px;background:var(--brass-bright);margin-left:5px;animation:blink 1s steps(1) infinite;vertical-align:-1px}
+@keyframes blink{50%{opacity:0}}
+#skipBtn{
+  position:absolute;bottom:26px;right:30px;z-index:5;
+  background:transparent;border:1px solid var(--line);color:var(--dim);
+  padding:9px 18px;border-radius:6px;
+  font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+}
+#skipBtn:hover{color:var(--ink);border-color:var(--dim)}
+#enterBtn{
+  position:absolute;z-index:6;left:50%;top:50%;transform:translate(-50%,-50%);
+  background:linear-gradient(180deg,#3a3127 0%, #2a241c 100%);
+  border:1px solid var(--brass-dim);color:var(--brass-bright);
+  padding:16px 34px;border-radius:8px;
+  font-size:14px;font-weight:800;letter-spacing:.34em;text-transform:uppercase;
+  box-shadow:0 10px 30px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.1);
+  display:none;
+}
+#enterBtn:hover{color:#fff;border-color:var(--brass)}
+#vaultLayer.cover #enterBtn{display:block}
+#vaultLayer.cover #skipBtn{display:none}
+#vaultLayer.cover .door-status{color:var(--dim)}
+
+/* ============================================================
+   APP SHELL (inside the vault)
+   ============================================================ */
+#app{display:none;min-height:100vh}
+#app.ready{display:block}
+.hazard{
+  height:6px;
+  background:repeating-linear-gradient(-45deg, var(--brass-dim) 0 14px, #1b1d20 14px 28px);
+  opacity:.5;
+}
+header.vault-head{
+  position:sticky;top:0;z-index:50;
+  background:linear-gradient(180deg,#2b2f35 0%, #22262b 100%);
+  border-bottom:1px solid var(--line);
+  box-shadow:0 6px 24px rgba(0,0,0,.45);
+}
+.head-row{
+  max-width:1200px;margin:0 auto;padding:16px 28px 12px;
+  display:flex;align-items:center;gap:18px;flex-wrap:wrap;
+}
+.brand{display:flex;flex-direction:column;gap:3px;margin-right:auto}
+.brand .title{
+  font-size:17px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--ink);
+  text-shadow:0 1px 0 rgba(0,0,0,.8);
+}
+.brand .sub{font-size:10px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--brass)}
+a.gallery-link{
+  color:var(--dim);text-decoration:none;font-size:11px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid var(--line);border-radius:6px;padding:8px 14px;
+  background:var(--panel-deep);
+}
+a.gallery-link:hover{color:var(--ink);border-color:var(--dim)}
+/* LED due counter */
+.led{
+  display:flex;align-items:center;gap:10px;
+  background:#101214;border:1px solid var(--line);border-radius:8px;
+  padding:8px 14px;box-shadow:inset 0 2px 8px rgba(0,0,0,.8);
+}
+.led .lamp{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.led.hot .lamp{background:var(--alarm);box-shadow:0 0 10px var(--alarm);animation:pulse 1.6s ease infinite}
+@keyframes pulse{50%{opacity:.35}}
+.led .digits{
+  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:17px;font-weight:700;
+  color:var(--ok);letter-spacing:.12em;
+}
+.led.hot .digits{color:var(--alarm)}
+.led .cap{font-size:9px;font-weight:700;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+.reclaim-btn{
+  background:var(--panel-deep);border:1px solid var(--line);color:var(--brass);
+  border-radius:6px;padding:8px 14px;font-size:11px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;
+}
+.reclaim-btn:hover{border-color:var(--brass-dim);color:var(--brass-bright)}
+nav.tabs{
+  max-width:1200px;margin:0 auto;padding:0 28px 0;
+  display:flex;gap:4px;overflow-x:auto;
+  scrollbar-width:none;
+}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{
+  background:transparent;border:none;border-bottom:3px solid transparent;
+  color:var(--dim);padding:12px 16px 11px;white-space:nowrap;
+  font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;
+}
+nav.tabs button:hover{color:var(--ink-soft)}
+nav.tabs button.active{color:var(--brass-bright);border-bottom-color:var(--brass)}
+nav.tabs button .mini{
+  display:inline-block;margin-left:7px;min-width:18px;padding:1px 5px;border-radius:9px;
+  background:var(--alarm);color:#fff;font-size:10px;letter-spacing:0;text-align:center;
+}
+nav.tabs button .mini.zero{background:#3a4047;color:var(--dim)}
+
+main{max-width:1200px;margin:0 auto;padding:36px 28px 90px}
+.view{display:none;animation:fadein .35s ease}
+.view.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view-head{margin-bottom:26px}
+.view-head h1{
+  font-size:22px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:var(--ink);
+}
+.view-head p{margin-top:8px;color:var(--dim);font-size:14px;max-width:640px;line-height:1.6}
+.rivet-rule{
+  display:flex;align-items:center;gap:10px;margin-top:16px;
+}
+.rivet-rule::before,.rivet-rule::after{content:"";height:1px;flex:1;background:var(--line)}
+.rivet-rule i{width:6px;height:6px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #8d939c, #3a3f45)}
+
+/* ============================================================
+   LIBRARY — WALL OF SAFE-DEPOSIT BOXES
+   ============================================================ */
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.filter-row button{
+  background:var(--panel-deep);border:1px solid var(--line);color:var(--dim);
+  padding:7px 14px;border-radius:99px;font-size:11px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+}
+.filter-row button.active{background:var(--brass);border-color:var(--brass);color:#1c1812}
+.filter-row button:not(.active):hover{color:var(--ink);border-color:var(--dim)}
+.box-wall{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:14px;
+  padding:18px;border-radius:var(--radius);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.18)),
+    var(--steel-3);
+  border:1px solid var(--line-soft);
+  box-shadow:inset 0 2px 14px rgba(0,0,0,.6);
+}
+.drawer{
+  position:relative;text-align:left;border:none;padding:0;border-radius:7px;
+  background:linear-gradient(170deg,#383d44 0%, #2a2e34 55%, #24282d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.1),
+    inset 0 -2px 4px rgba(0,0,0,.5),
+    0 4px 10px rgba(0,0,0,.45);
+  transition:transform .18s ease, box-shadow .18s ease;
+  overflow:hidden;color:var(--ink);
+}
+.drawer::before{ /* corner rivets */
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle 3.5px at 11px 11px, #7d838c 0 2.4px, #30343a 2.6px, transparent 3.6px),
+    radial-gradient(circle 3.5px at calc(100% - 11px) 11px, #7d838c 0 2.4px, #30343a 2.6px, transparent 3.6px),
+    radial-gradient(circle 3.5px at 11px calc(100% - 11px), #7d838c 0 2.4px, #30343a 2.6px, transparent 3.6px),
+    radial-gradient(circle 3.5px at calc(100% - 11px) calc(100% - 11px), #7d838c 0 2.4px, #30343a 2.6px, transparent 3.6px);
+}
+.drawer:hover{transform:translateY(-3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 10px 24px rgba(0,0,0,.55)}
+.drawer.pulling{animation:pullout .4s ease}
+@keyframes pullout{
+  0%{transform:none}
+  45%{transform:translateX(14px) scale(1.015)}
+  100%{transform:none}
+}
+.drawer-inner{padding:18px 20px 16px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+.drawer-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.chip{
+  font-size:9px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  padding:4px 9px;border-radius:3px;border:1px solid;
+}
+.chip.book{color:#8fb7e0;border-color:#44627f;background:rgba(70,110,150,.12)}
+.chip.essay{color:#d8b36b;border-color:#7d6436;background:rgba(190,150,80,.12)}
+.chip.article{color:#8fd0a0;border-color:#44704f;background:rgba(90,170,110,.12)}
+.chip.podcast{color:#cf9bd8;border-color:#6d4f74;background:rgba(170,120,180,.12)}
+.drawer-no{
+  font-family:"SF Mono",Menlo,Consolas,monospace;font-size:10px;color:var(--dim);letter-spacing:.14em;
+}
+.drawer .bt{
+  display:block;font-size:15.5px;font-weight:700;line-height:1.35;color:var(--ink);
+  letter-spacing:.02em;
+}
+.drawer .auth{font-size:12px;color:var(--ink-soft)}
+.drawer .meta-line{font-size:11px;color:var(--dim);letter-spacing:.04em}
+.drawer .tagrow{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto}
+.tag{
+  font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--brass);
+  background:rgba(201,163,90,.09);border:1px solid rgba(201,163,90,.3);
+  padding:2px 8px;border-radius:99px;
+}
+.drawer .handle-bar{
+  height:9px;margin:4px 20px 14px;border-radius:99px;
+  background:linear-gradient(180deg,#5b616a 0%, #3b4046 60%, #2b2f34 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 2px 4px rgba(0,0,0,.5);
+  width:46%;
+}
+
+/* ============================================================
+   DOSSIER MODAL (content detail)
+   ============================================================ */
+.overlay{
+  position:fixed;inset:0;z-index:120;display:none;
+  background:rgba(8,9,11,.74);backdrop-filter:blur(3px);
+  overflow-y:auto;padding:4vh 18px 6vh;
+}
+.overlay.show{display:block}
+.dossier{
+  max-width:820px;margin:0 auto;border-radius:12px;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  animation:slideup .35s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes slideup{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:none}}
+.dossier-tab{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  background:linear-gradient(180deg,#39342a 0%, #2d2922 100%);
+  border-bottom:1px solid var(--brass-dim);
+  padding:14px 26px;
+}
+.dossier-tab .label{font-size:11px;font-weight:800;letter-spacing:.3em;text-transform:uppercase;color:var(--brass-bright)}
+.x-btn{
+  background:transparent;border:1px solid var(--line);color:var(--dim);
+  width:34px;height:34px;border-radius:6px;font-size:16px;line-height:1;flex:none;
+}
+.x-btn:hover{color:var(--ink);border-color:var(--dim)}
+.dossier-body{padding:30px 34px 36px}
+.dossier-body h2{font-size:24px;font-weight:800;line-height:1.3;margin-bottom:6px}
+.dossier-body .byline{color:var(--ink-soft);font-size:14px;margin-bottom:20px}
+.meta-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;
+}
+.meta-cell{
+  background:var(--panel-deep);border:1px solid var(--line-soft);border-radius:8px;padding:12px 14px;
+}
+.meta-cell .k{font-size:9px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+.meta-cell .v{font-size:14px;color:var(--ink)}
+.section-label{
+  display:flex;align-items:center;gap:12px;margin:28px 0 14px;
+  font-size:10px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;color:var(--brass);
+}
+.section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+blockquote.q{
+  border-left:3px solid var(--brass-dim);padding:10px 18px;margin-bottom:12px;
+  background:rgba(201,163,90,.05);border-radius:0 8px 8px 0;
+  font-size:14.5px;line-height:1.65;color:var(--ink-soft);font-style:italic;
+}
+.note-card{
+  background:var(--panel-deep);border:1px solid var(--line-soft);border-radius:8px;
+  padding:14px 16px;margin-bottom:10px;
+}
+.note-card .ntxt{font-size:14px;line-height:1.65;color:var(--ink);white-space:pre-wrap}
+.note-card .nfoot{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+.note-card .ndate{font-size:11px;color:var(--dim);letter-spacing:.06em}
+.mini-btn{
+  background:transparent;border:1px solid var(--line);color:var(--dim);
+  padding:5px 12px;border-radius:5px;font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+}
+.mini-btn:hover{color:var(--brass-bright);border-color:var(--brass-dim)}
+.mini-btn.solid{background:var(--brass);border-color:var(--brass);color:#1c1812}
+.mini-btn.solid:hover{background:var(--brass-bright);color:#1c1812}
+textarea.field{
+  width:100%;min-height:92px;resize:vertical;
+  background:#15171a;border:1px solid var(--line);border-radius:8px;
+  color:var(--ink);font-size:14px;line-height:1.6;padding:12px 14px;
+}
+textarea.field:focus{outline:none;border-color:var(--brass-dim);box-shadow:0 0 0 3px rgba(201,163,90,.12)}
+.btn-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+
+/* ============================================================
+   COMBINATION DRILLS (flashcards)
+   ============================================================ */
+.gauge-strip{
+  display:flex;gap:14px;flex-wrap:wrap;margin-bottom:26px;
+}
+.gauge{
+  flex:1;min-width:170px;background:var(--panel);border:1px solid var(--line-soft);
+  border-radius:10px;padding:16px 18px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+}
+.gauge .gk{font-size:9px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-bottom:8px}
+.gauge .gv{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:24px;font-weight:700;color:var(--ink)}
+.gauge .gv.alarm{color:var(--alarm)}
+.gauge .gv.okc{color:var(--ok)}
+.gauge .bar{height:6px;border-radius:99px;background:#121417;margin-top:10px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,.8)}
+.gauge .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--brass-dim),var(--brass-bright));transition:width .4s ease}
+.drill-stage{display:flex;flex-direction:column;align-items:center;gap:22px}
+.card3d-wrap{width:min(620px,100%);height:330px;perspective:1400px}
+.card3d{
+  position:relative;width:100%;height:100%;cursor:pointer;
+  transform-style:preserve-3d;transition:transform .65s cubic-bezier(.4,.1,.25,1);
+}
+.card3d.flipped{transform:rotateY(180deg)}
+.cface{
+  position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;
+  display:flex;flex-direction:column;padding:26px 30px;
+  border:1px solid var(--line);
+  box-shadow:var(--shadow), inset 0 1px 0 rgba(255,255,255,.07);
+}
+.cface.front{
+  background:linear-gradient(165deg,#32373e 0%, #24282d 70%, #202329 100%);
+}
+.cface.back{
+  transform:rotateY(180deg);
+  background:linear-gradient(165deg,#3a3429 0%, #27241d 70%, #211e18 100%);
+  border-color:var(--brass-dim);
+}
+.cface .ctag{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.cface .ctag .src{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:right}
+.cface .big{
+  flex:1;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-size:19px;line-height:1.55;color:var(--ink);font-weight:600;padding:0 8px;
+  overflow:auto;
+}
+.cface.back .big{color:var(--brass-bright);font-weight:500;font-size:17.5px}
+.cface .hint{text-align:center;font-size:10px;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--dim)}
+.cface .dial-deco{
+  width:46px;height:46px;border-radius:50%;flex:none;
+  background:
+    radial-gradient(circle at 36% 30%, #7c828b 0%, #45494f 55%, #2a2d32 100%);
+  box-shadow:inset 0 -2px 5px rgba(0,0,0,.6), 0 2px 5px rgba(0,0,0,.5);
+  position:relative;
+}
+.dial-deco::after{content:"";position:absolute;left:50%;top:5px;width:2px;height:10px;background:var(--brass-bright);transform:translateX(-50%)}
+.card3d.flipped .front .dial-deco, .dial-deco.spun{transform:rotate(220deg);transition:transform .65s ease}
+.grade-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.grade-row button{
+  min-width:108px;padding:13px 18px;border-radius:9px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font-size:11px;font-weight:800;
+  letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:0 4px 10px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.07);
+  transition:transform .12s ease;
+}
+.grade-row button:hover:not(:disabled){transform:translateY(-2px)}
+.grade-row button:disabled{opacity:.35;cursor:not-allowed}
+.grade-row button small{display:block;margin-top:5px;font-size:9px;font-weight:600;letter-spacing:.1em;color:var(--dim)}
+.grade-row .g-again{border-color:#7d3a32;color:#ef8d80}
+.grade-row .g-hard{border-color:#7d6436;color:#dfb96a}
+.grade-row .g-good{border-color:#44704f;color:#8fd0a0}
+.grade-row .g-easy{border-color:#44627f;color:#8fb7e0}
+.empty-drill{
+  text-align:center;padding:60px 24px;border:1px dashed var(--line);border-radius:12px;
+  color:var(--dim);font-size:14px;line-height:1.7;width:min(620px,100%);
+}
+.empty-drill b{color:var(--ok);display:block;font-size:16px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+
+/* ============================================================
+   SECURITY AUDIT (active recall)
+   ============================================================ */
+.audit-setup{
+  display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:28px;
+  background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;padding:22px 24px;
+}
+.field-col{display:flex;flex-direction:column;gap:8px;min-width:220px;flex:1}
+.field-col label{font-size:9px;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+select.sel{
+  background:#15171a;border:1px solid var(--line);border-radius:8px;color:var(--ink);
+  padding:11px 12px;font-size:14px;
+}
+select.sel:focus{outline:none;border-color:var(--brass-dim)}
+.big-btn{
+  background:var(--brass);border:none;color:#1c1812;border-radius:8px;
+  padding:13px 26px;font-size:12px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;
+  box-shadow:0 6px 16px rgba(0,0,0,.4);
+}
+.big-btn:hover{background:var(--brass-bright)}
+.big-btn.ghost{background:transparent;border:1px solid var(--line);color:var(--dim);box-shadow:none}
+.big-btn.ghost:hover{color:var(--ink);border-color:var(--dim)}
+.audit-panel{
+  background:var(--panel);border:1px solid var(--line-soft);border-radius:12px;
+  padding:28px 30px;max-width:760px;
+}
+.audit-panel .prompt{font-size:19px;line-height:1.55;font-weight:600;margin:14px 0 20px}
+.audit-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.audit-answer{
+  margin-top:18px;padding:16px 18px;border-radius:8px;
+  background:rgba(201,163,90,.06);border:1px solid var(--brass-dim);
+  font-size:15px;line-height:1.65;color:var(--brass-bright);
+}
+.audit-your{
+  margin-top:12px;padding:14px 16px;border-radius:8px;background:#15171a;
+  border:1px solid var(--line-soft);font-size:14px;line-height:1.6;color:var(--ink-soft);white-space:pre-wrap;
+}
+.audit-your .yk{font-size:9px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+
+/* ============================================================
+   DEPOSIT LEDGER (reflections)
+   ============================================================ */
+.reflect-quote{
+  background:linear-gradient(165deg,#2e2a22 0%, #241f18 100%);
+  border:1px solid var(--brass-dim);border-radius:12px;padding:26px 30px;margin-bottom:22px;
+  box-shadow:var(--shadow);
+}
+.reflect-quote .qtxt{font-size:18px;line-height:1.65;font-style:italic;color:var(--ink);margin:12px 0 14px}
+.reflect-quote .qsrc{font-size:12px;color:var(--brass);letter-spacing:.08em}
+.ledger-list{margin-top:34px}
+.ledger-entry{
+  background:var(--panel);border:1px solid var(--line-soft);border-radius:10px;
+  padding:18px 22px;margin-bottom:12px;position:relative;
+  border-left:3px solid var(--brass-dim);
+}
+.ledger-entry .ldate{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:11px;color:var(--dim);letter-spacing:.1em;margin-bottom:8px}
+.ledger-entry .lquote{font-size:12.5px;font-style:italic;color:var(--dim);margin-bottom:10px;line-height:1.55}
+.ledger-entry .lbody{font-size:14px;line-height:1.7;color:var(--ink);white-space:pre-wrap}
+
+/* ============================================================
+   WIRING DIAGRAM (knowledge graph)
+   ============================================================ */
+.blueprint{
+  background:
+    linear-gradient(rgba(42,74,120,.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42,74,120,.16) 1px, transparent 1px),
+    var(--blueprint);
+  background-size:28px 28px, 28px 28px, auto;
+  border:1px solid var(--blueprint-line);border-radius:12px;
+  padding:10px;box-shadow:var(--shadow), inset 0 0 60px rgba(0,0,0,.4);
+}
+.blueprint svg{display:block;width:100%;height:auto}
+.gq-edge{stroke:var(--blueprint-line);stroke-width:1.2;transition:stroke .15s, opacity .15s}
+.gq-edge.hot{stroke:var(--brass-bright);stroke-width:2}
+.gq-edge.cold{opacity:.12}
+.gq-node{cursor:pointer}
+.gq-node circle{
+  fill:#132743;stroke:var(--blueprint-ink);stroke-width:1.4;transition:all .15s;
+}
+.gq-node.hot circle{fill:#1d3a60;stroke:var(--brass-bright);stroke-width:2.2}
+.gq-node.cold{opacity:.3}
+.gq-node text{
+  fill:var(--blueprint-ink);font-size:11px;font-weight:600;letter-spacing:.04em;
+  pointer-events:none;
+}
+.gq-node.hot text{fill:#fff}
+.gq-node .typ{font-size:8px;letter-spacing:.18em;fill:#5f82b4;text-transform:uppercase}
+.graph-tip{
+  margin-top:14px;font-size:12px;color:var(--dim);letter-spacing:.04em;min-height:18px;
+}
+.graph-tip b{color:var(--blueprint-ink)}
+
+/* ============================================================
+   UNCLAIMED ASSET (serendipity toast)
+   ============================================================ */
+#toast{
+  position:fixed;right:24px;bottom:24px;z-index:150;width:min(380px, calc(100vw - 48px));
+  background:linear-gradient(170deg,#343025 0%, #262219 100%);
+  border:1px solid var(--brass-dim);border-radius:12px;
+  box-shadow:0 24px 60px rgba(0,0,0,.7);
+  transform:translateY(24px);opacity:0;pointer-events:none;
+  transition:transform .45s cubic-bezier(.2,.9,.3,1.2), opacity .4s ease;
+  overflow:hidden;
+}
+#toast.show{transform:none;opacity:1;pointer-events:auto}
+#toast .t-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-bottom:1px solid rgba(201,163,90,.3);
+  background:repeating-linear-gradient(-45deg, rgba(201,163,90,.12) 0 10px, transparent 10px 20px);
+}
+#toast .t-head .tl{font-size:10px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;color:var(--brass-bright)}
+#toast .t-body{padding:16px 18px 18px}
+#toast .t-txt{font-size:13.5px;line-height:1.6;color:var(--ink);margin-bottom:12px;font-style:italic}
+#toast .t-src{font-size:11px;color:var(--brass);letter-spacing:.06em;margin-bottom:14px}
+#toast .t-actions{display:flex;gap:8px}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width:860px){
+  .head-row{padding:14px 18px 10px}
+  nav.tabs{padding:0 12px}
+  main{padding:26px 18px 80px}
+  .dossier-body{padding:24px 20px 28px}
+  .card3d-wrap{height:360px}
+  .brand .title{font-size:14px;letter-spacing:.22em}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<!-- ================= VAULT DOOR ================= -->
+<div id="vaultLayer" aria-hidden="true">
+  <div class="frame-ring"></div>
+  <div class="door-perspective">
+    <div class="vault-interior-peek"></div>
+    <div class="door" id="door">
+      <div id="boltRing"></div>
+      <div id="lugRing"></div>
+      <div class="dial-ring">
+        <div class="dial-ticks" id="dialTicks"></div>
+      </div>
+      <div class="handle" id="handle">
+        <span class="spoke"><i class="a"></i><i class="b"></i></span>
+        <span class="spoke"><i class="a"></i><i class="b"></i></span>
+        <span class="spoke"><i class="a"></i><i class="b"></i></span>
+        <div class="hub"></div>
+      </div>
+      <div class="door-plate">Geiling Private Vault<small>Chamber No. 0012 · Est. 2025</small></div>
+    </div>
+  </div>
+  <div class="door-status"><span id="statusTxt">SECURE — AWAITING KEYHOLDER</span><span class="cursor"></span></div>
+  <button id="enterBtn" type="button">Enter Vault</button>
+  <button id="skipBtn" type="button">Skip sequence</button>
+</div>
+
+<!-- ================= APP ================= -->
+<div id="app">
+  <header class="vault-head">
+    <div class="head-row">
+      <a class="gallery-link" href="../index.html">&larr; Gallery</a>
+      <div class="brand">
+        <div class="title">Geiling Private Vault</div>
+        <div class="sub">Knowledge Depository · Keyholder M. Geiling</div>
+      </div>
+      <button class="reclaim-btn" id="reclaimBtn" type="button" title="Surface a forgotten note">&#9679; Unclaimed Asset</button>
+      <div class="led" id="dueLed">
+        <span class="lamp"></span>
+        <span class="digits" id="dueDigits">00</span>
+        <span class="cap">Due<br>Now</span>
+      </div>
+    </div>
+    <nav class="tabs" id="navTabs">
+      <button data-view="library" class="active" type="button">Deposit Boxes</button>
+      <button data-view="drills" type="button">Combination Drills<span class="mini zero" id="drillMini">0</span></button>
+      <button data-view="audit" type="button">Security Audit</button>
+      <button data-view="ledger" type="button">Deposit Ledger</button>
+      <button data-view="graph" type="button">Wiring Diagram</button>
+    </nav>
+    <div class="hazard"></div>
+  </header>
+
+  <main>
+    <!-- LIBRARY -->
+    <section class="view active" id="view-library">
+      <div class="view-head">
+        <h1>Safe-Deposit Boxes</h1>
+        <p>Every work you have consumed, sealed in its own drawer. Open a box to inspect its dossier — notes, quotes, and classification.</p>
+        <div class="rivet-rule"><i></i><i></i><i></i></div>
+      </div>
+      <div class="filter-row" id="typeFilters"></div>
+      <div class="box-wall" id="boxWall"></div>
+    </section>
+
+    <!-- DRILLS -->
+    <section class="view" id="view-drills">
+      <div class="view-head">
+        <h1>Combination Drills</h1>
+        <p>Spin the dial. If you can recall the combination, the tumblers fall. Graded on an SM-2 forgetting curve — honest grades keep the vault honest.</p>
+        <div class="rivet-rule"><i></i><i></i><i></i></div>
+      </div>
+      <div class="gauge-strip">
+        <div class="gauge"><div class="gk">Lock Pressure — Due</div><div class="gv alarm" id="gDue">0</div><div class="bar"><i id="gDueBar" style="width:0%"></i></div></div>
+        <div class="gauge"><div class="gk">Cleared This Session</div><div class="gv okc" id="gDone">0</div><div class="bar"><i id="gDoneBar" style="width:0%"></i></div></div>
+        <div class="gauge"><div class="gk">Total Combinations</div><div class="gv" id="gTotal">0</div><div class="bar"><i style="width:100%"></i></div></div>
+      </div>
+      <div class="drill-stage" id="drillStage"></div>
+    </section>
+
+    <!-- AUDIT -->
+    <section class="view" id="view-audit">
+      <div class="view-head">
+        <h1>Security Audit</h1>
+        <p>A spot-check of one holding or one subject. Write your answer from memory before the seal is broken — then grade yourself. Results feed the same scheduler as the drills.</p>
+        <div class="rivet-rule"><i></i><i></i><i></i></div>
+      </div>
+      <div class="audit-setup">
+        <div class="field-col">
+          <label for="auditWork">Audit one holding</label>
+          <select class="sel" id="auditWork"><option value="">— Select a work —</option></select>
+        </div>
+        <div class="field-col">
+          <label for="auditTag">Or audit a subject</label>
+          <select class="sel" id="auditTag"><option value="">— Select a subject —</option></select>
+        </div>
+        <button class="big-btn" id="auditStart" type="button">Begin Audit</button>
+      </div>
+      <div id="auditArea"></div>
+    </section>
+
+    <!-- LEDGER -->
+    <section class="view" id="view-ledger">
+      <div class="view-head">
+        <h1>Deposit Ledger</h1>
+        <p>The vault surfaces a quotation from the holdings. Write what you now think — each entry is a deposit of synthesis, recorded with its date and source.</p>
+        <div class="rivet-rule"><i></i><i></i><i></i></div>
+      </div>
+      <div class="reflect-quote">
+        <div class="engraved brass">Surfaced for reflection</div>
+        <div class="qtxt" id="reflectQuote"></div>
+        <div class="qsrc" id="reflectSrc"></div>
+        <div class="btn-row">
+          <button class="mini-btn" id="newQuoteBtn" type="button">Draw another quote</button>
+        </div>
+      </div>
+      <textarea class="field" id="reflectInput" rows="5" placeholder="What does this mean to you today? Where have you seen it proven, or disproven?"></textarea>
+      <div class="btn-row">
+        <button class="big-btn" id="saveReflect" type="button">Record Deposit</button>
+      </div>
+      <div class="ledger-list">
+        <div class="section-label">Ledger — past deposits</div>
+        <div id="ledgerList"></div>
+      </div>
+    </section>
+
+    <!-- GRAPH -->
+    <section class="view" id="view-graph">
+      <div class="view-head">
+        <h1>Wiring Diagram</h1>
+        <p>The vault's internal wiring — every holding connected to every other through shared subjects. Hover a junction to trace its circuits; click to open the box.</p>
+        <div class="rivet-rule"><i></i><i></i><i></i></div>
+      </div>
+      <div class="blueprint">
+        <svg id="graphSvg" viewBox="0 0 980 640" role="img" aria-label="Knowledge graph of vault contents"></svg>
+      </div>
+      <div class="graph-tip" id="graphTip">Hover a node to trace its connections.</div>
+    </section>
+  </main>
+</div>
+
+<!-- DOSSIER MODAL -->
+<div class="overlay" id="dossierOverlay">
+  <div class="dossier" role="dialog" aria-modal="true" aria-label="Content dossier">
+    <div class="dossier-tab">
+      <span class="label">Dossier — Classified Holding</span>
+      <button class="x-btn" id="dossierClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="dossier-body" id="dossierBody"></div>
+  </div>
+</div>
+
+<!-- SERENDIPITY TOAST -->
+<div id="toast" role="status">
+  <div class="t-head">
+    <span class="tl">&#9888; Unclaimed Asset</span>
+    <button class="x-btn" id="toastClose" type="button" aria-label="Dismiss" style="width:28px;height:28px">&times;</button>
+  </div>
+  <div class="t-body">
+    <div class="t-txt" id="toastTxt"></div>
+    <div class="t-src" id="toastSrc"></div>
+    <div class="t-actions">
+      <button class="mini-btn" id="toastAnother" type="button">Another</button>
+      <button class="mini-btn solid" id="toastOpen" type="button">Open</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   MOCK DATA — all in memory, nothing persisted
+   ============================================================ */
+const DAY = 86400000;
+const NOW = Date.now();
+
+const WORKS = [
+  {
+    id:"tfs", type:"book", title:"Thinking, Fast and Slow", author:"Daniel Kahneman",
+    published:"2011", consumed:"2025-03-14",
+    tags:["psychology","decision-making","memory"],
+    quotes:[
+      "Nothing in life is as important as you think it is, while you are thinking about it.",
+      "A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth."
+    ],
+    notes:[
+      {text:"System 1 keeps answering an easier question than the one I asked it. When I estimate how long a project will take, I'm really answering \"how do I feel about this project\" — I should write the reference-class estimate down first.", date:"2025-03-16"},
+      {text:"The planning fallacy section hit hard. New rule: take my gut estimate for any build and multiply by 2.5 before committing to a date.", date:"2025-03-20"}
+    ],
+    cards:[
+      {q:"What distinguishes System 1 from System 2 thinking?", a:"System 1 is fast, automatic, associative, and effortless; System 2 is slow, deliberate, and effortful. System 2 is lazy and usually endorses whatever System 1 proposes."},
+      {q:"What is the 'anchoring effect'?", a:"Exposure to a number — even an obviously irrelevant one — biases subsequent numeric estimates toward it. Anchors work even when you know they are arbitrary."}
+    ]
+  },
+  {
+    id:"ah", type:"book", title:"Atomic Habits", author:"James Clear",
+    published:"2018", consumed:"2025-01-20",
+    tags:["habits","systems","psychology"],
+    quotes:[
+      "You do not rise to the level of your goals. You fall to the level of your systems.",
+      "Every action you take is a vote for the type of person you wish to become."
+    ],
+    notes:[
+      {text:"Identity-first framing works on me: 'I'm someone who reviews his vault daily' beats 'I should do my flashcards.' Changed my calendar block title accordingly.", date:"2025-01-22"}
+    ],
+    cards:[
+      {q:"What are the four laws of behavior change?", a:"Make it obvious, make it attractive, make it easy, make it satisfying. Invert each to break a bad habit (make it invisible, unattractive, hard, unsatisfying)."},
+      {q:"What is 'habit stacking'?", a:"Anchoring a new habit to an existing one: 'After [current habit], I will [new habit].' The established routine becomes the cue for the new behavior."}
+    ]
+  },
+  {
+    id:"dw", type:"book", title:"Deep Work", author:"Cal Newport",
+    published:"2016", consumed:"2025-05-02",
+    tags:["focus","habits","creativity"],
+    quotes:[
+      "Clarity about what matters provides clarity about what does not.",
+      "The ability to perform deep work is becoming increasingly rare at exactly the same time it is becoming increasingly valuable."
+    ],
+    notes:[
+      {text:"Tried the 'shutdown complete' ritual for two weeks. The surprise wasn't better evenings — it was that mornings started cleaner because open loops were parked, not swirling.", date:"2025-05-10"},
+      {text:"Attention residue explains why my 'quick' Slack checks cost 20 minutes of real thinking. Batch to 3 windows per day.", date:"2025-05-15"}
+    ],
+    cards:[
+      {q:"What is 'attention residue'?", a:"When switching tasks, part of your attention stays stuck on the previous task, degrading performance on the next one. Frequent switching leaves you perpetually operating at reduced capacity."},
+      {q:"Name the four deep-work scheduling philosophies Newport describes.", a:"Monastic (eliminate shallow work entirely), bimodal (long stretches split between deep and open), rhythmic (a daily chain of fixed deep blocks), and journalistic (slot deep work into any free gap)."}
+    ]
+  },
+  {
+    id:"mis", type:"book", title:"Make It Stick", author:"Brown, Roediger & McDaniel",
+    published:"2014", consumed:"2025-06-18",
+    tags:["learning","memory","psychology"],
+    quotes:[
+      "Learning is deeper and more durable when it's effortful.",
+      "Rereading text and massed practice of a skill are among the least productive study strategies — and among the most popular."
+    ],
+    notes:[
+      {text:"This book is basically the design spec for this app: retrieval practice beats rereading, spacing beats cramming, interleaving beats blocking. The vault should always make me generate before it reveals.", date:"2025-06-20"}
+    ],
+    cards:[
+      {q:"Why does retrieval practice beat rereading?", a:"The act of effortfully recalling strengthens and reconsolidates the memory trace itself. Rereading only builds fluency with the text, which feels like knowing but isn't."},
+      {q:"What is 'desirable difficulty'?", a:"Conditions that make learning feel harder and slower — spacing, interleaving, generation — but produce stronger, longer-lasting retention than easy, fluent practice."},
+      {q:"What is interleaving?", a:"Mixing different topics or problem types within one practice session instead of blocking one topic at a time. It feels worse but builds the discrimination skills real use demands."}
+    ]
+  },
+  {
+    id:"doet", type:"book", title:"The Design of Everyday Things", author:"Don Norman",
+    published:"1988", consumed:"2025-08-09",
+    tags:["design","psychology","systems"],
+    quotes:[
+      "Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.",
+      "When people make errors using a product, blame the design, not the user."
+    ],
+    notes:[
+      {text:"Norman doors are everywhere once you see them. My own app had one: the drawer handles looked decorative, so nobody pulled them. Affordances have to signal.", date:"2025-08-12"}
+    ],
+    cards:[
+      {q:"What is an 'affordance' vs a 'signifier'?", a:"An affordance is what actions an object makes possible; a signifier is the perceivable cue that communicates the affordance. Design fails when affordances exist without signifiers."},
+      {q:"What are the Gulf of Execution and Gulf of Evaluation?", a:"The gaps between a user's intention and the actions a system allows (execution), and between the system's state and the user's ability to perceive it (evaluation). Good design bridges both."}
+    ]
+  },
+  {
+    id:"med", type:"book", title:"Meditations", author:"Marcus Aurelius",
+    published:"c. 180 AD", consumed:"2025-11-25",
+    tags:["philosophy","habits"],
+    quotes:[
+      "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "Waste no more time arguing about what a good man should be. Be one."
+    ],
+    notes:[
+      {text:"Striking that the most powerful man alive wrote notes to himself he never meant to publish — a private vault. The format matters: short, repeated, addressed to self. These flashcards are my version.", date:"2025-11-28"}
+    ],
+    cards:[
+      {q:"What is the Stoic 'dichotomy of control'?", a:"Divide everything into what is up to you (judgments, intentions, responses) and what is not (events, others' opinions, outcomes). Spend effort only on the former."},
+      {q:"How did Marcus Aurelius use writing as a practice?", a:"As private, repeated self-admonition — rehearsing principles each morning so they'd be available under pressure. Spaced self-testing of values, not publication."}
+    ]
+  },
+  {
+    id:"gw", type:"essay", title:"How to Do Great Work", author:"Paul Graham",
+    published:"2023", consumed:"2025-09-30",
+    tags:["creativity","focus","systems"],
+    quotes:[
+      "The way to figure out what to work on is by working. If you're not sure what to work on, guess.",
+      "Curiosity is the key to all four steps: choosing the field, getting to the frontier, noticing the gaps, and exploring them."
+    ],
+    notes:[
+      {text:"His compounding argument: work that compounds looks flat for years, then vertical. The vault only pays off if I keep depositing — consistency is the whole strategy.", date:"2025-10-02"}
+    ],
+    cards:[
+      {q:"What four steps does Graham give for doing great work?", a:"Choose a field matching your aptitudes and interests, learn enough to reach the frontier, notice the gaps others overlook, and explore the promising gaps hard."}
+    ]
+  },
+  {
+    id:"awmt", type:"essay", title:"As We May Think", author:"Vannevar Bush",
+    published:"1945", consumed:"2025-10-12",
+    tags:["memory","systems","design"],
+    quotes:[
+      "The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.",
+      "A memex is a device in which an individual stores all his books, records, and communications, mechanized so that it may be consulted with exceeding speed and flexibility."
+    ],
+    notes:[
+      {text:"1945 and he already saw it: storage is trivial, retrieval by association is everything. The wiring diagram view exists because of this essay — trails between items, not folders.", date:"2025-10-14"}
+    ],
+    cards:[
+      {q:"What was Bush's 'memex' and its key organizing principle?", a:"A hypothetical personal device storing all one's documents, navigated by associative trails the user builds between items — mirroring how memory works by association rather than by hierarchy."}
+    ]
+  },
+  {
+    id:"sr", type:"essay", title:"Self-Reliance", author:"Ralph Waldo Emerson",
+    published:"1841", consumed:"2026-01-08",
+    tags:["philosophy","creativity"],
+    quotes:[
+      "A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.",
+      "Envy is ignorance; imitation is suicide."
+    ],
+    notes:[
+      {text:"'In every work of genius we recognize our own rejected thoughts.' That's exactly why I keep this vault — to stop rejecting my own thoughts before they're tested.", date:"2026-01-10"}
+    ],
+    cards:[
+      {q:"What does Emerson mean by 'a foolish consistency is the hobgoblin of little minds'?", a:"Clinging to past positions merely to appear consistent blocks growth. Speak today's conviction today, even if it contradicts yesterday's."}
+    ]
+  },
+  {
+    id:"wbdw", type:"article", title:"Why Books Don't Work", author:"Andy Matuschak",
+    published:"2019", consumed:"2025-07-22",
+    tags:["learning","memory","design"],
+    quotes:[
+      "As a medium, books are surprisingly bad at conveying knowledge, and readers mostly don't realize it.",
+      "The lesson of the testing effect: to remember something, you must practice remembering it."
+    ],
+    notes:[
+      {text:"His claim: books assume transmissionism — that reading = absorbing. My honest recall of books I 'loved' is a few sentences. This app is the mnemonic medium he's pointing toward.", date:"2025-07-23"},
+      {text:"Counterpoint to sit with: maybe books work as mood/worldview shifters even when propositional recall is near zero. Not everything is a fact to retain.", date:"2025-07-30"}
+    ],
+    cards:[
+      {q:"What does Matuschak mean by books assuming 'transmissionism'?", a:"The implicit (false) model that knowledge transfers from page to mind simply by reading. Real understanding requires active engagement — retrieval, elaboration, application."},
+      {q:"What is a 'mnemonic medium'?", a:"A medium with retrieval practice built into the reading experience itself — e.g., prose interleaved with spaced-repetition prompts — so remembering is the default, not an afterthought."}
+    ]
+  },
+  {
+    id:"altm", type:"article", title:"Augmenting Long-term Memory", author:"Michael Nielsen",
+    published:"2018", consumed:"2025-04-05",
+    tags:["memory","learning","systems"],
+    quotes:[
+      "Anki makes memory a choice, rather than a haphazard event, to be left to chance.",
+      "The single biggest change is to think of memory not as a static store, but as a skill you can systematically build."
+    ],
+    notes:[
+      {text:"Best practical rule in the piece: most bad cards are bad because they're too big. One atomic idea per card. I rewrote six of my own cards after reading this.", date:"2025-04-07"}
+    ],
+    cards:[
+      {q:"What does Nielsen mean by 'memory becomes a choice'?", a:"With spaced repetition, anything you decide to remember, you will — at a predictable cost of a few minutes of review spread over years. Forgetting becomes opt-in, not inevitable."},
+      {q:"What is Nielsen's main rule for writing good spaced-repetition cards?", a:"Make them atomic: one precise idea per card. Large, compound cards fail in hard-to-diagnose ways; small cards isolate exactly what you don't know."}
+    ]
+  },
+  {
+    id:"hub", type:"podcast", title:"Huberman Lab — Understanding & Improving Memory", author:"Andrew Huberman",
+    published:"2022", consumed:"2026-02-14",
+    tags:["memory","learning","psychology"],
+    quotes:[
+      "Repetition works, but emotion and adrenaline after learning can accomplish in one trial what repetition does in many.",
+      "Taking a mental snapshot engages the same circuitry that improves memory for the whole scene."
+    ],
+    notes:[
+      {text:"Actionable: brief spikes of arousal AFTER study (cold shower, hard exercise) tag the preceding material for consolidation. Try stacking workouts after vault review sessions.", date:"2026-02-15"}
+    ],
+    cards:[
+      {q:"How does post-learning adrenaline affect memory, per Huberman?", a:"An adrenaline/arousal spike shortly after learning signals 'that mattered' and enhances consolidation of the material learned just before — one emotional trial can rival many repetitions."},
+      {q:"Why does Huberman recommend 'mental snapshots'?", a:"Deliberately taking a visual snapshot of a moment engages hippocampal/visual circuitry that improves recall not just of the image but of the surrounding context and information."}
+    ]
+  },
+  {
+    id:"tkp", type:"podcast", title:"The Knowledge Project — Mental Models", author:"Shane Parrish",
+    published:"2021", consumed:"2025-12-03",
+    tags:["decision-making","systems","philosophy"],
+    quotes:[
+      "You can't make good decisions about a world you don't understand — mental models are how you compress the world.",
+      "The person with the most accurate map of reality wins, and the map is built from the big ideas of the big disciplines."
+    ],
+    notes:[
+      {text:"A latticework beats a list: models only pay when they're connected enough to collide. That's an argument for the wiring diagram over the drawer wall — review at the junctions, not the boxes.", date:"2025-12-05"}
+    ],
+    cards:[
+      {q:"What is a 'latticework of mental models' and why a latticework?", a:"A connected set of core ideas from many disciplines (inversion, compounding, incentives, margin of safety...). Connection matters because isolated models don't get recalled or combined when real problems arrive."}
+    ]
+  }
+];
+
+const TYPE_LABEL = {book:"Book", essay:"Essay", article:"Article", podcast:"Podcast"};
+
+/* ---------- reflections (seeded) ---------- */
+const REFLECTIONS = [
+  {
+    date:"2025-09-12",
+    quote:"You do not rise to the level of your goals. You fall to the level of your systems.",
+    source:"Atomic Habits — James Clear",
+    text:"Eight months in, the proof: every goal I hit this year had a calendar block behind it; every one I missed had only intention. The vault itself is the system now — if the review streak breaks, the retention breaks about ten days later. Measured it."
+  },
+  {
+    date:"2026-01-19",
+    quote:"The human mind operates by association. With one item in its grasp, it snaps instantly to the next.",
+    source:"As We May Think — Vannevar Bush",
+    text:"Bush and Parrish are circling the same idea eighty years apart: value lives in the connections, not the items. Kahneman gives the mechanism (associative System 1), Matuschak gives the failure mode (reading without linking). My tags are the trails. I should review by tag more often than by work."
+  }
+];
+
+/* ============================================================
+   SRS — simple SM-2-style scheduler, in memory
+   ============================================================ */
+const CARDS = [];
+WORKS.forEach(w => w.cards.forEach((c, ci) => {
+  CARDS.push({workId:w.id, workTitle:w.title, q:c.q, a:c.a, id:w.id+"-"+ci,
+              ef:2.5, interval:0, due:NOW, reps:0});
+}));
+/* seed so some are due now, some later */
+CARDS.forEach((c,i)=>{
+  const m = i % 3;
+  if (m===0){ c.ef=2.3; c.interval=4;  c.reps=3; c.due = NOW - ((i%5)+1)*DAY; }       // overdue
+  else if (m===1){ c.ef=2.5; c.interval=2; c.reps=2; c.due = NOW + ((i%4)+1)*DAY; }   // soon
+  else { c.ef=2.6; c.interval=12; c.reps=4; c.due = NOW + ((i%9)+5)*DAY; }            // later
+});
+/* force a couple extra due for a healthy session */
+CARDS[1].due = NOW - 2*DAY; CARDS[1].interval = 3;
+CARDS[5].due = NOW - 1*DAY; CARDS[5].interval = 2;
+
+let clearedThisSession = 0;
+
+function dueCards(){ return CARDS.filter(c => c.due <= Date.now()); }
+
+function gradeCard(card, g){ // g: 0 again, 1 hard, 2 good, 3 easy
+  const now = Date.now();
+  if (g === 0){
+    card.interval = 0;
+    card.ef = Math.max(1.3, card.ef - 0.2);
+    card.due = now + 10*60*1000; // 10 min
+  } else {
+    if (card.interval < 1){
+      card.interval = (g===1) ? 1 : (g===2) ? 2 : 4;
+    } else {
+      const mult = (g===1) ? 1.2 : (g===2) ? card.ef : card.ef * 1.35;
+      card.interval = Math.max(1, Math.round(card.interval * mult));
+    }
+    card.ef = Math.min(2.8, Math.max(1.3, card.ef + (g===1 ? -0.15 : g===3 ? 0.15 : 0)));
+    card.due = now + card.interval * DAY;
+    clearedThisSession++;
+  }
+  card.reps++;
+  updateDueUI();
+}
+
+function fmtInterval(card, g){
+  if (g===0) return "10 min";
+  let iv;
+  if (card.interval < 1) iv = (g===1)?1:(g===2)?2:4;
+  else iv = Math.max(1, Math.round(card.interval * ((g===1)?1.2:(g===2)?card.ef:card.ef*1.35)));
+  return iv === 1 ? "1 day" : iv + " days";
+}
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+const $ = sel => document.querySelector(sel);
+function esc(s){ return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function fmtDate(iso){
+  const d = new Date(iso + "T12:00:00");
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"});
+}
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function workById(id){ return WORKS.find(w => w.id === id); }
+function allTags(){
+  const s = new Set();
+  WORKS.forEach(w => w.tags.forEach(t => s.add(t)));
+  return [...s].sort();
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i=a.length-1;i>0;i--){ const j = Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* ============================================================
+   DUE BADGE / GAUGES
+   ============================================================ */
+function updateDueUI(){
+  const n = dueCards().length;
+  const led = $("#dueLed");
+  $("#dueDigits").textContent = String(n).padStart(2,"0");
+  led.classList.toggle("hot", n > 0);
+  const mini = $("#drillMini");
+  mini.textContent = n;
+  mini.classList.toggle("zero", n === 0);
+  $("#gDue").textContent = String(n).padStart(2,"0");
+  $("#gDue").className = "gv " + (n>0 ? "alarm" : "okc");
+  $("#gDone").textContent = String(clearedThisSession).padStart(2,"0");
+  $("#gTotal").textContent = String(CARDS.length).padStart(2,"0");
+  $("#gDueBar").style.width = Math.min(100, n / CARDS.length * 100) + "%";
+  $("#gDoneBar").style.width = Math.min(100, clearedThisSession / CARDS.length * 100) + "%";
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showView(name){
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  $("#view-"+name).classList.add("active");
+  document.querySelectorAll("nav.tabs button").forEach(b =>
+    b.classList.toggle("active", b.dataset.view === name));
+  if (name === "drills") renderDrill();
+  if (name === "graph") renderGraphHighlightReset();
+  window.scrollTo({top:0, behavior:"auto"});
+}
+$("#navTabs").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-view]");
+  if (btn) showView(btn.dataset.view);
+});
+
+/* ============================================================
+   LIBRARY — box wall
+   ============================================================ */
+let typeFilter = "all";
+function renderFilters(){
+  const counts = {all:WORKS.length};
+  WORKS.forEach(w => counts[w.type] = (counts[w.type]||0)+1);
+  const kinds = ["all","book","essay","article","podcast"];
+  $("#typeFilters").innerHTML = kinds.map(k =>
+    `<button type="button" data-f="${k}" class="${k===typeFilter?'active':''}">${k==="all"?"All Holdings":TYPE_LABEL[k]+"s"} · ${counts[k]||0}</button>`
+  ).join("");
+}
+$("#typeFilters").addEventListener("click", e => {
+  const b = e.target.closest("button[data-f]");
+  if (!b) return;
+  typeFilter = b.dataset.f;
+  renderFilters(); renderWall();
+});
+function renderWall(){
+  const list = WORKS.filter(w => typeFilter==="all" || w.type===typeFilter);
+  $("#boxWall").innerHTML = list.map((w,i) => {
+    const no = String(WORKS.indexOf(w)+1).padStart(3,"0");
+    return `<button type="button" class="drawer" data-open="${w.id}">
+      <div class="drawer-inner">
+        <div class="drawer-top">
+          <span class="chip ${w.type}">${TYPE_LABEL[w.type]}</span>
+          <span class="drawer-no">BOX ${no}</span>
+        </div>
+        <span class="bt">${esc(w.title)}</span>
+        <div class="auth">${esc(w.author)}</div>
+        <div class="meta-line">Published ${esc(w.published)} &middot; Consumed ${fmtDate(w.consumed)}</div>
+        <div class="tagrow">${w.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+      </div>
+      <div class="handle-bar"></div>
+    </button>`;
+  }).join("");
+}
+$("#boxWall").addEventListener("click", e => {
+  const d = e.target.closest(".drawer");
+  if (!d) return;
+  d.classList.add("pulling");
+  setTimeout(() => { d.classList.remove("pulling"); openDossier(d.dataset.open); }, 260);
+});
+
+/* ============================================================
+   DOSSIER — detail view with editable notes
+   ============================================================ */
+let currentWorkId = null;
+function openDossier(id){
+  currentWorkId = id;
+  renderDossier();
+  $("#dossierOverlay").classList.add("show");
+}
+function closeDossier(){
+  $("#dossierOverlay").classList.remove("show");
+  currentWorkId = null;
+}
+$("#dossierClose").addEventListener("click", closeDossier);
+$("#dossierOverlay").addEventListener("click", e => { if (e.target === $("#dossierOverlay")) closeDossier(); });
+
+function renderDossier(editIdx){
+  const w = workById(currentWorkId);
+  if (!w) return;
+  const body = $("#dossierBody");
+  let html = `
+    <span class="chip ${w.type}">${TYPE_LABEL[w.type]}</span>
+    <h2 style="margin-top:14px">${esc(w.title)}</h2>
+    <div class="byline">${esc(w.author)}</div>
+    <div class="meta-grid">
+      <div class="meta-cell"><div class="k">Author</div><div class="v">${esc(w.author)}</div></div>
+      <div class="meta-cell"><div class="k">Published</div><div class="v">${esc(w.published)}</div></div>
+      <div class="meta-cell"><div class="k">Consumed</div><div class="v">${fmtDate(w.consumed)}</div></div>
+      <div class="meta-cell"><div class="k">Combinations</div><div class="v">${w.cards.length} card${w.cards.length!==1?"s":""}</div></div>
+    </div>
+    <div class="tagrow" style="display:flex;flex-wrap:wrap;gap:6px">${w.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>
+    <div class="section-label">Sealed Quotations</div>
+    ${w.quotes.map(q=>`<blockquote class="q">&ldquo;${esc(q)}&rdquo;</blockquote>`).join("")}
+    <div class="section-label">Keyholder Notes</div>`;
+  html += w.notes.map((n,i) => {
+    if (editIdx === i){
+      return `<div class="note-card">
+        <textarea class="field" id="editNoteField">${esc(n.text)}</textarea>
+        <div class="btn-row">
+          <button class="mini-btn solid" type="button" data-save-note="${i}">Save</button>
+          <button class="mini-btn" type="button" data-cancel-note="1">Cancel</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="note-card">
+      <div class="ntxt">${esc(n.text)}</div>
+      <div class="nfoot">
+        <span class="ndate">Filed ${fmtDate(n.date)}</span>
+        <button class="mini-btn" type="button" data-edit-note="${i}">Edit</button>
+      </div>
+    </div>`;
+  }).join("");
+  html += `
+    <div class="section-label">File a new note</div>
+    <textarea class="field" id="newNoteField" placeholder="Add a note to this holding&hellip;"></textarea>
+    <div class="btn-row"><button class="mini-btn solid" type="button" id="addNoteBtn">Add Note</button></div>`;
+  body.innerHTML = html;
+}
+$("#dossierBody").addEventListener("click", e => {
+  const w = workById(currentWorkId);
+  if (!w) return;
+  const editBtn = e.target.closest("[data-edit-note]");
+  if (editBtn){ renderDossier(Number(editBtn.dataset.editNote)); return; }
+  const saveBtn = e.target.closest("[data-save-note]");
+  if (saveBtn){
+    const i = Number(saveBtn.dataset.saveNote);
+    const val = $("#editNoteField").value.trim();
+    if (val){ w.notes[i].text = val; w.notes[i].date = todayISO(); }
+    renderDossier(); return;
+  }
+  if (e.target.closest("[data-cancel-note]")){ renderDossier(); return; }
+  if (e.target.closest("#addNoteBtn")){
+    const field = $("#newNoteField");
+    const val = field.value.trim();
+    if (!val){ field.focus(); return; }
+    w.notes.push({text:val, date:todayISO()});
+    renderDossier();
+  }
+});
+
+/* ============================================================
+   COMBINATION DRILLS — flashcards
+   ============================================================ */
+let drillCard = null;
+let drillPractice = false;
+
+function pickDrillCard(){
+  const due = dueCards().sort((a,b)=>a.due-b.due);
+  if (due.length){ drillPractice = false; return due[0]; }
+  return null;
+}
+function renderDrill(forcePracticeCard){
+  updateDueUI();
+  const stage = $("#drillStage");
+  drillCard = forcePracticeCard || pickDrillCard();
+  if (!drillCard){
+    stage.innerHTML = `<div class="empty-drill">
+      <b>All tumblers cleared</b>
+      Nothing is due right now. The vault holds — come back when the pressure gauge climbs.<br><br>
+      <button class="big-btn ghost" type="button" id="practiceBtn">Practice ahead anyway</button>
+    </div>`;
+    const pb = $("#practiceBtn");
+    if (pb) pb.addEventListener("click", () => {
+      drillPractice = true;
+      renderDrill(shuffle(CARDS)[0]);
+    });
+    return;
+  }
+  const w = workById(drillCard.workId);
+  stage.innerHTML = `
+    <div class="card3d-wrap">
+      <div class="card3d" id="theCard" tabindex="0" role="button" aria-label="Flashcard — activate to flip">
+        <div class="cface front">
+          <div class="ctag"><div class="dial-deco"></div><span class="src">${esc(w.title)}<br>${TYPE_LABEL[w.type]} &middot; ${esc(w.author)}</span></div>
+          <div class="big">${esc(drillCard.q)}</div>
+          <div class="hint">Spin the dial — click to reveal</div>
+        </div>
+        <div class="cface back">
+          <div class="ctag"><div class="dial-deco spun"></div><span class="src">Combination</span></div>
+          <div class="big">${esc(drillCard.a)}</div>
+          <div class="hint">Grade your recall below</div>
+        </div>
+      </div>
+    </div>
+    <div class="grade-row" id="gradeRow">
+      <button class="g-again" type="button" data-g="0" disabled>Again<small>${fmtInterval(drillCard,0)}</small></button>
+      <button class="g-hard" type="button" data-g="1" disabled>Hard<small>${fmtInterval(drillCard,1)}</small></button>
+      <button class="g-good" type="button" data-g="2" disabled>Good<small>${fmtInterval(drillCard,2)}</small></button>
+      <button class="g-easy" type="button" data-g="3" disabled>Easy<small>${fmtInterval(drillCard,3)}</small></button>
+    </div>`;
+  const card = $("#theCard");
+  const flip = () => {
+    card.classList.add("flipped");
+    document.querySelectorAll("#gradeRow button").forEach(b => b.disabled = false);
+  };
+  card.addEventListener("click", flip);
+  card.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" "){ e.preventDefault(); flip(); } });
+  $("#gradeRow").addEventListener("click", e => {
+    const b = e.target.closest("button[data-g]");
+    if (!b || b.disabled) return;
+    if (drillPractice){
+      // practice-ahead grading still updates the card's schedule
+      gradeCard(drillCard, Number(b.dataset.g));
+      drillPractice = false;
+      renderDrill();
+    } else {
+      gradeCard(drillCard, Number(b.dataset.g));
+      renderDrill();
+    }
+  });
+}
+
+/* ============================================================
+   SECURITY AUDIT — active recall
+   ============================================================ */
+let auditQueue = [];
+let auditIdx = 0;
+let auditScopeLabel = "";
+
+function fillAuditSelects(){
+  $("#auditWork").innerHTML = `<option value="">&mdash; Select a work &mdash;</option>` +
+    WORKS.map(w=>`<option value="${w.id}">${esc(w.title)}</option>`).join("");
+  $("#auditTag").innerHTML = `<option value="">&mdash; Select a subject &mdash;</option>` +
+    allTags().map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join("");
+}
+$("#auditWork").addEventListener("change", () => { if ($("#auditWork").value) $("#auditTag").value = ""; });
+$("#auditTag").addEventListener("change", () => { if ($("#auditTag").value) $("#auditWork").value = ""; });
+
+$("#auditStart").addEventListener("click", () => {
+  const wid = $("#auditWork").value;
+  const tag = $("#auditTag").value;
+  let pool;
+  if (wid){ pool = CARDS.filter(c => c.workId === wid); auditScopeLabel = workById(wid).title; }
+  else if (tag){ pool = CARDS.filter(c => workById(c.workId).tags.includes(tag)); auditScopeLabel = "Subject: " + tag; }
+  else {
+    $("#auditArea").innerHTML = `<div class="empty-drill" style="max-width:760px">Select a holding <em>or</em> a subject above to begin the audit.</div>`;
+    return;
+  }
+  auditQueue = shuffle(pool);
+  auditIdx = 0;
+  renderAuditStep();
+});
+
+function renderAuditStep(revealed){
+  const area = $("#auditArea");
+  if (auditIdx >= auditQueue.length){
+    area.innerHTML = `<div class="audit-panel">
+      <div class="engraved brass">Audit complete</div>
+      <div class="prompt">All ${auditQueue.length} item${auditQueue.length!==1?"s":""} inspected for &ldquo;${esc(auditScopeLabel)}&rdquo;. Findings filed with the scheduler.</div>
+      <button class="big-btn ghost" type="button" id="auditAgain">Run another audit</button>
+    </div>`;
+    $("#auditAgain").addEventListener("click", () => { area.innerHTML = ""; window.scrollTo({top:0}); });
+    return;
+  }
+  const c = auditQueue[auditIdx];
+  const w = workById(c.workId);
+  if (!revealed){
+    area.innerHTML = `<div class="audit-panel">
+      <div class="audit-meta">
+        <span class="engraved brass">${esc(auditScopeLabel)}</span>
+        <span class="engraved">Item ${auditIdx+1} of ${auditQueue.length}</span>
+      </div>
+      <div class="prompt">${esc(c.q)}</div>
+      <div class="engraved" style="margin-bottom:8px">Source: ${esc(w.title)} &middot; ${esc(w.author)}</div>
+      <textarea class="field" id="auditAnswerField" placeholder="Write your answer from memory before breaking the seal&hellip;"></textarea>
+      <div class="btn-row"><button class="big-btn" type="button" id="auditReveal">Break Seal &mdash; Reveal</button></div>
+    </div>`;
+    $("#auditReveal").addEventListener("click", () => renderAuditStep(true));
+  } else {
+    const typed = ($("#auditAnswerField") ? $("#auditAnswerField").value : "").trim();
+    area.innerHTML = `<div class="audit-panel">
+      <div class="audit-meta">
+        <span class="engraved brass">${esc(auditScopeLabel)}</span>
+        <span class="engraved">Item ${auditIdx+1} of ${auditQueue.length}</span>
+      </div>
+      <div class="prompt">${esc(c.q)}</div>
+      ${typed ? `<div class="audit-your"><div class="yk">Your answer</div>${esc(typed)}</div>` : `<div class="audit-your"><div class="yk">Your answer</div><em style="color:var(--dim)">(left blank)</em></div>`}
+      <div class="audit-answer">${esc(c.a)}</div>
+      <div class="section-label" style="margin-top:22px">Grade your recall</div>
+      <div class="grade-row" style="justify-content:flex-start" id="auditGradeRow">
+        <button class="g-again" type="button" data-g="0">Again<small>${fmtInterval(c,0)}</small></button>
+        <button class="g-hard" type="button" data-g="1">Hard<small>${fmtInterval(c,1)}</small></button>
+        <button class="g-good" type="button" data-g="2">Good<small>${fmtInterval(c,2)}</small></button>
+        <button class="g-easy" type="button" data-g="3">Easy<small>${fmtInterval(c,3)}</small></button>
+      </div>
+    </div>`;
+    $("#auditGradeRow").addEventListener("click", e => {
+      const b = e.target.closest("button[data-g]");
+      if (!b) return;
+      gradeCard(c, Number(b.dataset.g));
+      auditIdx++;
+      renderAuditStep();
+    });
+  }
+}
+
+/* ============================================================
+   DEPOSIT LEDGER — reflections
+   ============================================================ */
+let currentQuote = null;
+function allQuotePool(){
+  const pool = [];
+  WORKS.forEach(w => w.quotes.forEach(q => pool.push({quote:q, source:w.title+" — "+w.author, workId:w.id})));
+  return pool;
+}
+function drawQuote(){
+  const pool = allQuotePool();
+  let next;
+  do { next = pool[Math.floor(Math.random()*pool.length)]; }
+  while (currentQuote && pool.length > 1 && next.quote === currentQuote.quote);
+  currentQuote = next;
+  $("#reflectQuote").textContent = "“" + currentQuote.quote + "”";
+  $("#reflectSrc").textContent = currentQuote.source;
+}
+$("#newQuoteBtn").addEventListener("click", drawQuote);
+$("#saveReflect").addEventListener("click", () => {
+  const field = $("#reflectInput");
+  const val = field.value.trim();
+  if (!val){ field.focus(); return; }
+  REFLECTIONS.unshift({date: todayISO(), quote: currentQuote.quote, source: currentQuote.source, text: val});
+  field.value = "";
+  renderLedger();
+});
+function renderLedger(){
+  $("#ledgerList").innerHTML = REFLECTIONS.map(r => `
+    <div class="ledger-entry">
+      <div class="ldate">DEPOSIT &middot; ${fmtDate(r.date)}</div>
+      <div class="lquote">&ldquo;${esc(r.quote)}&rdquo; &mdash; ${esc(r.source)}</div>
+      <div class="lbody">${esc(r.text)}</div>
+    </div>`).join("");
+}
+
+/* ============================================================
+   WIRING DIAGRAM — knowledge graph (SVG)
+   ============================================================ */
+const GRAPH_POS = {
+  tfs:[250,150], ah:[120,330], dw:[300,470], mis:[500,120], doet:[700,90],
+  med:[105,540], gw:[485,555], awmt:[690,300], sr:[260,590], wbdw:[520,300],
+  altm:[720,480], hub:[860,180], tkp:[870,420]
+};
+function sharedTags(a,b){ return a.tags.filter(t => b.tags.includes(t)); }
+function buildGraph(){
+  const svg = $("#graphSvg");
+  const NS = "http://www.w3.org/2000/svg";
+  const edges = [];
+  for (let i=0;i<WORKS.length;i++)
+    for (let j=i+1;j<WORKS.length;j++){
+      const sh = sharedTags(WORKS[i], WORKS[j]);
+      if (sh.length) edges.push({a:WORKS[i].id, b:WORKS[j].id, n:sh.length, tags:sh});
+    }
+  const edgeG = document.createElementNS(NS,"g");
+  edges.forEach(ed => {
+    const [x1,y1] = GRAPH_POS[ed.a], [x2,y2] = GRAPH_POS[ed.b];
+    const line = document.createElementNS(NS,"line");
+    line.setAttribute("x1",x1); line.setAttribute("y1",y1);
+    line.setAttribute("x2",x2); line.setAttribute("y2",y2);
+    line.setAttribute("class","gq-edge");
+    line.setAttribute("stroke-opacity", 0.25 + ed.n*0.18);
+    line.dataset.a = ed.a; line.dataset.b = ed.b;
+    edgeG.appendChild(line);
+  });
+  svg.appendChild(edgeG);
+  const nodeG = document.createElementNS(NS,"g");
+  WORKS.forEach(w => {
+    const [x,y] = GRAPH_POS[w.id];
+    const g = document.createElementNS(NS,"g");
+    g.setAttribute("class","gq-node");
+    g.dataset.id = w.id;
+    const r = 13 + w.tags.length * 2.5;
+    const circ = document.createElementNS(NS,"circle");
+    circ.setAttribute("cx",x); circ.setAttribute("cy",y); circ.setAttribute("r",r);
+    g.appendChild(circ);
+    const t1 = document.createElementNS(NS,"text");
+    t1.setAttribute("x",x); t1.setAttribute("y",y + r + 16); t1.setAttribute("text-anchor","middle");
+    t1.textContent = w.title.length > 26 ? w.title.slice(0,24)+"…" : w.title;
+    g.appendChild(t1);
+    const t2 = document.createElementNS(NS,"text");
+    t2.setAttribute("x",x); t2.setAttribute("y",y + r + 29); t2.setAttribute("text-anchor","middle");
+    t2.setAttribute("class","typ");
+    t2.textContent = TYPE_LABEL[w.type].toUpperCase();
+    g.appendChild(t2);
+    g.addEventListener("mouseenter", () => highlightNode(w.id));
+    g.addEventListener("mouseleave", renderGraphHighlightReset);
+    g.addEventListener("click", () => openDossier(w.id));
+    nodeG.appendChild(g);
+  });
+  svg.appendChild(nodeG);
+}
+function highlightNode(id){
+  const connected = new Set([id]);
+  document.querySelectorAll(".gq-edge").forEach(e => {
+    const hit = e.dataset.a === id || e.dataset.b === id;
+    e.classList.toggle("hot", hit);
+    e.classList.toggle("cold", !hit);
+    if (hit){ connected.add(e.dataset.a); connected.add(e.dataset.b); }
+  });
+  document.querySelectorAll(".gq-node").forEach(n => {
+    n.classList.toggle("hot", n.dataset.id === id);
+    n.classList.toggle("cold", !connected.has(n.dataset.id));
+  });
+  const w = workById(id);
+  const neighbors = [...connected].filter(x => x !== id).length;
+  $("#graphTip").innerHTML = `<b>${esc(w.title)}</b> &mdash; wired to ${neighbors} other holding${neighbors!==1?"s":""} via ${w.tags.map(esc).join(", ")}. Click to open the box.`;
+}
+function renderGraphHighlightReset(){
+  document.querySelectorAll(".gq-edge").forEach(e => e.classList.remove("hot","cold"));
+  document.querySelectorAll(".gq-node").forEach(n => n.classList.remove("hot","cold"));
+  const tip = $("#graphTip");
+  if (tip) tip.textContent = "Hover a node to trace its connections.";
+}
+
+/* ============================================================
+   UNCLAIMED ASSET — serendipity
+   ============================================================ */
+let toastItem = null;
+function assetPool(){
+  const pool = [];
+  WORKS.forEach(w => w.notes.forEach(n =>
+    pool.push({kind:"note", text:n.text, date:n.date, label:w.title+" — "+w.author, workId:w.id})));
+  REFLECTIONS.forEach(r =>
+    pool.push({kind:"reflection", text:r.text, date:r.date, label:"Ledger deposit on "+r.source, workId:null}));
+  return pool;
+}
+function showToast(){
+  const pool = assetPool();
+  let next;
+  do { next = pool[Math.floor(Math.random()*pool.length)]; }
+  while (toastItem && pool.length > 1 && next.text === toastItem.text);
+  toastItem = next;
+  const short = next.text.length > 180 ? next.text.slice(0,177) + "…" : next.text;
+  $("#toastTxt").textContent = "“" + short + "”";
+  $("#toastSrc").textContent = (next.kind === "note" ? "Note · " : "Reflection · ") + next.label + " · filed " + fmtDate(next.date);
+  $("#toast").classList.add("show");
+}
+function hideToast(){ $("#toast").classList.remove("show"); }
+$("#toastClose").addEventListener("click", hideToast);
+$("#toastAnother").addEventListener("click", showToast);
+$("#toastOpen").addEventListener("click", () => {
+  hideToast();
+  if (toastItem && toastItem.workId) openDossier(toastItem.workId);
+  else showView("ledger");
+});
+$("#reclaimBtn").addEventListener("click", showToast);
+
+/* ============================================================
+   KEYBOARD
+   ============================================================ */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape"){
+    if ($("#dossierOverlay").classList.contains("show")) closeDossier();
+    else if ($("#toast").classList.contains("show")) hideToast();
+  }
+});
+
+/* ============================================================
+   VAULT DOOR SEQUENCE
+   ============================================================ */
+const EMBEDDED = (function(){ try { return window.self !== window.top; } catch(_) { return true; } })();
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const layer = $("#vaultLayer");
+let doorTimers = [];
+
+function buildDoorDeco(){
+  const boltRing = $("#boltRing");
+  for (let i=0;i<24;i++){
+    const b = document.createElement("div");
+    b.className = "bolt";
+    b.style.transform = `translate(-50%,-50%) rotate(${i*15}deg) translateX(min(34.2vmin, 296px))`;
+    boltRing.appendChild(b);
+  }
+  const lugRing = $("#lugRing");
+  for (let i=0;i<12;i++){
+    const l = document.createElement("div");
+    l.className = "lug";
+    l.style.transform = `translate(-50%,-50%) rotate(${i*30}deg) translateX(min(36vmin, 312px))`;
+    l.dataset.ang = i*30;
+    lugRing.appendChild(l);
+  }
+  const ticks = $("#dialTicks");
+  for (let i=0;i<36;i++){
+    const t = document.createElement("i");
+    t.style.transform = `translate(-50%,0) rotate(${i*10}deg) translateY(min(21vmin, 182px))`;
+    ticks.appendChild(t);
+  }
+}
+
+function setStatus(msg){ $("#statusTxt").textContent = msg; }
+
+function finishOpen(){
+  doorTimers.forEach(clearTimeout); doorTimers = [];
+  layer.classList.add("gone");
+  $("#app").classList.add("ready");
+  setTimeout(() => { layer.style.display = "none"; }, 600);
+  if (!EMBEDDED){
+    doorTimers.push(setTimeout(() => { showToast(); }, 4500));
+  }
+}
+
+function playOpenSequence(){
+  layer.classList.remove("cover");
+  setStatus("SCANNING CREDENTIALS…");
+  doorTimers.push(setTimeout(() => setStatus("IDENTITY CONFIRMED — MATTHEW GEILING"), 650));
+  doorTimers.push(setTimeout(() => {
+    setStatus("RELEASING LOCKING LUGS…");
+    layer.classList.add("spin");
+  }, 1300));
+  doorTimers.push(setTimeout(() => {
+    document.querySelectorAll(".lug").forEach((l, i) => {
+      setTimeout(() => {
+        l.style.transform = `translate(-50%,-50%) rotate(${l.dataset.ang}deg) translateX(min(29.5vmin, 256px))`;
+      }, i * 55);
+    });
+  }, 1750));
+  doorTimers.push(setTimeout(() => {
+    setStatus("VAULT OPEN — WELCOME BACK");
+    layer.classList.add("open");
+  }, 2550));
+  doorTimers.push(setTimeout(finishOpen, 3400));
+}
+
+function initDoor(){
+  buildDoorDeco();
+  if (EMBEDDED){
+    // static closed-door cover (gallery thumbnail); opens only on explicit request
+    layer.classList.add("cover");
+    setStatus("SECURE — KEYHOLDER ACCESS ONLY");
+    $("#enterBtn").addEventListener("click", () => {
+      $("#enterBtn").style.display = "none";
+      if (REDUCED) finishOpen(); else playOpenSequence();
+    });
+    $("#skipBtn").addEventListener("click", finishOpen);
+    return;
+  }
+  if (REDUCED){
+    // jump straight inside
+    finishOpen();
+    return;
+  }
+  $("#skipBtn").addEventListener("click", finishOpen);
+  doorTimers.push(setTimeout(playOpenSequence, 500));
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+renderFilters();
+renderWall();
+fillAuditSelects();
+drawQuote();
+renderLedger();
+buildGraph();
+updateDueUI();
+renderDrill();
+initDoor();
+</script>
+</body>
+</html>

@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prism — Matthew's Knowledge Library</title>
+<style>
+  /* ============ LIQUID GLASS FOUNDATION ============ */
+  :root{
+    --glass: rgba(22, 24, 48, .42);
+    --glass-bright: rgba(40, 44, 82, .55);
+    --glass-border: rgba(255,255,255,.18);
+    --glass-border-soft: rgba(255,255,255,.10);
+    --scrim: rgba(10, 12, 30, .52);
+    --text: rgba(255,255,255,.92);
+    --text-dim: rgba(255,255,255,.62);
+    --text-faint: rgba(255,255,255,.42);
+    --accent: #8ab4ff;
+    --radius-lg: 26px;
+    --radius-md: 20px;
+    --radius-sm: 14px;
+    --shadow: 0 24px 60px rgba(0,0,0,.45), 0 4px 16px rgba(0,0,0,.30);
+    --shadow-soft: 0 12px 36px rgba(0,0,0,.35);
+    --ease: 240ms cubic-bezier(.3,.7,.3,1);
+    --c-book: #a78bfa;
+    --c-essay: #6ee7b7;
+    --c-article: #fbbf24;
+    --c-podcast: #f0719b;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: #0a0b1c;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+    font-size: 15px;
+  }
+
+  /* ============ AMBIENT BACKGROUND SCENE ============ */
+  .ambient{ position: fixed; inset: 0; z-index: 0; overflow: hidden;
+    background: linear-gradient(160deg, #141432 0%, #0c0e26 45%, #1a0f2e 100%); }
+  .orb{ position: absolute; border-radius: 50%; filter: blur(90px); opacity:.75; }
+  .orb1{ width: 54vw; height: 54vw; left: -14vw; top: -18vh;
+    background: radial-gradient(circle at 35% 35%, #6d4ddb, #3b2a8f 60%, transparent 72%); }
+  .orb2{ width: 48vw; height: 48vw; right: -12vw; top: 8vh;
+    background: radial-gradient(circle at 40% 40%, #2563c9, #173a7a 60%, transparent 72%); }
+  .orb3{ width: 44vw; height: 44vw; left: 22vw; bottom: -22vh;
+    background: radial-gradient(circle at 45% 40%, #b0387e, #5b1f52 62%, transparent 74%); }
+  .orb4{ width: 26vw; height: 26vw; right: 16vw; bottom: 10vh;
+    background: radial-gradient(circle at 45% 40%, #e8a33d, #8a5a1c 58%, transparent 70%); opacity:.5; }
+  .orb5{ width: 20vw; height: 20vw; left: 46vw; top: 6vh;
+    background: radial-gradient(circle at 50% 50%, #3fc6c0, #1c5e63 60%, transparent 72%); opacity:.45; }
+  @keyframes drift1{ from{ transform: translate(0,0);} 50%{ transform: translate(4vw,3vh);} to{ transform: translate(0,0);} }
+  @keyframes drift2{ from{ transform: translate(0,0);} 50%{ transform: translate(-3vw,4vh);} to{ transform: translate(0,0);} }
+  .orb1{ animation: drift1 26s ease-in-out infinite; }
+  .orb2{ animation: drift2 31s ease-in-out infinite; }
+  .orb3{ animation: drift1 37s ease-in-out infinite reverse; }
+  .grain{ position: fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px);
+    background-size: 3px 3px; }
+
+  /* ============ LAYOUT ============ */
+  .shell{ position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 24px 28px 120px; }
+
+  .gallery-link{
+    display:inline-flex; align-items:center; gap:6px;
+    color: var(--text-dim); text-decoration:none; font-size:13px; font-weight:500;
+    padding: 7px 14px; border-radius: 999px;
+    background: rgba(255,255,255,.07); border: 1px solid var(--glass-border-soft);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    transition: background var(--ease), color var(--ease);
+  }
+  .gallery-link:hover{ background: rgba(255,255,255,.14); color: var(--text); }
+
+  /* ============ FLOATING NAV DOCK ============ */
+  .dock{
+    position: sticky; top: 16px; z-index: 50;
+    margin: 18px auto 34px;
+    display:flex; align-items:center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px;
+    background: var(--glass);
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.14);
+  }
+  .brand{ display:flex; align-items:center; gap: 10px; margin-right: 6px; }
+  .brand-gem{
+    width: 34px; height: 34px; border-radius: 11px; flex: 0 0 auto;
+    background: linear-gradient(135deg, #8ab4ff, #b78bfa 55%, #f0719b);
+    box-shadow: 0 4px 14px rgba(120,120,255,.45), inset 0 1px 0 rgba(255,255,255,.5);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 17px; color: rgba(255,255,255,.95);
+  }
+  .brand h1{ font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
+  .brand small{ display:block; font-size: 11px; font-weight: 500; color: var(--text-faint); letter-spacing:.01em; }
+  .dock-pills{ display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
+  .pill{
+    position: relative;
+    font: inherit; font-size: 13.5px; font-weight: 600; letter-spacing:-.01em;
+    color: var(--text-dim); cursor: pointer;
+    padding: 9px 16px; border-radius: 999px;
+    background: transparent; border: 1px solid transparent;
+    transition: background var(--ease), color var(--ease), border-color var(--ease), box-shadow var(--ease);
+  }
+  .pill:hover{ background: rgba(255,255,255,.10); color: var(--text); }
+  .pill:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(138,180,255,.45); }
+  .pill.active{
+    background: rgba(255,255,255,.16); color: #fff;
+    border-color: var(--glass-border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 2px 10px rgba(0,0,0,.25);
+  }
+  .badge{
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width: 19px; height: 19px; padding: 0 5px; margin-left: 7px;
+    border-radius: 999px; font-size: 11px; font-weight: 700;
+    background: linear-gradient(135deg,#ff6b81,#f0719b);
+    color:#fff; box-shadow: 0 2px 8px rgba(240,113,155,.5);
+    vertical-align: 1px;
+  }
+  .badge.zero{ background: rgba(255,255,255,.14); box-shadow:none; color: var(--text-dim); }
+
+  /* ============ GLASS PANELS ============ */
+  .panel{
+    background: var(--glass);
+    backdrop-filter: blur(24px) saturate(170%);
+    -webkit-backdrop-filter: blur(24px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.13);
+    padding: 26px 28px;
+  }
+  .view{ display:none; animation: viewIn 300ms cubic-bezier(.3,.7,.3,1); }
+  .view.visible{ display:block; }
+  @keyframes viewIn{ from{ opacity:0; transform: translateY(10px);} to{ opacity:1; transform:none;} }
+
+  h2.view-title{ font-size: 28px; font-weight: 700; letter-spacing: -.03em; margin-bottom: 4px; }
+  .view-sub{ color: var(--text-dim); font-size: 14.5px; margin-bottom: 22px; }
+  h3.section{ font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--text-faint); margin: 22px 0 10px; }
+
+  /* ============ LIBRARY ============ */
+  .filter-row{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom: 20px; }
+  .chip{
+    font: inherit; font-size: 12.5px; font-weight: 600; cursor:pointer;
+    padding: 7px 14px; border-radius: 999px; color: var(--text-dim);
+    background: rgba(255,255,255,.07); border: 1px solid var(--glass-border-soft);
+    transition: background var(--ease), color var(--ease), border-color var(--ease);
+  }
+  .chip:hover{ background: rgba(255,255,255,.14); color: var(--text); }
+  .chip:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(138,180,255,.45); }
+  .chip.active{ background: rgba(255,255,255,.2); color:#fff; border-color: var(--glass-border); }
+  .lib-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; }
+  .lib-card{
+    text-align:left; font:inherit; color:inherit; cursor:pointer;
+    background: var(--glass);
+    backdrop-filter: blur(22px) saturate(170%);
+    -webkit-backdrop-filter: blur(22px) saturate(170%);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.12);
+    padding: 20px 22px;
+    transition: transform var(--ease), background var(--ease), box-shadow var(--ease);
+  }
+  .lib-card:hover{ transform: translateY(-3px); background: var(--glass-bright);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.18); }
+  .lib-card:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(138,180,255,.5), var(--shadow-soft); }
+  .type-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing:.08em;
+    padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+    background: rgba(255,255,255,.09); border:1px solid var(--glass-border-soft);
+  }
+  .type-dot{ width:7px; height:7px; border-radius:50%; }
+  .lib-card h4{ font-size: 17px; font-weight: 700; letter-spacing:-.02em; margin-bottom: 3px; }
+  .lib-card .meta{ font-size: 13px; color: var(--text-dim); margin-bottom: 12px; }
+  .tag-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tag{
+    font-size: 11.5px; font-weight: 600; color: var(--accent);
+    padding: 3px 9px; border-radius: 999px;
+    background: rgba(138,180,255,.12); border: 1px solid rgba(138,180,255,.22);
+  }
+  .lib-stats{ margin-top: 14px; font-size: 12px; color: var(--text-faint); display:flex; gap:14px; }
+
+  /* ============ MODAL (DETAIL) — brighter 2nd glass layer ============ */
+  .modal-backdrop{
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(6,8,20,.55);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    display:none; align-items: flex-start; justify-content: center;
+    padding: 5vh 20px 6vh; overflow-y: auto;
+  }
+  .modal-backdrop.open{ display:flex; animation: fadeIn 220ms ease; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  .modal{
+    width: 100%; max-width: 720px;
+    background: var(--glass-bright);
+    backdrop-filter: blur(30px) saturate(190%);
+    -webkit-backdrop-filter: blur(30px) saturate(190%);
+    border: 1px solid rgba(255,255,255,.24);
+    border-radius: 28px;
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.2);
+    padding: 30px 32px 34px;
+    animation: modalIn 280ms cubic-bezier(.3,.7,.3,1);
+  }
+  @keyframes modalIn{ from{ opacity:0; transform: translateY(22px) scale(.97);} to{ opacity:1; transform:none;} }
+  .modal-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; }
+  .modal h3.title{ font-size: 24px; font-weight: 700; letter-spacing:-.025em; margin: 10px 0 2px; }
+  .close-btn{
+    font: inherit; font-size: 16px; line-height:1; cursor:pointer; color: var(--text-dim);
+    width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%;
+    background: rgba(255,255,255,.1); border: 1px solid var(--glass-border-soft);
+    transition: background var(--ease), color var(--ease);
+  }
+  .close-btn:hover{ background: rgba(255,255,255,.2); color:#fff; }
+  .close-btn:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(138,180,255,.45); }
+  .meta-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin: 16px 0 6px; }
+  .meta-cell{ background: var(--scrim); border: 1px solid var(--glass-border-soft);
+    border-radius: var(--radius-sm); padding: 10px 14px; }
+  .meta-cell .k{ font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing:.09em; color: var(--text-faint); }
+  .meta-cell .v{ font-size: 14px; font-weight: 600; margin-top: 2px; }
+  .quote-block{
+    background: var(--scrim); border: 1px solid var(--glass-border-soft);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px;
+    font-size: 15px; font-style: italic; color: rgba(255,255,255,.88);
+  }
+  .note-block{
+    background: var(--scrim); border: 1px solid var(--glass-border-soft);
+    border-radius: var(--radius-sm); padding: 14px 16px; margin-bottom: 10px;
+  }
+  .note-block .note-date{ font-size: 11.5px; color: var(--text-faint); margin-bottom: 5px; font-weight:600; }
+  .note-block p{ font-size: 14.5px; color: rgba(255,255,255,.88); }
+  .note-tools{ margin-top: 10px; display:flex; gap:8px; }
+
+  .btn{
+    font: inherit; font-size: 13.5px; font-weight: 600; cursor:pointer; color: var(--text);
+    padding: 9px 18px; border-radius: 999px;
+    background: rgba(255,255,255,.12); border: 1px solid var(--glass-border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+    transition: background var(--ease), transform var(--ease), box-shadow var(--ease);
+  }
+  .btn:hover{ background: rgba(255,255,255,.22); }
+  .btn:active{ transform: scale(.97); }
+  .btn:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(138,180,255,.5), inset 0 1px 0 rgba(255,255,255,.18); }
+  .btn.small{ font-size: 12px; padding: 6px 13px; }
+  .btn.primary{
+    background: linear-gradient(135deg, rgba(138,180,255,.85), rgba(167,139,250,.85));
+    border-color: rgba(255,255,255,.35); color:#fff;
+    box-shadow: 0 4px 16px rgba(138,140,255,.4), inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .btn.primary:hover{ background: linear-gradient(135deg, rgba(158,196,255,.95), rgba(187,162,255,.95)); }
+  .btn.ghost{ background: transparent; border-color: var(--glass-border-soft); }
+  .btn.ghost:hover{ background: rgba(255,255,255,.1); }
+
+  textarea, select{
+    font: inherit; font-size: 14.5px; color: var(--text);
+    width: 100%;
+    background: var(--scrim);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    transition: border-color var(--ease), box-shadow var(--ease);
+  }
+  textarea{ resize: vertical; min-height: 92px; }
+  textarea:focus, select:focus{ outline:none; border-color: rgba(138,180,255,.6);
+    box-shadow: 0 0 0 3px rgba(138,180,255,.25); }
+  select{ appearance:none; -webkit-appearance:none; cursor:pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-dim) 50%), linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+    background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+    background-size: 6px 6px; background-repeat: no-repeat; padding-right: 40px; }
+  select option{ background: #16182f; color: #fff; }
+
+  /* ============ FLASHCARDS ============ */
+  .fc-stage{ display:flex; flex-direction:column; align-items:center; gap: 20px; padding: 10px 0 6px; }
+  .fc-count{ font-size: 13px; font-weight: 600; color: var(--text-dim); }
+  .flip-scene{ width: min(560px, 100%); height: 300px; perspective: 1400px; }
+  .flip-card{
+    position: relative; width: 100%; height: 100%; cursor: pointer;
+    transform-style: preserve-3d; transition: transform 420ms cubic-bezier(.35,.7,.3,1);
+    border: none; background: transparent; padding: 0; font: inherit; color: inherit;
+  }
+  .flip-card.flipped{ transform: rotateY(180deg); }
+  .flip-card:focus-visible{ outline:none; }
+  .flip-card:focus-visible .face{ box-shadow: 0 0 0 3px rgba(138,180,255,.5), var(--shadow-soft); }
+  .face{
+    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+    gap: 12px; padding: 30px 34px;
+    background: var(--glass-bright);
+    backdrop-filter: blur(26px) saturate(180%);
+    -webkit-backdrop-filter: blur(26px) saturate(180%);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 28px;
+    box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+  .face.back{ transform: rotateY(180deg); background: rgba(52, 58, 104, .6); }
+  .face .label{ font-size: 11px; font-weight: 700; letter-spacing:.12em; text-transform:uppercase; color: var(--text-faint); }
+  .face .body-text{ font-size: 19px; font-weight: 600; letter-spacing:-.015em; line-height: 1.4; max-height: 170px; overflow-y:auto; }
+  .face.back .body-text{ font-size: 16.5px; font-weight: 500; }
+  .face .source{ font-size: 12px; color: var(--text-dim); }
+  .fc-hint{ font-size: 12.5px; color: var(--text-faint); }
+  .grade-row{ display:flex; gap: 10px; flex-wrap:wrap; justify-content:center; }
+  .grade-btn{
+    font: inherit; font-size: 13.5px; font-weight: 700; cursor:pointer; color:#fff;
+    padding: 11px 22px; border-radius: 999px; border: 1px solid rgba(255,255,255,.28);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 4px 14px rgba(0,0,0,.3);
+    transition: filter var(--ease), transform var(--ease);
+  }
+  .grade-btn:hover{ filter: brightness(1.18); }
+  .grade-btn:active{ transform: scale(.96); }
+  .grade-btn:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(255,255,255,.5); }
+  .grade-btn small{ display:block; font-size: 10.5px; font-weight: 600; opacity:.85; }
+  .g-again{ background: linear-gradient(135deg,#e85d75,#c73a5c); }
+  .g-hard{ background: linear-gradient(135deg,#e8a33d,#c77f22); }
+  .g-good{ background: linear-gradient(135deg,#4aa8e8,#2d7fc7); }
+  .g-easy{ background: linear-gradient(135deg,#43c59e,#2a9d79); }
+  .done-panel{ text-align:center; padding: 40px 20px; }
+  .done-panel .big{ font-size: 40px; margin-bottom: 10px; }
+  .done-panel h4{ font-size: 20px; font-weight: 700; letter-spacing:-.02em; margin-bottom: 6px; }
+  .done-panel p{ color: var(--text-dim); font-size: 14px; margin-bottom: 18px; }
+
+  /* ============ RECALL ============ */
+  .recall-setup{ display:flex; gap: 12px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 8px; }
+  .recall-setup .field{ flex: 1 1 280px; }
+  .field label{ display:block; font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing:.08em; color: var(--text-faint); margin-bottom: 7px; }
+  .recall-card{ margin-top: 20px; }
+  .recall-q{
+    background: var(--scrim); border: 1px solid var(--glass-border-soft);
+    border-radius: var(--radius-md); padding: 20px 24px; margin-bottom: 14px;
+  }
+  .recall-q .src{ font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 7px; }
+  .recall-q .q{ font-size: 18px; font-weight: 650; letter-spacing:-.015em; line-height:1.4; }
+  .recall-answer{
+    background: rgba(67, 197, 158, .1); border: 1px solid rgba(67,197,158,.3);
+    border-radius: var(--radius-md); padding: 18px 22px; margin: 14px 0;
+  }
+  .recall-answer .label{ font-size: 11px; font-weight: 700; text-transform:uppercase; letter-spacing:.1em;
+    color:#6fe0bd; margin-bottom: 6px; }
+  .recall-progress{ font-size: 12.5px; color: var(--text-faint); font-weight: 600; margin-top: 12px; }
+
+  /* ============ REFLECT ============ */
+  .reflect-quote{
+    background: var(--scrim);
+    border: 1px solid var(--glass-border-soft);
+    border-radius: var(--radius-md);
+    padding: 26px 30px; margin-bottom: 16px; position: relative;
+  }
+  .reflect-quote .mark{ font-size: 44px; line-height: .6; color: rgba(138,180,255,.5);
+    font-family: Georgia, serif; display:block; margin-bottom: 10px; }
+  .reflect-quote blockquote{ font-size: 18.5px; font-weight: 500; font-style: italic;
+    letter-spacing:-.01em; line-height: 1.5; color: rgba(255,255,255,.92); }
+  .reflect-quote cite{ display:block; margin-top: 12px; font-style: normal;
+    font-size: 13.5px; color: var(--text-dim); font-weight: 600; }
+  .reflect-actions{ display:flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .reflection-item{
+    background: var(--scrim); border: 1px solid var(--glass-border-soft);
+    border-radius: var(--radius-md); padding: 16px 20px; margin-bottom: 12px;
+  }
+  .reflection-item .rhead{ display:flex; justify-content:space-between; gap: 12px; flex-wrap:wrap;
+    font-size: 12px; color: var(--text-faint); font-weight: 600; margin-bottom: 7px; }
+  .reflection-item .rquote{ font-size: 12.5px; font-style: italic; color: var(--text-dim); margin-bottom: 8px; }
+  .reflection-item .rbody{ font-size: 14.5px; color: rgba(255,255,255,.88); }
+
+  /* ============ GRAPH ============ */
+  .graph-wrap{ position: relative; }
+  .graph-svg{ width: 100%; height: auto; display: block; border-radius: var(--radius-md);
+    background: rgba(8,10,26,.35); border: 1px solid var(--glass-border-soft); }
+  .g-edge{ stroke: rgba(255,255,255,.14); transition: stroke 200ms ease, stroke-width 200ms ease; }
+  .g-edge.lit{ stroke: rgba(138,180,255,.75); }
+  .g-edge.dimmed{ stroke: rgba(255,255,255,.04); }
+  .g-node{ cursor: pointer; }
+  .g-node circle.halo{ fill: transparent; }
+  .g-node circle.core{ stroke: rgba(255,255,255,.4); stroke-width: 1.2;
+    transition: r 200ms ease, filter 200ms ease; }
+  .g-node.lit circle.core{ filter: brightness(1.35) drop-shadow(0 0 10px rgba(138,180,255,.8)); }
+  .g-node.dimmed{ opacity: .25; }
+  .g-node text{ fill: rgba(255,255,255,.8); font-size: 12.5px; font-weight: 600;
+    font-family: inherit; pointer-events: none; }
+  .g-node.lit text{ fill: #fff; }
+  .graph-legend{ display:flex; gap: 16px; flex-wrap:wrap; margin-top: 14px; font-size: 12.5px; color: var(--text-dim); }
+  .graph-legend span{ display:inline-flex; align-items:center; gap: 7px; font-weight: 600; }
+  .graph-tip{ font-size: 12.5px; color: var(--text-faint); margin-top: 8px; }
+
+  /* ============ SERENDIPITY TOAST ============ */
+  .toast{
+    position: fixed; right: 24px; bottom: 24px; z-index: 200;
+    width: min(380px, calc(100vw - 40px));
+    background: var(--glass-bright);
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255,255,255,.24);
+    border-radius: 24px;
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.2);
+    padding: 18px 20px 16px;
+    transform: translateY(24px); opacity: 0; pointer-events: none;
+    transition: transform 300ms cubic-bezier(.3,.7,.3,1), opacity 300ms ease;
+  }
+  .toast.show{ transform: none; opacity: 1; pointer-events: auto; }
+  .toast .t-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom: 9px; }
+  .toast .t-title{ font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing:.1em;
+    color: #ffd58a; display:flex; align-items:center; gap: 7px; }
+  .toast .t-body{ font-size: 14px; color: rgba(255,255,255,.9); margin-bottom: 8px; }
+  .toast .t-src{ font-size: 12px; color: var(--text-dim); font-weight: 600; margin-bottom: 12px; }
+  .toast .t-actions{ display:flex; gap: 8px; }
+
+  /* ============ RESPONSIVE + MOTION ============ */
+  @media (max-width: 860px){
+    .shell{ padding: 18px 16px 100px; }
+    .panel{ padding: 20px 18px; }
+    .dock{ justify-content: center; }
+    .dock-pills{ margin-left: 0; justify-content:center; }
+    .modal{ padding: 24px 20px 26px; }
+    h2.view-title{ font-size: 24px; }
+    .flip-scene{ height: 320px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation: none !important; transition: none !important; }
+    html{ scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient" aria-hidden="true">
+  <div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div>
+  <div class="orb orb4"></div><div class="orb orb5"></div>
+</div>
+<div class="grain" aria-hidden="true"></div>
+
+<div class="shell">
+  <a class="gallery-link" href="../index.html">&larr; Gallery</a>
+
+  <nav class="dock" aria-label="Primary">
+    <div class="brand">
+      <div class="brand-gem">&#10022;</div>
+      <div>
+        <h1>Prism</h1>
+        <small>Matthew's knowledge library</small>
+      </div>
+    </div>
+    <div class="dock-pills">
+      <button class="pill active" data-view="library">Library</button>
+      <button class="pill" data-view="cards">Flashcards <span class="badge" id="dueBadge">0</span></button>
+      <button class="pill" data-view="recall">Recall</button>
+      <button class="pill" data-view="reflect">Reflect</button>
+      <button class="pill" data-view="graph">Graph</button>
+      <button class="pill" id="serendipityBtn" title="Serendipity — resurface something old">&#10024;</button>
+    </div>
+  </nav>
+
+  <!-- ===== LIBRARY ===== -->
+  <section class="view visible" id="view-library">
+    <h2 class="view-title">Library</h2>
+    <p class="view-sub" id="libSummary"></p>
+    <div class="filter-row" id="typeFilters"></div>
+    <div class="lib-grid" id="libGrid"></div>
+  </section>
+
+  <!-- ===== FLASHCARDS ===== -->
+  <section class="view" id="view-cards">
+    <h2 class="view-title">Flashcards</h2>
+    <p class="view-sub">Takeaways from across your library, scheduled by the forgetting curve.</p>
+    <div class="panel">
+      <div id="fcStage"></div>
+    </div>
+  </section>
+
+  <!-- ===== RECALL ===== -->
+  <section class="view" id="view-recall">
+    <h2 class="view-title">Active Recall</h2>
+    <p class="view-sub">Pick one work or a whole subject. Write your answer before revealing — retrieval is the workout.</p>
+    <div class="panel">
+      <div class="recall-setup">
+        <div class="field">
+          <label for="recallScope">Test me on</label>
+          <select id="recallScope"></select>
+        </div>
+        <button class="btn primary" id="recallStart">Start session</button>
+      </div>
+      <div id="recallArea"></div>
+    </div>
+  </section>
+
+  <!-- ===== REFLECT ===== -->
+  <section class="view" id="view-reflect">
+    <h2 class="view-title">Reflection Engine</h2>
+    <p class="view-sub">A quote surfaces; you synthesize. Writing is how reading becomes thinking.</p>
+    <div class="panel">
+      <div class="reflect-quote">
+        <span class="mark">&ldquo;</span>
+        <blockquote id="reflectQuote"></blockquote>
+        <cite id="reflectCite"></cite>
+      </div>
+      <textarea id="reflectInput" placeholder="What does this connect to? Where have you seen it play out? Push on it&hellip;"></textarea>
+      <div class="reflect-actions">
+        <button class="btn primary" id="reflectSave">Save reflection</button>
+        <button class="btn ghost" id="reflectShuffle">Different quote</button>
+      </div>
+      <h3 class="section">Past reflections</h3>
+      <div id="reflectList"></div>
+    </div>
+  </section>
+
+  <!-- ===== GRAPH ===== -->
+  <section class="view" id="view-graph">
+    <h2 class="view-title">Knowledge Graph</h2>
+    <p class="view-sub">Everything you've consumed, connected by shared tags. Thicker threads mean more overlap.</p>
+    <div class="panel graph-wrap">
+      <svg class="graph-svg" id="graphSvg" viewBox="0 0 1200 720" role="img" aria-label="Knowledge graph of library content connected by shared tags"></svg>
+      <div class="graph-legend" id="graphLegend"></div>
+      <p class="graph-tip">Hover a node to light up its connections &middot; click to open its detail view.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ===== DETAIL MODAL ===== -->
+<div class="modal-backdrop" id="detailBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-head">
+      <div id="detailTypeTag"></div>
+      <button class="close-btn" id="detailClose" aria-label="Close detail view">&times;</button>
+    </div>
+    <h3 class="title" id="detailTitle"></h3>
+    <div class="meta-grid" id="detailMeta"></div>
+    <h3 class="section">Tags</h3>
+    <div class="tag-row" id="detailTags"></div>
+    <h3 class="section">Quotes</h3>
+    <div id="detailQuotes"></div>
+    <h3 class="section">Notes</h3>
+    <div id="detailNotes"></div>
+    <h3 class="section">Add a note</h3>
+    <textarea id="newNoteInput" placeholder="Capture a thought about this work&hellip;"></textarea>
+    <div class="note-tools">
+      <button class="btn primary small" id="newNoteSave">Add note</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SERENDIPITY TOAST ===== -->
+<div class="toast" id="toast" role="status">
+  <div class="t-head">
+    <span class="t-title">&#10024; From the archive</span>
+    <button class="close-btn" id="toastClose" aria-label="Dismiss" style="width:28px;height:28px;font-size:14px;">&times;</button>
+  </div>
+  <div class="t-body" id="toastBody"></div>
+  <div class="t-src" id="toastSrc"></div>
+  <div class="t-actions">
+    <button class="btn small" id="toastAnother">Another</button>
+    <button class="btn primary small" id="toastOpen">Open</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================================================================
+   MOCK DATA — all in-memory, single user: Matthew Geiling
+   ================================================================ */
+const DAY = 86400000;
+const now = () => Date.now();
+// seed(dueOffsetDays, interval, ease, reps) — negative offset = due now
+const seed = (off, iv, ef, reps) => ({ due: Date.now() + off * DAY, interval: iv, ef: ef, reps: reps });
+
+const LIBRARY = [
+  {
+    id: "tfas", type: "book", title: "Thinking, Fast and Slow", author: "Daniel Kahneman",
+    published: "2011", consumed: "2025-03-14",
+    tags: ["psychology", "decision-making", "memory"],
+    notes: [
+      { date: "2025-03-16", text: "System 1 isn't the villain — it's the engine. The failure mode is letting it answer questions that deserve System 2, especially under time pressure. My worst decisions at work were all fast answers to slow questions." },
+      { date: "2025-03-20", text: "The experiencing self vs. remembering self split explains why I rate vacations by their endings. Peak-end rule applies to meetings too — close strong." }
+    ],
+    quotes: [
+      "Nothing in life is as important as you think it is, while you are thinking about it.",
+      "A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth."
+    ],
+    cards: [
+      { q: "What distinguishes System 1 from System 2 thinking?", a: "System 1 is fast, automatic, intuitive, and effortless; System 2 is slow, deliberate, and effortful. System 1 generates impressions that System 2 often simply endorses.", srs: seed(-2, 6, 2.5, 3) },
+      { q: "What is the anchoring effect?", a: "The tendency for an initial number — even an arbitrary one — to bias subsequent numeric estimates, because adjustment away from the anchor is usually insufficient.", srs: seed(-1, 3, 2.36, 2) },
+      { q: "What is the peak-end rule?", a: "We judge an experience largely by how it felt at its most intense point and at its end, rather than by the sum or average of every moment.", srs: seed(4, 8, 2.6, 3) }
+    ]
+  },
+  {
+    id: "atomic", type: "book", title: "Atomic Habits", author: "James Clear",
+    published: "2018", consumed: "2025-01-20",
+    tags: ["habits", "systems", "psychology"],
+    notes: [
+      { date: "2025-01-22", text: "Identity-based habits reframed everything: not 'I want to read more' but 'I am a reader.' Each rep is a vote for the identity. This is why my gym streak finally held — I stopped negotiating per-day." }
+    ],
+    quotes: [
+      "You do not rise to the level of your goals. You fall to the level of your systems.",
+      "Every action you take is a vote for the type of person you wish to become."
+    ],
+    cards: [
+      { q: "What are the four laws of behavior change?", a: "Make it obvious, make it attractive, make it easy, make it satisfying — one law for each stage of the habit loop (cue, craving, response, reward).", srs: seed(-3, 10, 2.7, 4) },
+      { q: "What is habit stacking?", a: "Anchoring a new habit to an existing one with the formula: 'After [current habit], I will [new habit]' — the old routine becomes the cue for the new one.", srs: seed(6, 12, 2.6, 4) }
+    ]
+  },
+  {
+    id: "deepwork", type: "book", title: "Deep Work", author: "Cal Newport",
+    published: "2016", consumed: "2025-05-02",
+    tags: ["focus", "habits", "creativity"],
+    notes: [
+      { date: "2025-05-04", text: "Attention residue is the real cost of context switching — a quick Slack check taxes the next 20 minutes. Blocked 9–11am as a no-input zone and output doubled within two weeks." },
+      { date: "2025-05-09", text: "Newport's 'grand gestures' idea (Rowling writing in a hotel) is really about raising the psychological stakes of a session. Even a coffee shop counts." }
+    ],
+    quotes: [
+      "Clarity about what matters provides clarity about what does not."
+    ],
+    cards: [
+      { q: "What is 'attention residue' and why does it matter?", a: "When you switch tasks, part of your attention stays stuck on the previous task, degrading performance on the next one. It makes frequent quick checks far more expensive than they feel.", srs: seed(-1, 4, 2.5, 2) },
+      { q: "Newport's definition of deep work?", a: "Professional activity performed in a state of distraction-free concentration that pushes cognitive capabilities to their limit, creating new value and skills that are hard to replicate.", srs: seed(9, 15, 2.66, 5) }
+    ]
+  },
+  {
+    id: "makeitstick", type: "book", title: "Make It Stick", author: "Brown, Roediger & McDaniel",
+    published: "2014", consumed: "2025-02-10",
+    tags: ["learning", "memory", "psychology"],
+    notes: [
+      { date: "2025-02-12", text: "Rereading and highlighting are fluency illusions — they feel like learning because recognition gets easier, while recall stays flat. This book is basically the design spec for this app: test, space, interleave." }
+    ],
+    quotes: [
+      "Learning that's easy is like writing in sand, here today and gone tomorrow.",
+      "The act of retrieving learning from memory has two profound benefits: it tells you what you know, and it strengthens the memory itself."
+    ],
+    cards: [
+      { q: "Why is retrieval practice superior to rereading?", a: "Actively recalling information strengthens the memory trace and reveals gaps, while rereading only builds a misleading sense of fluency (recognition, not recall).", srs: seed(-4, 2, 2.3, 1) },
+      { q: "What is desirable difficulty?", a: "Learning conditions that feel harder and slower — spacing, interleaving, testing — produce more durable, flexible learning than easy, massed practice.", srs: seed(2, 7, 2.56, 3) },
+      { q: "What does interleaving mean in practice?", a: "Mixing different topics or problem types within one study session instead of blocking them — worse short-term performance, better long-term retention and discrimination.", srs: seed(-1, 5, 2.46, 2) }
+    ]
+  },
+  {
+    id: "doet", type: "book", title: "The Design of Everyday Things", author: "Don Norman",
+    published: "1988", consumed: "2025-08-19",
+    tags: ["design", "psychology", "systems"],
+    notes: [
+      { date: "2025-08-21", text: "When a user errs, blame the design. 'Norman doors' are everywhere once you see them — including in software I've shipped. Affordances should make the next action self-evident." }
+    ],
+    quotes: [
+      "Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible."
+    ],
+    cards: [
+      { q: "What is an affordance vs. a signifier?", a: "An affordance is what an object actually allows (a handle affords pulling); a signifier is the perceivable cue that communicates the affordance (a flat plate signals 'push').", srs: seed(-2, 3, 2.4, 2) },
+      { q: "What is the Gulf of Execution?", a: "The gap between a user's intention and the actions the system makes available — good design shrinks it so users can tell what to do and how.", srs: seed(11, 14, 2.6, 4) }
+    ]
+  },
+  {
+    id: "meditations", type: "book", title: "Meditations", author: "Marcus Aurelius",
+    published: "c. 180 AD", consumed: "2025-11-30",
+    tags: ["philosophy", "habits", "focus"],
+    notes: [
+      { date: "2025-12-02", text: "It reads like a private notebook because it was one — he was journaling to retrain his own defaults. The Stoic move is always the same: separate the event from the judgment about the event." }
+    ],
+    quotes: [
+      "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "The impediment to action advances action. What stands in the way becomes the way."
+    ],
+    cards: [
+      { q: "What is the Stoic 'dichotomy of control'?", a: "Divide everything into what is up to you (judgments, intentions, responses) and what is not (events, others, outcomes) — and invest effort only in the former.", srs: seed(-1, 6, 2.5, 3) }
+    ]
+  },
+  {
+    id: "greatwork", type: "essay", title: "How to Do Great Work", author: "Paul Graham",
+    published: "2023", consumed: "2026-01-12",
+    tags: ["creativity", "focus", "systems"],
+    notes: [
+      { date: "2026-01-13", text: "The compound interest of curiosity: work on what feels excitingly ambitious to you, not what's prestigious. Prestige is a lagging indicator — following it means copying the previous generation's bets." }
+    ],
+    quotes: [
+      "The way to figure out what to work on is by working. If you're not sure what to work on, guess. But pick something and get going.",
+      "Curiosity is the key to all four steps in doing great work: it will choose the field for you, get you to the frontier, cause you to notice the gaps in it, and drive you to explore them."
+    ],
+    cards: [
+      { q: "Per Paul Graham, what three qualities should the work you choose have?", a: "It should be something you have a natural aptitude for, a deep interest in, and that offers scope to do great work.", srs: seed(-2, 2, 2.36, 1) },
+      { q: "Why does Graham warn against chasing prestige?", a: "Prestige is a lagging indicator of what was impressive to a previous generation; chasing it leads you to imitate old bets instead of noticing new gaps.", srs: seed(5, 9, 2.56, 3) }
+    ]
+  },
+  {
+    id: "memex", type: "essay", title: "As We May Think", author: "Vannevar Bush",
+    published: "1945", consumed: "2025-09-08",
+    tags: ["memory", "systems", "design"],
+    notes: [
+      { date: "2025-09-10", text: "The memex anticipated hyperlinks, personal wikis, and honestly this app — in 1945. His key insight: the mind works by association, not alphabetical filing, so our tools should store trails, not just items." }
+    ],
+    quotes: [
+      "The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.",
+      "A memex is a device in which an individual stores all his books, records, and communications, and which is mechanized so that it may be consulted with exceeding speed and flexibility."
+    ],
+    cards: [
+      { q: "What was the memex, and what modern ideas did it anticipate?", a: "Bush's hypothetical desk-sized device for storing and linking all of one's documents via associative 'trails' — anticipating hyperlinks, personal knowledge bases, and the web.", srs: seed(3, 8, 2.6, 3) }
+    ]
+  },
+  {
+    id: "selfreliance", type: "essay", title: "Self-Reliance", author: "Ralph Waldo Emerson",
+    published: "1841", consumed: "2025-06-21",
+    tags: ["philosophy", "creativity"],
+    notes: [
+      { date: "2025-06-23", text: "'Envy is ignorance; imitation is suicide.' The essay's dare: trust that what's true for you in your private heart is true for everyone. Genius is mostly the courage not to discard your own first thoughts." }
+    ],
+    quotes: [
+      "A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.",
+      "In every work of genius we recognize our own rejected thoughts: they come back to us with a certain alienated majesty."
+    ],
+    cards: [
+      { q: "What does Emerson mean by 'a foolish consistency is the hobgoblin of little minds'?", a: "Clinging to your past positions merely to appear consistent blocks growth; you should speak today's truth even if it contradicts yesterday's.", srs: seed(-3, 4, 2.42, 2) }
+    ]
+  },
+  {
+    id: "whybooks", type: "article", title: "Why Books Don't Work", author: "Andy Matuschak",
+    published: "2019", consumed: "2025-04-05",
+    tags: ["learning", "memory", "design"],
+    notes: [
+      { date: "2025-04-06", text: "Books silently assume transmissionism — that reading is absorbing. But people retain shockingly little from even attentive reading. The medium lacks a cognitive model. The fix isn't better books; it's mediums with retrieval built in." },
+      { date: "2025-04-11", text: "Pairs perfectly with Make It Stick: Matuschak diagnoses the medium, Roediger et al. supply the mechanism. This whole project is my attempt at the 'mnemonic medium' for my own reading." }
+    ],
+    quotes: [
+      "As a medium, books are surprisingly bad at conveying knowledge, and readers mostly don't realize it."
+    ],
+    cards: [
+      { q: "What is 'transmissionism,' and why does Matuschak reject it?", a: "The implicit model that knowledge transfers from page to mind just by reading. He rejects it because retention from passive reading is poor — understanding requires active cognitive engagement the book medium doesn't orchestrate.", srs: seed(-1, 3, 2.4, 2) },
+      { q: "What does Matuschak propose instead of traditional books?", a: "A 'mnemonic medium' — texts with spaced-repetition prompts woven in, so the medium itself schedules the engagement needed to actually remember.", srs: seed(7, 11, 2.6, 4) }
+    ]
+  },
+  {
+    id: "augmem", type: "article", title: "Augmenting Long-term Memory", author: "Michael Nielsen",
+    published: "2018", consumed: "2025-07-17",
+    tags: ["memory", "learning", "systems"],
+    notes: [
+      { date: "2025-07-19", text: "Nielsen used Anki to read deeply in unfamiliar fields: decompose papers into atomic questions, then let the scheduler do the remembering. Key discipline — most cards should take under 10 seconds; long cards mean the idea needs splitting." }
+    ],
+    quotes: [
+      "Anki makes memory a choice, rather than a haphazard event, to be left to chance.",
+      "The single biggest change that Anki brings about is that it means memory is no longer a haphazard event."
+    ],
+    cards: [
+      { q: "What does Nielsen mean by 'memory is a choice'?", a: "With spaced repetition, committing something to long-term memory takes a predictable, small amount of review time (minutes over years), so you can simply decide what to remember.", srs: seed(-2, 5, 2.46, 2) },
+      { q: "What is Nielsen's rule for card granularity?", a: "Cards should be atomic — one idea, answerable in seconds. If a card keeps failing or takes long to answer, break it into smaller questions.", srs: seed(1, 6, 2.5, 3) }
+    ]
+  },
+  {
+    id: "huberman", type: "podcast", title: "Huberman Lab: Improve Memory & Focus", author: "Andrew Huberman",
+    published: "2022", consumed: "2026-02-03",
+    tags: ["memory", "learning", "psychology"],
+    notes: [
+      { date: "2026-02-04", text: "Emotion and adrenaline timestamp memories — arousal *after* encoding enhances consolidation. Also: brief mental repetition gaps during practice let the hippocampus replay sequences at high speed. Rest is part of the rep." }
+    ],
+    quotes: [
+      "Repetition works, but what really cements memory is the state of your nervous system right after you learn."
+    ],
+    cards: [
+      { q: "Per Huberman, how does emotional arousal affect memory?", a: "Adrenaline/arousal released shortly after learning enhances consolidation — the nervous system flags the preceding experience as worth keeping.", srs: seed(-1, 2, 2.36, 1) },
+      { q: "What role do rest gaps play during practice?", a: "During brief pauses the hippocampus replays the practiced sequence at accelerated speed, effectively adding extra reps — so micro-rests improve skill learning.", srs: seed(8, 10, 2.56, 3) }
+    ]
+  },
+  {
+    id: "tkp", type: "podcast", title: "The Knowledge Project: Mental Models", author: "Shane Parrish",
+    published: "2021", consumed: "2025-10-26",
+    tags: ["decision-making", "systems", "philosophy"],
+    notes: [
+      { date: "2025-10-28", text: "A latticework of models beats isolated facts: inversion, second-order thinking, circle of competence. The episode's sharpest line — most bad decisions come from answering the wrong question confidently." }
+    ],
+    quotes: [
+      "Understanding the world means building a latticework of mental models you can apply across disciplines — not memorizing facts in silos."
+    ],
+    cards: [
+      { q: "What is inversion as a mental model?", a: "Instead of asking how to succeed, ask what would guarantee failure and avoid that. Solving problems backwards often exposes risks forward thinking misses.", srs: seed(-5, 1, 2.3, 1) },
+      { q: "What is second-order thinking?", a: "Asking 'and then what?' — evaluating the consequences of consequences, since first-order benefits often carry second-order costs.", srs: seed(4, 7, 2.5, 3) }
+    ]
+  }
+];
+
+const REFLECTIONS = [
+  {
+    date: "2025-04-12",
+    quote: "Learning that's easy is like writing in sand, here today and gone tomorrow.",
+    source: "Make It Stick — Brown, Roediger & McDaniel",
+    text: "This keeps indicting my old study habits. In college I highlighted entire chapters and called it work. The difficulty I avoided was the exact signal that learning was happening. Designing this app around retrieval instead of storage is the practical repentance."
+  },
+  {
+    date: "2025-09-14",
+    quote: "The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.",
+    source: "As We May Think — Vannevar Bush",
+    text: "Bush in 1945 and Matuschak in 2019 are making the same argument from opposite ends: tools should mirror how memory actually works. My tags are a crude version of his 'trails' — the knowledge graph view is the closest I've come to seeing my own associations drawn out."
+  }
+];
+
+const TYPE_META = {
+  book:    { label: "Book",    color: "var(--c-book)" },
+  essay:   { label: "Essay",   color: "var(--c-essay)" },
+  article: { label: "Article", color: "var(--c-article)" },
+  podcast: { label: "Podcast", color: "var(--c-podcast)" }
+};
+
+/* ================================================================
+   HELPERS
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtDate = iso => {
+  const d = new Date(iso + "T12:00:00");
+  return isNaN(d) ? iso : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+const todayISO = () => new Date().toISOString().slice(0, 10);
+const shuffle = arr => { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sharedTags = (a, b) => a.tags.filter(t => b.tags.includes(t));
+
+function allCards() {
+  const out = [];
+  LIBRARY.forEach(item => item.cards.forEach(card => out.push({ item, card })));
+  return out;
+}
+function dueCards() { return allCards().filter(x => x.card.srs.due <= now()); }
+
+function updateBadge() {
+  const n = dueCards().length;
+  const b = $("dueBadge");
+  b.textContent = n;
+  b.classList.toggle("zero", n === 0);
+}
+
+/* SM-2-style scheduler. grade: 0=Again 1=Hard 2=Good 3=Easy */
+function gradeCard(card, grade) {
+  const s = card.srs;
+  const q = [1, 3, 4, 5][grade];
+  if (q < 3) {
+    s.reps = 0;
+    s.interval = 0;
+    s.due = now() + 10 * 60 * 1000; // back in ~10 minutes
+  } else {
+    if (s.reps === 0) s.interval = 1;
+    else if (s.reps === 1) s.interval = 6;
+    else s.interval = Math.round(s.interval * s.ef);
+    if (grade === 1) s.interval = Math.max(1, Math.round(s.interval * 0.6));
+    if (grade === 3) s.interval = Math.max(1, Math.round(s.interval * 1.3));
+    s.reps += 1;
+    s.due = now() + s.interval * DAY;
+  }
+  s.ef = Math.max(1.3, s.ef + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02)));
+  updateBadge();
+}
+
+/* ================================================================
+   VIEW SWITCHING
+   ================================================================ */
+const VIEWS = ["library", "cards", "recall", "reflect", "graph"];
+function showView(name) {
+  VIEWS.forEach(v => $("view-" + v).classList.toggle("visible", v === name));
+  document.querySelectorAll(".pill[data-view]").forEach(p =>
+    p.classList.toggle("active", p.dataset.view === name));
+  if (name === "cards") renderFlashcards();
+  if (name === "graph") buildGraph();
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+document.querySelectorAll(".pill[data-view]").forEach(p =>
+  p.addEventListener("click", () => showView(p.dataset.view)));
+
+/* ================================================================
+   LIBRARY
+   ================================================================ */
+let libFilter = "all";
+function renderTypeFilters() {
+  const counts = { all: LIBRARY.length };
+  LIBRARY.forEach(i => counts[i.type] = (counts[i.type] || 0) + 1);
+  const row = $("typeFilters");
+  row.innerHTML = "";
+  [["all", "All"], ["book", "Books"], ["essay", "Essays"], ["article", "Articles"], ["podcast", "Podcasts"]].forEach(([key, label]) => {
+    const b = document.createElement("button");
+    b.className = "chip" + (libFilter === key ? " active" : "");
+    b.textContent = label + " · " + (counts[key] || 0);
+    b.addEventListener("click", () => { libFilter = key; renderLibrary(); });
+    row.appendChild(b);
+  });
+}
+function renderLibrary() {
+  renderTypeFilters();
+  const items = LIBRARY.filter(i => libFilter === "all" || i.type === libFilter);
+  const grid = $("libGrid");
+  grid.innerHTML = "";
+  items.forEach(item => {
+    const t = TYPE_META[item.type];
+    const due = item.cards.filter(c => c.srs.due <= now()).length;
+    const el = document.createElement("button");
+    el.className = "lib-card";
+    el.innerHTML =
+      '<span class="type-tag"><span class="type-dot" style="background:' + t.color + '"></span>' + t.label + "</span>" +
+      "<h4>" + esc(item.title) + "</h4>" +
+      '<div class="meta">' + esc(item.author) + " &middot; " + esc(item.published) + " &middot; consumed " + fmtDate(item.consumed) + "</div>" +
+      '<div class="tag-row">' + item.tags.map(tag => '<span class="tag">' + esc(tag) + "</span>").join("") + "</div>" +
+      '<div class="lib-stats"><span>' + item.notes.length + (item.notes.length === 1 ? " note" : " notes") + "</span><span>" +
+      item.cards.length + (item.cards.length === 1 ? " card" : " cards") + "</span>" +
+      (due ? '<span style="color:#f0719b;font-weight:700;">' + due + " due</span>" : "") + "</div>";
+    el.addEventListener("click", () => openDetail(item.id));
+    grid.appendChild(el);
+  });
+  const total = LIBRARY.reduce((n, i) => n + i.notes.length, 0);
+  $("libSummary").textContent = LIBRARY.length + " works · " + total + " notes · " + allCards().length + " flashcards in rotation";
+}
+
+/* ================================================================
+   DETAIL MODAL — view / add / edit notes in place
+   ================================================================ */
+let currentDetailId = null;
+function openDetail(id) {
+  const item = LIBRARY.find(i => i.id === id);
+  if (!item) return;
+  currentDetailId = id;
+  const t = TYPE_META[item.type];
+  $("detailTypeTag").innerHTML = '<span class="type-tag"><span class="type-dot" style="background:' + t.color + '"></span>' + t.label + "</span>";
+  $("detailTitle").textContent = item.title;
+  $("detailMeta").innerHTML =
+    '<div class="meta-cell"><div class="k">Author</div><div class="v">' + esc(item.author) + "</div></div>" +
+    '<div class="meta-cell"><div class="k">Published</div><div class="v">' + esc(item.published) + "</div></div>" +
+    '<div class="meta-cell"><div class="k">Consumed</div><div class="v">' + fmtDate(item.consumed) + "</div></div>";
+  $("detailTags").innerHTML = item.tags.map(tag => '<span class="tag">' + esc(tag) + "</span>").join("");
+  $("detailQuotes").innerHTML = item.quotes.map(q => '<div class="quote-block">&ldquo;' + esc(q) + "&rdquo;</div>").join("");
+  renderDetailNotes(item);
+  $("newNoteInput").value = "";
+  $("detailBackdrop").classList.add("open");
+  $("detailClose").focus();
+}
+function renderDetailNotes(item) {
+  const wrap = $("detailNotes");
+  wrap.innerHTML = "";
+  item.notes.forEach((note, idx) => {
+    const block = document.createElement("div");
+    block.className = "note-block";
+    block.innerHTML = '<div class="note-date">' + fmtDate(note.date) + "</div><p>" + esc(note.text) + "</p>";
+    const tools = document.createElement("div");
+    tools.className = "note-tools";
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn ghost small";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", () => beginEditNote(item, idx, block));
+    tools.appendChild(editBtn);
+    block.appendChild(tools);
+    wrap.appendChild(block);
+  });
+  if (!item.notes.length) wrap.innerHTML = '<p class="view-sub" style="margin:0;">No notes yet — add your first below.</p>';
+}
+function beginEditNote(item, idx, block) {
+  const note = item.notes[idx];
+  block.innerHTML = '<div class="note-date">' + fmtDate(note.date) + " · editing</div>";
+  const ta = document.createElement("textarea");
+  ta.value = note.text;
+  block.appendChild(ta);
+  const tools = document.createElement("div");
+  tools.className = "note-tools";
+  const save = document.createElement("button");
+  save.className = "btn primary small";
+  save.textContent = "Save";
+  save.addEventListener("click", () => {
+    const v = ta.value.trim();
+    if (v) note.text = v;
+    renderDetailNotes(item);
+  });
+  const cancel = document.createElement("button");
+  cancel.className = "btn ghost small";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => renderDetailNotes(item));
+  tools.appendChild(save); tools.appendChild(cancel);
+  block.appendChild(tools);
+  ta.focus();
+}
+$("newNoteSave").addEventListener("click", () => {
+  const item = LIBRARY.find(i => i.id === currentDetailId);
+  const v = $("newNoteInput").value.trim();
+  if (!item || !v) return;
+  item.notes.push({ date: todayISO(), text: v });
+  $("newNoteInput").value = "";
+  renderDetailNotes(item);
+  renderLibrary();
+});
+function closeDetail() { $("detailBackdrop").classList.remove("open"); currentDetailId = null; }
+$("detailClose").addEventListener("click", closeDetail);
+$("detailBackdrop").addEventListener("click", e => { if (e.target === $("detailBackdrop")) closeDetail(); });
+
+/* ================================================================
+   FLASHCARDS
+   ================================================================ */
+let fcQueue = [], fcIndex = 0, fcFlipped = false, fcPractice = false;
+function renderFlashcards(rebuild) {
+  if (rebuild !== false) {
+    const due = dueCards();
+    fcPractice = due.length === 0 && fcPractice;
+    fcQueue = due.length ? shuffle(due) : (fcPractice ? shuffle(allCards()) : []);
+    fcIndex = 0; fcFlipped = false;
+  }
+  drawFlashcard();
+}
+function drawFlashcard() {
+  const stage = $("fcStage");
+  stage.innerHTML = "";
+  if (fcIndex >= fcQueue.length) {
+    const done = document.createElement("div");
+    done.className = "done-panel";
+    const dueNow = dueCards().length;
+    if (dueNow > 0) {
+      renderFlashcards(true);
+      return;
+    }
+    done.innerHTML = '<div class="big">&#10024;</div><h4>All caught up</h4><p>No cards due right now. The scheduler will bring them back right as you start to forget.</p>';
+    const practice = document.createElement("button");
+    practice.className = "btn primary";
+    practice.textContent = "Practice anyway";
+    practice.addEventListener("click", () => { fcPractice = true; fcQueue = shuffle(allCards()); fcIndex = 0; fcFlipped = false; drawFlashcard(); });
+    done.appendChild(practice);
+    stage.appendChild(done);
+    return;
+  }
+  const { item, card } = fcQueue[fcIndex];
+  const wrap = document.createElement("div");
+  wrap.className = "fc-stage";
+  const count = document.createElement("div");
+  count.className = "fc-count";
+  count.textContent = (fcPractice ? "Practice · " : "") + "Card " + (fcIndex + 1) + " of " + fcQueue.length +
+    (fcPractice ? "" : " due");
+  wrap.appendChild(count);
+
+  const scene = document.createElement("div");
+  scene.className = "flip-scene";
+  const flip = document.createElement("button");
+  flip.className = "flip-card" + (fcFlipped ? " flipped" : "");
+  flip.setAttribute("aria-label", "Flashcard — click to flip");
+  flip.innerHTML =
+    '<span class="face front"><span class="label">Question</span><span class="body-text">' + esc(card.q) +
+    '</span><span class="source">' + esc(item.title) + " &middot; " + esc(item.author) + "</span></span>" +
+    '<span class="face back"><span class="label">Answer</span><span class="body-text">' + esc(card.a) +
+    '</span><span class="source">' + esc(item.title) + "</span></span>";
+  flip.addEventListener("click", () => { fcFlipped = !fcFlipped; flip.classList.toggle("flipped", fcFlipped); drawGradeRow(); });
+  scene.appendChild(flip);
+  wrap.appendChild(scene);
+
+  const hint = document.createElement("div");
+  hint.className = "fc-hint";
+  hint.textContent = "Click the card to flip";
+  wrap.appendChild(hint);
+
+  const grades = document.createElement("div");
+  grades.className = "grade-row";
+  grades.id = "fcGrades";
+  wrap.appendChild(grades);
+  stage.appendChild(wrap);
+  drawGradeRow();
+
+  function drawGradeRow() {
+    const row = $("fcGrades");
+    if (!row) return;
+    row.innerHTML = "";
+    if (!fcFlipped) { hint.style.visibility = "visible"; return; }
+    hint.style.visibility = "hidden";
+    [["Again", "g-again", 0, "<10m"], ["Hard", "g-hard", 1, ""], ["Good", "g-good", 2, ""], ["Easy", "g-easy", 3, ""]].forEach(([label, cls, g]) => {
+      const b = document.createElement("button");
+      b.className = "grade-btn " + cls;
+      b.innerHTML = label + "<small>" + previewInterval(card, g) + "</small>";
+      b.addEventListener("click", () => {
+        gradeCard(card, g);
+        fcIndex += 1; fcFlipped = false;
+        drawFlashcard();
+      });
+      row.appendChild(b);
+    });
+  }
+}
+function previewInterval(card, grade) {
+  if (grade === 0) return "~10 min";
+  const s = card.srs;
+  let iv;
+  if (s.reps === 0) iv = 1;
+  else if (s.reps === 1) iv = 6;
+  else iv = Math.round(s.interval * s.ef);
+  if (grade === 1) iv = Math.max(1, Math.round(iv * 0.6));
+  if (grade === 3) iv = Math.round(iv * 1.3) || 1;
+  return iv === 1 ? "1 day" : iv + " days";
+}
+
+/* ================================================================
+   ACTIVE RECALL
+   ================================================================ */
+function buildRecallScope() {
+  const sel = $("recallScope");
+  const tags = [...new Set(LIBRARY.flatMap(i => i.tags))].sort();
+  let html = '<optgroup label="Subjects (tags)">';
+  tags.forEach(t => { html += '<option value="tag:' + esc(t) + '">' + esc(t) + "</option>"; });
+  html += '</optgroup><optgroup label="Works">';
+  LIBRARY.forEach(i => { html += '<option value="work:' + i.id + '">' + esc(i.title) + "</option>"; });
+  html += "</optgroup>";
+  sel.innerHTML = html;
+}
+let rcQueue = [], rcIndex = 0, rcRevealed = false;
+$("recallStart").addEventListener("click", () => {
+  const v = $("recallScope").value;
+  let pool;
+  if (v.startsWith("tag:")) {
+    const tag = v.slice(4);
+    pool = allCards().filter(x => x.item.tags.includes(tag));
+  } else {
+    const id = v.slice(5);
+    pool = allCards().filter(x => x.item.id === id);
+  }
+  rcQueue = shuffle(pool);
+  rcIndex = 0; rcRevealed = false;
+  drawRecall();
+});
+function drawRecall() {
+  const area = $("recallArea");
+  area.innerHTML = "";
+  if (!rcQueue.length) return;
+  if (rcIndex >= rcQueue.length) {
+    const d = document.createElement("div");
+    d.className = "done-panel";
+    d.innerHTML = '<div class="big">&#127881;</div><h4>Session complete</h4><p>' + rcQueue.length +
+      " prompts answered. Every self-grade just fed the spaced-repetition scheduler.</p>";
+    const again = document.createElement("button");
+    again.className = "btn primary";
+    again.textContent = "Run it again";
+    again.addEventListener("click", () => { rcQueue = shuffle(rcQueue); rcIndex = 0; rcRevealed = false; drawRecall(); });
+    d.appendChild(again);
+    area.appendChild(d);
+    return;
+  }
+  const { item, card } = rcQueue[rcIndex];
+  const wrap = document.createElement("div");
+  wrap.className = "recall-card";
+  wrap.innerHTML =
+    '<div class="recall-q"><div class="src">' + esc(item.title) + " &middot; " + esc(item.author) + '</div><div class="q">' + esc(card.q) + "</div></div>";
+  const ta = document.createElement("textarea");
+  ta.placeholder = "Type your answer from memory — no peeking…";
+  wrap.appendChild(ta);
+
+  const answerSlot = document.createElement("div");
+  wrap.appendChild(answerSlot);
+
+  const tools = document.createElement("div");
+  tools.className = "reflect-actions";
+  const reveal = document.createElement("button");
+  reveal.className = "btn primary";
+  reveal.textContent = "Reveal answer";
+  reveal.addEventListener("click", () => {
+    if (rcRevealed) return;
+    rcRevealed = true;
+    reveal.style.display = "none";
+    answerSlot.innerHTML = '<div class="recall-answer"><div class="label">Answer</div><div>' + esc(card.a) + "</div></div>" +
+      '<div class="fc-hint" style="margin-bottom:10px;">How did your answer compare?</div>';
+    const row = document.createElement("div");
+    row.className = "grade-row";
+    row.style.justifyContent = "flex-start";
+    [["Again", "g-again", 0], ["Hard", "g-hard", 1], ["Good", "g-good", 2], ["Easy", "g-easy", 3]].forEach(([label, cls, g]) => {
+      const b = document.createElement("button");
+      b.className = "grade-btn " + cls;
+      b.textContent = label;
+      b.addEventListener("click", () => { gradeCard(card, g); rcIndex += 1; rcRevealed = false; drawRecall(); });
+      row.appendChild(b);
+    });
+    answerSlot.appendChild(row);
+  });
+  tools.appendChild(reveal);
+  wrap.appendChild(tools);
+
+  const prog = document.createElement("div");
+  prog.className = "recall-progress";
+  prog.textContent = "Prompt " + (rcIndex + 1) + " of " + rcQueue.length;
+  wrap.appendChild(prog);
+  area.appendChild(wrap);
+  ta.focus();
+}
+
+/* ================================================================
+   REFLECTION ENGINE
+   ================================================================ */
+let currentQuote = null;
+function allQuotes() {
+  const out = [];
+  LIBRARY.forEach(i => i.quotes.forEach(q => out.push({ item: i, quote: q })));
+  return out;
+}
+function pickQuote() {
+  const pool = allQuotes();
+  let next;
+  do { next = pool[Math.floor(Math.random() * pool.length)]; }
+  while (pool.length > 1 && currentQuote && next.quote === currentQuote.quote);
+  currentQuote = next;
+  $("reflectQuote").textContent = next.quote;
+  $("reflectCite").textContent = "— " + next.item.author + ", " + next.item.title + " (" + next.item.published + ")";
+}
+$("reflectShuffle").addEventListener("click", pickQuote);
+$("reflectSave").addEventListener("click", () => {
+  const v = $("reflectInput").value.trim();
+  if (!v || !currentQuote) return;
+  REFLECTIONS.unshift({
+    date: todayISO(),
+    quote: currentQuote.quote,
+    source: currentQuote.item.title + " — " + currentQuote.item.author,
+    text: v
+  });
+  $("reflectInput").value = "";
+  renderReflections();
+});
+function renderReflections() {
+  const list = $("reflectList");
+  list.innerHTML = "";
+  REFLECTIONS.forEach(r => {
+    const el = document.createElement("div");
+    el.className = "reflection-item";
+    el.innerHTML =
+      '<div class="rhead"><span>' + fmtDate(r.date) + "</span><span>" + esc(r.source) + "</span></div>" +
+      '<div class="rquote">&ldquo;' + esc(r.quote) + "&rdquo;</div>" +
+      '<div class="rbody">' + esc(r.text) + "</div>";
+    list.appendChild(el);
+  });
+}
+
+/* ================================================================
+   KNOWLEDGE GRAPH (SVG, hand-coded)
+   ================================================================ */
+let graphBuilt = false;
+function buildGraph() {
+  if (graphBuilt) return;
+  graphBuilt = true;
+  const svg = $("graphSvg");
+  const NS = "http://www.w3.org/2000/svg";
+  // Ordered so related items sit near each other on the ellipse
+  const order = ["tfas", "tkp", "meditations", "selfreliance", "greatwork", "deepwork", "atomic", "doet", "memex", "augmem", "whybooks", "makeitstick", "huberman"];
+  const cx = 600, cy = 352, rx = 455, ry = 270;
+  const pos = {};
+  order.forEach((id, i) => {
+    const a = (i / order.length) * Math.PI * 2 - Math.PI / 2;
+    pos[id] = { x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) };
+  });
+
+  const edgesGroup = document.createElementNS(NS, "g");
+  const nodesGroup = document.createElementNS(NS, "g");
+  svg.appendChild(edgesGroup);
+  svg.appendChild(nodesGroup);
+
+  const edges = [];
+  for (let i = 0; i < LIBRARY.length; i++) {
+    for (let j = i + 1; j < LIBRARY.length; j++) {
+      const shared = sharedTags(LIBRARY[i], LIBRARY[j]);
+      if (!shared.length) continue;
+      const a = LIBRARY[i].id, b = LIBRARY[j].id;
+      const line = document.createElementNS(NS, "line");
+      line.setAttribute("x1", pos[a].x); line.setAttribute("y1", pos[a].y);
+      line.setAttribute("x2", pos[b].x); line.setAttribute("y2", pos[b].y);
+      line.setAttribute("class", "g-edge");
+      line.setAttribute("stroke-width", shared.length * 1.4);
+      edgesGroup.appendChild(line);
+      edges.push({ a, b, el: line });
+    }
+  }
+
+  const nodeEls = {};
+  LIBRARY.forEach(item => {
+    const p = pos[item.id];
+    const g = document.createElementNS(NS, "g");
+    g.setAttribute("class", "g-node");
+    g.setAttribute("tabindex", "0");
+    g.setAttribute("role", "button");
+    g.setAttribute("aria-label", item.title + " — open detail view");
+
+    const halo = document.createElementNS(NS, "circle");
+    halo.setAttribute("cx", p.x); halo.setAttribute("cy", p.y); halo.setAttribute("r", 30);
+    halo.setAttribute("class", "halo");
+    g.appendChild(halo);
+
+    const core = document.createElementNS(NS, "circle");
+    core.setAttribute("cx", p.x); core.setAttribute("cy", p.y);
+    core.setAttribute("r", 11 + item.cards.length * 2);
+    core.setAttribute("class", "core");
+    const colors = { book: "#a78bfa", essay: "#6ee7b7", article: "#fbbf24", podcast: "#f0719b" };
+    core.setAttribute("fill", colors[item.type]);
+    core.setAttribute("fill-opacity", "0.85");
+    g.appendChild(core);
+
+    const label = document.createElementNS(NS, "text");
+    const short = item.title.length > 26 ? item.title.slice(0, 24) + "…" : item.title;
+    label.textContent = short;
+    label.setAttribute("x", p.x);
+    label.setAttribute("y", p.y + (p.y < cy ? -26 : 38));
+    label.setAttribute("text-anchor", "middle");
+    g.appendChild(label);
+
+    const highlight = on => {
+      document.querySelectorAll(".g-node").forEach(n => n.classList.remove("lit", "dimmed"));
+      edges.forEach(e => e.el.classList.remove("lit", "dimmed"));
+      if (!on) return;
+      const neighbors = new Set([item.id]);
+      edges.forEach(e => {
+        if (e.a === item.id || e.b === item.id) {
+          e.el.classList.add("lit");
+          neighbors.add(e.a); neighbors.add(e.b);
+        } else e.el.classList.add("dimmed");
+      });
+      LIBRARY.forEach(other => {
+        nodeEls[other.id].classList.add(neighbors.has(other.id) ? "lit" : "dimmed");
+      });
+    };
+    g.addEventListener("mouseenter", () => highlight(true));
+    g.addEventListener("mouseleave", () => highlight(false));
+    g.addEventListener("focus", () => highlight(true));
+    g.addEventListener("blur", () => highlight(false));
+    g.addEventListener("click", () => openDetail(item.id));
+    g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDetail(item.id); } });
+    nodesGroup.appendChild(g);
+    nodeEls[item.id] = g;
+  });
+
+  $("graphLegend").innerHTML = Object.entries(TYPE_META).map(([k, t]) =>
+    '<span><span class="type-dot" style="width:9px;height:9px;border-radius:50%;background:' + t.color + ';display:inline-block;"></span>' + t.label + "s</span>").join("");
+}
+
+/* ================================================================
+   SERENDIPITY ENGINE
+   ================================================================ */
+let toastPayload = null;
+function serendipityPool() {
+  const pool = [];
+  LIBRARY.forEach(i => i.notes.forEach(n => pool.push({
+    kind: "note", text: n.text, date: n.date,
+    source: i.title + " — " + i.author, itemId: i.id
+  })));
+  REFLECTIONS.forEach(r => pool.push({
+    kind: "reflection", text: r.text, date: r.date,
+    source: "Reflection on " + r.source, itemId: null
+  }));
+  return pool;
+}
+function showSerendipity() {
+  const pool = serendipityPool();
+  let next;
+  do { next = pool[Math.floor(Math.random() * pool.length)]; }
+  while (pool.length > 1 && toastPayload && next.text === toastPayload.text);
+  toastPayload = next;
+  const snippet = next.text.length > 180 ? next.text.slice(0, 178).trimEnd() + "…" : next.text;
+  $("toastBody").textContent = snippet;
+  $("toastSrc").textContent = next.source + " · " + fmtDate(next.date);
+  $("toast").classList.add("show");
+}
+function hideToast() { $("toast").classList.remove("show"); }
+$("toastClose").addEventListener("click", hideToast);
+$("toastAnother").addEventListener("click", showSerendipity);
+$("toastOpen").addEventListener("click", () => {
+  if (!toastPayload) return;
+  hideToast();
+  if (toastPayload.kind === "note" && toastPayload.itemId) openDetail(toastPayload.itemId);
+  else showView("reflect");
+});
+$("serendipityBtn").addEventListener("click", showSerendipity);
+
+/* ================================================================
+   GLOBAL KEYS + INIT
+   ================================================================ */
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    if ($("detailBackdrop").classList.contains("open")) closeDetail();
+    else if ($("toast").classList.contains("show")) hideToast();
+  }
+});
+
+renderLibrary();
+buildRecallScope();
+pickQuote();
+renderReflections();
+updateBadge();
+
+// Auto serendipity a few seconds after load — but not when embedded (gallery thumbnails)
+if (window.self === window.top) {
+  setTimeout(showSerendipity, 4500);
+}
+</script>
+</body>
+</html>

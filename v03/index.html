@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tidepool — Matthew's Knowledge Lineup</title>
+<style>
+  :root{
+    --navy:#0b3954;
+    --navy-deep:#072a3f;
+    --teal:#087e8b;
+    --teal-ink:#066070;
+    --teal-bright:#1fb6a6;
+    --seafoam:#bfe8e2;
+    --seafoam-light:#e3f6f2;
+    --sand:#f4e9d8;
+    --sand-deep:#e8d5b7;
+    --coral:#e9724c;
+    --coral-deep:#c2492a;
+    --ink:#143247;
+    --ink-soft:#3d5a6e;
+    --card:#fdfaf3;
+    --radius-blob:2.2rem 1.1rem 2rem 1.3rem;
+    --radius-blob2:1.2rem 2.4rem 1.4rem 2.2rem;
+    --shadow:0 10px 30px rgba(11,57,84,.10), 0 2px 8px rgba(11,57,84,.08);
+    --shadow-lift:0 16px 40px rgba(11,57,84,.16), 0 4px 10px rgba(11,57,84,.10);
+    font-size:16px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg, #eaf7f5 0%, var(--sand) 38%, #f7efe1 100%);
+    line-height:1.65;
+    min-height:100vh;
+  }
+  /* ---------- Header ---------- */
+  header.site{
+    position:relative;
+    background:linear-gradient(160deg, var(--navy-deep) 0%, var(--navy) 45%, var(--teal) 100%);
+    color:#f1faf8;
+    padding:1.4rem 2rem 4.5rem;
+  }
+  .gallery-link{
+    display:inline-block;
+    color:var(--seafoam);
+    text-decoration:none;
+    font-size:.95rem;
+    font-weight:600;
+    padding:.3rem .85rem;
+    border:1.5px solid rgba(191,232,226,.5);
+    border-radius:999px;
+    transition:background .25s, color .25s;
+  }
+  .gallery-link:hover,.gallery-link:focus-visible{background:var(--seafoam);color:var(--navy);}
+  .masthead{
+    max-width:1100px;margin:1.6rem auto 0;
+    display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:1.5rem;
+  }
+  .brand h1{
+    margin:0;
+    font-size:clamp(2.3rem, 4.5vw, 3.3rem);
+    font-weight:800;
+    letter-spacing:-.02em;
+    line-height:1.1;
+  }
+  .brand h1 .wave-accent{color:var(--teal-bright);}
+  .brand p{margin:.5rem 0 0;color:var(--seafoam);font-size:1.05rem;max-width:34rem;}
+  .swell-badge{
+    display:flex;align-items:center;gap:.8rem;
+    background:rgba(244,233,216,.12);
+    border:1.5px solid rgba(191,232,226,.35);
+    border-radius:var(--radius-blob);
+    padding:.85rem 1.3rem;
+    backdrop-filter:blur(3px);
+  }
+  .swell-badge .count{
+    background:var(--coral);
+    color:#fff;
+    font-weight:800;
+    font-size:1.35rem;
+    min-width:2.6rem;height:2.6rem;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:1.3rem .9rem 1.2rem 1rem;
+  }
+  .swell-badge .label{font-size:.95rem;line-height:1.35;}
+  .swell-badge .label strong{display:block;font-size:1.02rem;}
+  .wave-divider{position:absolute;left:0;right:0;bottom:-1px;line-height:0;}
+  .wave-divider svg{display:block;width:100%;height:60px;}
+  .wave-divider.flip svg{transform:scaleY(-1);}
+  /* floating gulls / bubbles */
+  .bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .bubble{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.35), rgba(255,255,255,.05));
+    animation:drift 14s ease-in-out infinite;
+  }
+  @keyframes drift{
+    0%,100%{transform:translateY(0) translateX(0);}
+    50%{transform:translateY(-18px) translateX(8px);}
+  }
+  /* ---------- Nav ---------- */
+  nav.tabs{
+    max-width:1100px;
+    margin:-2.4rem auto 0;
+    position:relative;z-index:5;
+    display:flex;flex-wrap:wrap;gap:.6rem;
+    padding:0 2rem;
+  }
+  nav.tabs button{
+    font:inherit;font-weight:700;font-size:.98rem;
+    color:var(--navy);
+    background:var(--card);
+    border:2px solid transparent;
+    border-radius:1.4rem 1.4rem .5rem 1.4rem;
+    padding:.65rem 1.25rem;
+    cursor:pointer;
+    box-shadow:var(--shadow);
+    transition:transform .2s, background .2s, color .2s;
+  }
+  nav.tabs button:hover{transform:translateY(-2px);}
+  nav.tabs button[aria-selected="true"]{
+    background:var(--teal);color:#fff;
+    border-color:var(--navy);
+  }
+  nav.tabs button .mini-badge{
+    display:inline-block;margin-left:.4rem;
+    background:var(--coral);color:#fff;
+    border-radius:999px;font-size:.78rem;padding:.05rem .5rem;
+    vertical-align:middle;
+  }
+  /* ---------- Layout ---------- */
+  main{max-width:1100px;margin:0 auto;padding:2.2rem 2rem 5rem;}
+  section.view[hidden]{display:none;}
+  .view-title{
+    font-size:clamp(1.6rem, 2.6vw, 2.1rem);
+    font-weight:800;color:var(--navy);
+    margin:0 0 .3rem;letter-spacing:-.01em;
+  }
+  .view-sub{color:var(--ink-soft);margin:0 0 1.8rem;font-size:1.02rem;max-width:44rem;}
+  /* ---------- Library ---------- */
+  .filter-row{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1.6rem;align-items:center;}
+  .filter-row .chip{
+    font:inherit;font-size:.88rem;font-weight:600;
+    border:1.5px solid var(--teal);
+    background:transparent;color:var(--teal-ink);
+    border-radius:999px;padding:.32rem .95rem;cursor:pointer;
+    transition:background .2s,color .2s;
+  }
+  .filter-row .chip:hover{background:var(--seafoam-light);}
+  .filter-row .chip[aria-pressed="true"]{background:var(--teal);color:#fff;}
+  .lib-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
+    gap:1.4rem;
+  }
+  .work-card{
+    text-align:left;font:inherit;cursor:pointer;
+    background:var(--card);
+    border:none;
+    border-radius:var(--radius-blob);
+    padding:1.5rem 1.5rem 1.3rem;
+    box-shadow:var(--shadow);
+    display:flex;flex-direction:column;gap:.55rem;
+    position:relative;overflow:hidden;
+    transition:transform .25s, box-shadow .25s;
+  }
+  .work-card:hover,.work-card:focus-visible{transform:translateY(-4px);box-shadow:var(--shadow-lift);}
+  .work-card::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:7px;
+    background:repeating-linear-gradient(90deg, var(--teal-bright) 0 18px, var(--teal) 18px 36px);
+    opacity:.55;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8' preserveAspectRatio='none'%3E%3Cpath d='M0 8 Q5 0 10 4 T20 4 T30 4 T40 4 V8 Z'/%3E%3C/svg%3E");
+    mask-size:40px 8px;
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8' preserveAspectRatio='none'%3E%3Cpath d='M0 8 Q5 0 10 4 T20 4 T30 4 T40 4 V8 Z'/%3E%3C/svg%3E");
+    -webkit-mask-size:40px 8px;
+  }
+  .type-pill{
+    align-self:flex-start;
+    font-size:.74rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+    padding:.22rem .75rem;border-radius:999px;
+  }
+  .type-book{background:var(--navy);color:var(--seafoam);}
+  .type-essay{background:var(--teal);color:#fff;}
+  .type-article{background:var(--coral);color:#fff;}
+  .type-podcast{background:var(--sand-deep);color:var(--navy);}
+  .work-card h3{margin:.1rem 0 0;font-size:1.22rem;line-height:1.3;color:var(--navy);font-weight:800;}
+  .work-card .byline{color:var(--ink-soft);font-size:.92rem;margin:0;}
+  .tag-row{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.2rem;}
+  .tag{
+    font-size:.78rem;font-weight:600;
+    background:var(--seafoam-light);color:#0a5f69;
+    border:1px solid var(--seafoam);
+    border-radius:999px;padding:.12rem .6rem;
+  }
+  .work-card .meta-line{font-size:.84rem;color:var(--ink-soft);margin-top:auto;padding-top:.5rem;}
+  /* ---------- Detail ---------- */
+  .back-btn{
+    font:inherit;font-weight:700;font-size:.95rem;
+    background:transparent;border:2px solid var(--teal);color:var(--teal);
+    border-radius:999px;padding:.45rem 1.1rem;cursor:pointer;margin-bottom:1.4rem;
+    transition:background .2s,color .2s;
+  }
+  .back-btn:hover{background:var(--teal);color:#fff;}
+  .detail-hero{
+    background:linear-gradient(150deg, var(--navy) 0%, var(--teal) 130%);
+    color:#f1faf8;
+    border-radius:var(--radius-blob2);
+    padding:2rem 2.2rem;
+    box-shadow:var(--shadow);
+    margin-bottom:1.8rem;
+  }
+  .detail-hero h2{margin:.5rem 0 .4rem;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:800;line-height:1.2;}
+  .detail-hero .byline{color:var(--seafoam);font-size:1.02rem;margin:0 0 .9rem;}
+  .detail-hero .meta-grid{display:flex;flex-wrap:wrap;gap:1.6rem;font-size:.92rem;margin-top:.6rem;}
+  .detail-hero .meta-grid div span{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em;color:var(--seafoam);font-weight:700;}
+  .detail-hero .tag{background:rgba(244,233,216,.16);color:var(--seafoam);border-color:rgba(191,232,226,.4);}
+  .detail-cols{display:grid;grid-template-columns:1.1fr .9fr;gap:1.6rem;align-items:start;}
+  .panel{
+    background:var(--card);
+    border-radius:var(--radius-blob);
+    padding:1.6rem 1.7rem;
+    box-shadow:var(--shadow);
+  }
+  .panel h3{
+    margin:0 0 1rem;font-size:1.15rem;font-weight:800;color:var(--navy);
+    display:flex;align-items:center;gap:.5rem;
+  }
+  .quote-block{
+    border-left:4px solid var(--teal-bright);
+    background:var(--seafoam-light);
+    border-radius:0 1.2rem 1.2rem .4rem;
+    padding:.85rem 1.1rem;
+    margin:0 0 .9rem;
+    font-style:italic;color:var(--ink);
+  }
+  .quote-block:last-child{margin-bottom:0;}
+  .note-item{
+    background:#fff;
+    border:1.5px solid var(--sand-deep);
+    border-radius:1.1rem 1.6rem 1.1rem 1.4rem;
+    padding:.95rem 1.1rem .8rem;
+    margin-bottom:.9rem;
+  }
+  .note-item p.note-text{margin:0 0 .5rem;white-space:pre-wrap;}
+  .note-foot{display:flex;justify-content:space-between;align-items:center;gap:.8rem;}
+  .note-date{font-size:.8rem;color:var(--ink-soft);}
+  .btn{
+    font:inherit;font-weight:700;cursor:pointer;border:none;border-radius:999px;
+    transition:transform .15s, filter .2s;
+  }
+  .btn:hover{filter:brightness(1.07);transform:translateY(-1px);}
+  .btn-sm{font-size:.82rem;padding:.3rem .85rem;}
+  .btn-md{font-size:.95rem;padding:.55rem 1.3rem;}
+  .btn-teal{background:var(--teal);color:#fff;}
+  .btn-navy{background:var(--navy);color:var(--seafoam-light);}
+  .btn-coral{background:var(--coral-deep);color:#fff;}
+  .btn-ghost{background:transparent;border:1.5px solid var(--ink-soft);color:var(--ink-soft);}
+  .btn-sand{background:var(--sand-deep);color:var(--navy);}
+  textarea, select{
+    font:inherit;color:var(--ink);
+    border:2px solid var(--sand-deep);
+    border-radius:1rem;
+    background:#fff;
+    padding:.7rem .9rem;
+    width:100%;
+  }
+  textarea:focus,select:focus{outline:3px solid var(--teal-bright);outline-offset:1px;border-color:var(--teal);}
+  .note-editor{margin-top:.4rem;}
+  .note-editor .row{display:flex;gap:.6rem;margin-top:.6rem;}
+  /* ---------- Flashcards ---------- */
+  .surf-report{
+    display:flex;align-items:center;gap:1rem;flex-wrap:wrap;
+    background:var(--seafoam-light);
+    border:1.5px solid var(--seafoam);
+    border-radius:var(--radius-blob2);
+    padding:1rem 1.4rem;margin-bottom:1.6rem;
+  }
+  .surf-report strong{color:var(--navy);}
+  .flash-stage{max-width:620px;margin:0 auto;}
+  .flip-scene{perspective:1400px;margin-bottom:1.4rem;}
+  .flip-card{
+    position:relative;width:100%;min-height:300px;
+    transform-style:preserve-3d;
+    transition:transform .6s cubic-bezier(.4,.1,.2,1);
+    cursor:pointer;border:none;background:none;padding:0;font:inherit;text-align:center;
+    display:block;
+  }
+  .flip-card.flipped{transform:rotateY(180deg);}
+  .flip-face{
+    position:absolute;inset:0;
+    backface-visibility:hidden;-webkit-backface-visibility:hidden;
+    border-radius:var(--radius-blob);
+    box-shadow:var(--shadow-lift);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:2.2rem 2rem;gap:.8rem;
+  }
+  .flip-front{background:linear-gradient(165deg,#fff 0%, var(--seafoam-light) 100%);}
+  .flip-back{background:linear-gradient(165deg, var(--navy) 0%, var(--teal) 140%);color:#f1faf8;transform:rotateY(180deg);}
+  .flip-face .kicker{font-size:.76rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--teal-ink);}
+  .flip-back .kicker{color:var(--seafoam);}
+  .flip-face .card-q{font-size:1.3rem;font-weight:700;line-height:1.45;max-width:30rem;color:var(--navy);}
+  .flip-back .card-q{color:#fff;font-weight:600;font-size:1.18rem;}
+  .flip-face .card-src{font-size:.85rem;color:var(--ink-soft);}
+  .flip-back .card-src{color:var(--seafoam);}
+  .flip-hint{font-size:.82rem;color:var(--ink-soft);font-style:italic;}
+  .grade-row{display:flex;gap:.7rem;justify-content:center;flex-wrap:wrap;}
+  .grade-row .btn{min-width:6.2rem;}
+  .grade-row .hint{display:block;font-weight:400;font-size:.72rem;opacity:.85;margin-top:.1rem;}
+  .flat-day{
+    text-align:center;background:var(--card);border-radius:var(--radius-blob);
+    box-shadow:var(--shadow);padding:2.6rem 2rem;
+  }
+  .flat-day .big{font-size:2.6rem;line-height:1;}
+  /* ---------- Recall ---------- */
+  .recall-setup{display:flex;gap:.9rem;flex-wrap:wrap;align-items:end;margin-bottom:1.6rem;}
+  .recall-setup label{font-weight:700;color:var(--navy);font-size:.9rem;display:block;margin-bottom:.35rem;}
+  .recall-setup .field{flex:1 1 260px;}
+  .recall-card{max-width:680px;margin:0 auto;}
+  .recall-answer{
+    background:var(--seafoam-light);border:1.5px solid var(--seafoam);
+    border-radius:1.2rem;padding:1rem 1.2rem;margin-top:1rem;
+  }
+  .recall-answer h4{margin:0 0 .4rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-ink);}
+  .progress-dots{display:flex;gap:.4rem;justify-content:center;margin:1rem 0 0;}
+  .progress-dots span{width:.65rem;height:.65rem;border-radius:50%;background:var(--sand-deep);}
+  .progress-dots span.done{background:var(--teal-bright);}
+  .progress-dots span.now{background:var(--coral);}
+  /* ---------- Reflections ---------- */
+  .reflect-quote{
+    background:linear-gradient(150deg, var(--navy) 0%, #0e5468 100%);
+    color:#f1faf8;border-radius:var(--radius-blob2);
+    padding:1.9rem 2.1rem;box-shadow:var(--shadow);margin-bottom:1.4rem;position:relative;
+  }
+  .reflect-quote blockquote{margin:0;font-size:1.25rem;font-style:italic;line-height:1.6;}
+  .reflect-quote cite{display:block;margin-top:.9rem;color:var(--seafoam);font-style:normal;font-size:.95rem;}
+  .reflection-item{
+    background:var(--card);border-radius:1.4rem 1rem 1.6rem 1.1rem;
+    box-shadow:var(--shadow);padding:1.3rem 1.5rem;margin-bottom:1.1rem;
+  }
+  .reflection-item .ref-quote{font-size:.9rem;font-style:italic;color:var(--ink-soft);border-left:3px solid var(--teal-bright);padding-left:.8rem;margin:0 0 .7rem;}
+  .reflection-item .ref-body{margin:0 0 .6rem;white-space:pre-wrap;}
+  .reflection-item .ref-date{font-size:.8rem;color:var(--ink-soft);}
+  /* ---------- Graph ---------- */
+  .graph-shell{
+    background:linear-gradient(170deg, var(--navy-deep) 0%, var(--navy) 55%, #0d4a62 100%);
+    border-radius:var(--radius-blob);
+    box-shadow:var(--shadow-lift);
+    padding:1.2rem;overflow:hidden;
+  }
+  .graph-shell svg{display:block;width:100%;height:auto;}
+  .g-edge{stroke:#6fd3c7;transition:opacity .2s, stroke .2s;}
+  .g-node{cursor:pointer;}
+  .g-node circle{transition:transform .2s, filter .2s;stroke:rgba(243,250,248,.65);stroke-width:1.5;}
+  .g-node:hover circle,.g-node:focus circle{filter:brightness(1.2);stroke:#fff;stroke-width:3;}
+  .g-node:focus{outline:none;}
+  .g-node text{fill:#dff3ef;font-size:12.5px;font-weight:600;pointer-events:none;}
+  .g-node .g-type{fill:#9fd0c8;font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+  svg.dimmed .g-edge{opacity:.06;}
+  svg.dimmed .g-node{opacity:.25;}
+  svg.dimmed .g-edge.lit{opacity:.95;stroke:#ffd9a8;}
+  svg.dimmed .g-node.lit{opacity:1;}
+  .graph-legend{display:flex;flex-wrap:wrap;gap:1.1rem;margin-top:1rem;font-size:.85rem;color:var(--ink-soft);}
+  .graph-legend span{display:inline-flex;align-items:center;gap:.4rem;}
+  .graph-legend i{width:.9rem;height:.9rem;border-radius:50%;display:inline-block;}
+  /* ---------- Serendipity toast ---------- */
+  .bottle-toast{
+    position:fixed;right:1.4rem;bottom:1.4rem;z-index:50;
+    width:min(380px, calc(100vw - 2.8rem));
+    background:var(--card);
+    border:2px solid var(--teal);
+    border-radius:1.8rem 1.2rem 1.8rem 1.4rem;
+    box-shadow:var(--shadow-lift);
+    padding:1.3rem 1.4rem 1.2rem;
+    animation:bob .5s ease-out;
+  }
+  @keyframes bob{from{transform:translateY(26px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .bottle-toast[hidden]{display:none;}
+  .bottle-toast .bt-kicker{display:flex;align-items:center;justify-content:space-between;gap:.6rem;margin-bottom:.6rem;}
+  .bottle-toast .bt-kicker strong{color:var(--teal);font-size:.82rem;text-transform:uppercase;letter-spacing:.11em;}
+  .bt-close{background:none;border:none;font-size:1.25rem;line-height:1;cursor:pointer;color:var(--ink-soft);padding:.2rem .4rem;border-radius:.5rem;}
+  .bt-close:hover{background:var(--seafoam-light);color:var(--navy);}
+  .bottle-toast .bt-body{font-size:.95rem;margin:0 0 .5rem;font-style:italic;}
+  .bottle-toast .bt-src{font-size:.8rem;color:var(--ink-soft);margin:0 0 .9rem;}
+  .bottle-toast .bt-actions{display:flex;gap:.6rem;}
+  /* ---------- Footer ---------- */
+  footer.site{
+    background:linear-gradient(180deg, var(--teal) -60%, var(--navy) 90%);
+    color:var(--seafoam);text-align:center;
+    padding:2.6rem 2rem 2.2rem;font-size:.9rem;position:relative;
+  }
+  footer .wave-top{position:absolute;top:-1px;left:0;right:0;line-height:0;}
+  footer .wave-top svg{display:block;width:100%;height:50px;transform:scaleY(-1);}
+  /* ---------- Misc ---------- */
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
+  @media (max-width:860px){
+    .detail-cols{grid-template-columns:1fr;}
+  }
+  @media (max-width:768px){
+    header.site{padding:1.2rem 1.2rem 4rem;}
+    main{padding:1.8rem 1.2rem 4rem;}
+    nav.tabs{padding:0 1.2rem;}
+    .masthead{flex-direction:column;align-items:flex-start;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+    html{scroll-behavior:auto;}
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="bubbles" aria-hidden="true">
+    <span class="bubble" style="width:70px;height:70px;left:8%;top:55%;animation-delay:0s;"></span>
+    <span class="bubble" style="width:34px;height:34px;left:28%;top:20%;animation-delay:-4s;"></span>
+    <span class="bubble" style="width:52px;height:52px;left:72%;top:14%;animation-delay:-8s;"></span>
+    <span class="bubble" style="width:26px;height:26px;left:90%;top:50%;animation-delay:-2s;"></span>
+  </div>
+  <a class="gallery-link" href="../index.html">&larr; Gallery</a>
+  <div class="masthead">
+    <div class="brand">
+      <h1>Tide<span class="wave-accent">pool</span> <span aria-hidden="true">🌊</span></h1>
+      <p>Matthew's knowledge lineup — store what you read, paddle back out, and actually remember it.</p>
+    </div>
+    <div class="swell-badge">
+      <span class="count" id="dueCountBadge">0</span>
+      <span class="label"><strong>Today's swell</strong><span id="dueCountLabel">cards due for review</span></span>
+    </div>
+  </div>
+  <div class="wave-divider" aria-hidden="true">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path d="M0,30 C180,60 360,0 540,22 C720,44 900,58 1080,36 C1260,14 1380,34 1440,28 L1440,60 L0,60 Z" fill="#eaf7f5"/></svg>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="App sections">
+  <button role="tab" aria-selected="true" data-view="library">🏖️ Library</button>
+  <button role="tab" aria-selected="false" data-view="flash">🏄 Flashcards <span class="mini-badge" id="navDueBadge">0</span></button>
+  <button role="tab" aria-selected="false" data-view="recall">🧠 Recall</button>
+  <button role="tab" aria-selected="false" data-view="reflect">🐚 Reflect</button>
+  <button role="tab" aria-selected="false" data-view="graph">🗺️ Reef Map</button>
+</nav>
+
+<main>
+  <!-- ============ LIBRARY ============ -->
+  <section class="view" id="view-library">
+    <h2 class="view-title">The Lineup</h2>
+    <p class="view-sub">Everything you've paddled through — books, essays, articles, and podcasts, tagged by theme.</p>
+    <div class="filter-row" id="typeFilters" role="group" aria-label="Filter by type"></div>
+    <div class="lib-grid" id="libGrid"></div>
+  </section>
+
+  <!-- ============ DETAIL ============ -->
+  <section class="view" id="view-detail" hidden>
+    <button class="back-btn" id="backToLibrary">&larr; Paddle back out</button>
+    <div id="detailContent"></div>
+  </section>
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section class="view" id="view-flash" hidden>
+    <h2 class="view-title">Flashcards</h2>
+    <p class="view-sub">Catch the day's swell — cards from across your whole library, scheduled by spaced repetition.</p>
+    <div class="surf-report" id="surfReport"></div>
+    <div class="flash-stage" id="flashStage"></div>
+  </section>
+
+  <!-- ============ RECALL ============ -->
+  <section class="view" id="view-recall" hidden>
+    <h2 class="view-title">Active Recall</h2>
+    <p class="view-sub">Pick one work or a whole subject, write your answer from memory, then check yourself against the reef. Your grades feed the same spaced-repetition schedule.</p>
+    <div class="recall-setup">
+      <div class="field">
+        <label for="recallScope">What are we testing?</label>
+        <select id="recallScope"></select>
+      </div>
+      <button class="btn btn-teal btn-md" id="recallStart">Start session</button>
+    </div>
+    <div class="recall-card" id="recallStage"></div>
+  </section>
+
+  <!-- ============ REFLECT ============ -->
+  <section class="view" id="view-reflect" hidden>
+    <h2 class="view-title">Reflection Cove</h2>
+    <p class="view-sub">A quote washes ashore — sit with it, then write what it stirs up. Synthesis beats storage.</p>
+    <div class="reflect-quote" id="reflectQuoteBox"></div>
+    <div style="display:flex;gap:.7rem;flex-wrap:wrap;margin-bottom:1.4rem;">
+      <button class="btn btn-ghost btn-md" id="newQuoteBtn">🌀 Different quote</button>
+    </div>
+    <div class="panel" style="margin-bottom:2rem;">
+      <h3>🐚 Your reflection</h3>
+      <textarea id="reflectInput" rows="5" placeholder="What does this connect to? Where have you seen it play out in your own life or work?"></textarea>
+      <div style="margin-top:.8rem;display:flex;gap:.7rem;">
+        <button class="btn btn-teal btn-md" id="saveReflection">Save reflection</button>
+      </div>
+    </div>
+    <h3 style="font-size:1.25rem;font-weight:800;color:var(--navy);margin:0 0 1rem;">Driftwood — past reflections</h3>
+    <div id="reflectionList"></div>
+  </section>
+
+  <!-- ============ GRAPH ============ -->
+  <section class="view" id="view-graph" hidden>
+    <h2 class="view-title">Reef Map</h2>
+    <p class="view-sub">Your library as a reef — works connect when they share tags. Hover a node to light up its neighborhood; click to open its detail page.</p>
+    <div class="graph-shell" id="graphShell"></div>
+    <div class="graph-legend" id="graphLegend"></div>
+  </section>
+</main>
+
+<!-- ============ SERENDIPITY ============ -->
+<div class="bottle-toast" id="bottleToast" hidden role="dialog" aria-label="Message in a bottle">
+  <div class="bt-kicker">
+    <strong>📜 Message in a bottle</strong>
+    <button class="bt-close" id="btClose" aria-label="Close">&times;</button>
+  </div>
+  <p class="bt-body" id="btBody"></p>
+  <p class="bt-src" id="btSrc"></p>
+  <div class="bt-actions">
+    <button class="btn btn-sand btn-sm" id="btAnother">🌊 Another</button>
+    <button class="btn btn-teal btn-sm" id="btOpen">Open</button>
+  </div>
+</div>
+
+<footer class="site">
+  <div class="wave-top" aria-hidden="true">
+    <svg viewBox="0 0 1440 50" preserveAspectRatio="none"><path d="M0,25 C240,50 480,0 720,18 C960,36 1200,48 1440,22 L1440,50 L0,50 Z" fill="#f7efe1"/></svg>
+  </div>
+  <p style="margin:0;">Tidepool · a personal knowledge reef for Matthew Geiling · v03 "Coastal" concept</p>
+  <p style="margin:.4rem 0 0;opacity:.75;">All data lives in this page's memory — close the tab and the tide takes it back.</p>
+</footer>
+
+<script>
+'use strict';
+/* =====================================================================
+   MOCK DATA — the library
+===================================================================== */
+const DAY = 86400000;
+const NOW = Date.now();
+
+const WORKS = [
+  {
+    id:'tfas', type:'book', title:'Thinking, Fast and Slow', author:'Daniel Kahneman',
+    pub:'2011', consumed:'2025-03-14', tags:['psychology','decision-making','memory'],
+    notes:[
+      {t:"System 1 explains basically every bad snap judgment I make in code review. The fix isn't \"think harder\" — it's building checklists so System 2 gets invoked automatically.", d:'2025-03-16'},
+      {t:"The planning fallacy section hit hard. I should start estimating projects from base rates of my past projects, not from the inside view.", d:'2025-03-20'}
+    ],
+    quotes:[
+      "Nothing in life is as important as you think it is, while you are thinking about it.",
+      "A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth."
+    ],
+    cards:[
+      {q:'What are System 1 and System 2?', a:'System 1 is fast, automatic, intuitive and effortless; System 2 is slow, deliberate, analytical and effortful. Most judgments start in System 1.', srs:{ivl:4, off:-2}},
+      {q:'What is the anchoring effect?', a:'Estimates are biased toward an initial reference number — even an obviously irrelevant one — because adjustment away from the anchor is usually insufficient.', srs:{ivl:1, off:1}},
+      {q:'What is the planning fallacy, and the recommended fix?', a:'Systematically underestimating time/cost by taking the "inside view" of a plan. Fix: use the outside view — base rates from similar past projects.', srs:{ivl:10, off:6}}
+    ]
+  },
+  {
+    id:'atomic', type:'book', title:'Atomic Habits', author:'James Clear',
+    pub:'2018', consumed:'2025-01-08', tags:['habits','systems','psychology'],
+    notes:[
+      {t:"\"You don't rise to the level of your goals, you fall to the level of your systems\" — this is why my review-every-night plan failed. The system was 40 minutes of friction. Redesigned it to a 5-minute default.", d:'2025-01-10'}
+    ],
+    quotes:[
+      "Every action you take is a vote for the type of person you wish to become.",
+      "You do not rise to the level of your goals. You fall to the level of your systems."
+    ],
+    cards:[
+      {q:'What are the four laws of behavior change?', a:'Make it obvious, make it attractive, make it easy, make it satisfying. (Invert each to break a bad habit.)', srs:{ivl:7, off:-1}},
+      {q:'What is habit stacking?', a:'Anchoring a new habit to an existing one: "After [current habit], I will [new habit]." The established routine becomes the cue.', srs:{ivl:2, off:3}}
+    ]
+  },
+  {
+    id:'deepwork', type:'book', title:'Deep Work', author:'Cal Newport',
+    pub:'2016', consumed:'2025-05-22', tags:['focus','habits','systems'],
+    notes:[
+      {t:"Attention residue is the key idea for me: every glance at Slack taxes the next 20 minutes. Trying 90-minute shutters with the phone in another room — three blocks a day is plenty.", d:'2025-05-25'}
+    ],
+    quotes:[
+      "Clarity about what matters provides clarity about what does not.",
+      "The ability to perform deep work is becoming increasingly rare at exactly the same time it is becoming increasingly valuable."
+    ],
+    cards:[
+      {q:'What is "attention residue"?', a:'When you switch tasks, part of your attention stays stuck on the previous task, degrading performance on the next one — especially after quick inbox/Slack checks.', srs:{ivl:3, off:0}},
+      {q:'Name two of Newport\'s deep work scheduling philosophies.', a:'Monastic (eliminate shallow entirely), bimodal (long stretches of depth), rhythmic (daily fixed blocks), journalistic (any free gap). Rhythmic fits most working lives.', srs:{ivl:14, off:9}}
+    ]
+  },
+  {
+    id:'stick', type:'book', title:'Make It Stick', author:'Peter Brown, Henry Roediger & Mark McDaniel',
+    pub:'2014', consumed:'2025-07-02', tags:['memory','learning','psychology'],
+    notes:[
+      {t:"The whole reason this app exists. Rereading and highlighting feel productive but are nearly worthless; retrieval practice with spacing is the real engine. Desirable difficulty = if it feels easy, it isn't working.", d:'2025-07-04'},
+      {t:"Interleaving: mix subjects in one session rather than blocking. Feels worse, tests better. Applies directly to how I should mix flashcard decks.", d:'2025-07-09'}
+    ],
+    quotes:[
+      "Learning is deeper and more durable when it's effortful.",
+      "Rereading text and massed practice of a skill are among the least productive study strategies — yet they are the most preferred."
+    ],
+    cards:[
+      {q:'Why is retrieval practice superior to rereading?', a:'The act of effortfully recalling strengthens and reconsolidates the memory trace; rereading only breeds fluency illusions — familiarity mistaken for knowledge.', srs:{ivl:5, off:-3}},
+      {q:'What is a "desirable difficulty"?', a:'A learning condition (spacing, interleaving, testing) that makes practice feel harder and slower but produces stronger, longer-lasting retention.', srs:{ivl:1, off:0}},
+      {q:'Blocked vs. interleaved practice — which wins long-term?', a:'Interleaved. Mixing topics feels less fluent during practice but produces much better discrimination and retention on later tests.', srs:{ivl:20, off:12}}
+    ]
+  },
+  {
+    id:'doet', type:'book', title:'The Design of Everyday Things', author:'Don Norman',
+    pub:'1988', consumed:'2025-09-18', tags:['design','psychology','systems'],
+    notes:[
+      {t:"\"Human error\" is almost always design error. When I fumble a push/pull door, that's a signifier problem, not a me problem. Same stance applies to my own tools: if I keep forgetting to review, redesign the tool.", d:'2025-09-21'}
+    ],
+    quotes:[
+      "Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible."
+    ],
+    cards:[
+      {q:'Affordance vs. signifier — what\'s the difference?', a:'An affordance is what an object actually allows (a handle affords pulling); a signifier is the perceivable cue that communicates it (a flat plate signals push).', srs:{ivl:6, off:-1}},
+      {q:'What are the Gulf of Execution and Gulf of Evaluation?', a:'Execution: the gap between a user\'s goal and knowing what actions to take. Evaluation: the gap between the system\'s state and the user understanding it.', srs:{ivl:2, off:2}}
+    ]
+  },
+  {
+    id:'meditations', type:'book', title:'Meditations', author:'Marcus Aurelius',
+    pub:'c. 180 AD', consumed:'2026-01-05', tags:['philosophy','focus','habits'],
+    notes:[
+      {t:"Reading a Roman emperor's private journal about the same distraction and status anxiety I feel is weirdly comforting. Book 2.1 — rehearsing the day's annoyances in advance — is basically implementation intentions, 1800 years early.", d:'2026-01-11'}
+    ],
+    quotes:[
+      "You have power over your mind — not outside events. Realize this, and you will find strength.",
+      "The impediment to action advances action. What stands in the way becomes the way."
+    ],
+    cards:[
+      {q:'What is the Stoic "dichotomy of control"?', a:'Divide everything into what is up to you (judgments, intentions, responses) and what is not (events, others\' opinions) — and spend effort only on the former.', srs:{ivl:3, off:-2}},
+      {q:'What does "the obstacle becomes the way" mean in practice?', a:'Every impediment is raw material for a different virtue: a setback becomes a chance to practice patience, creativity, or honesty — so action is never truly blocked.', srs:{ivl:9, off:5}}
+    ]
+  },
+  {
+    id:'greatwork', type:'essay', title:'How to Do Great Work', author:'Paul Graham',
+    pub:'2023', consumed:'2025-02-11', tags:['creativity','focus','philosophy'],
+    notes:[
+      {t:"The compounding argument: work on something you have an 'excessive interest' in, because curiosity is the only sustainable fuel for the volume of work greatness requires. Also: notice gaps — the questions everyone walks past.", d:'2025-02-12'}
+    ],
+    quotes:[
+      "The way to figure out what to work on is by working. If you're not sure what to work on, guess.",
+      "Curiosity is the key to all four steps in doing great work: it will choose the field for you, get you to the frontier, cause you to notice the gaps in it, and drive you to explore them."
+    ],
+    cards:[
+      {q:'According to Graham, what are the four steps toward doing great work?', a:'Choose a field, learn enough to reach the frontier, notice gaps, and explore the promising ones — with curiosity driving all four.', srs:{ivl:4, off:1}},
+      {q:'Why does Graham say to "err on the side of starting"?', a:'Because the work itself generates direction: understanding of a problem grows by working on it, so a mediocre start beats a perfect plan.', srs:{ivl:1, off:2}}
+    ]
+  },
+  {
+    id:'memex', type:'essay', title:'As We May Think', author:'Vannevar Bush',
+    pub:'1945', consumed:'2025-08-09', tags:['memory','systems','design'],
+    notes:[
+      {t:"The memex is this app, sketched in 1945 with microfilm. His core insight: the human mind works by association, not alphabetical indexes — so our tools should store *trails* between items, not just the items. That's the knowledge graph.", d:'2025-08-10'}
+    ],
+    quotes:[
+      "The human mind... operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.",
+      "A memex is a device in which an individual stores all his books, records, and communications... an enlarged intimate supplement to his memory."
+    ],
+    cards:[
+      {q:'What was the memex?', a:'Bush\'s 1945 concept of a personal desk-machine storing all one\'s books and notes, linked by associative "trails" — a direct ancestor of hypertext and PKM tools.', srs:{ivl:8, off:-4}},
+      {q:'Why did Bush think indexes fail as memory tools?', a:'Because the mind retrieves by association, not by alphabetical or hierarchical lookup — so tools should let users build and re-walk associative trails.', srs:{ivl:2, off:4}}
+    ]
+  },
+  {
+    id:'selfreliance', type:'essay', title:'Self-Reliance', author:'Ralph Waldo Emerson',
+    pub:'1841', consumed:'2026-02-14', tags:['philosophy','creativity'],
+    notes:[
+      {t:"\"In every work of genius we recognize our own rejected thoughts\" — the exact feeling of seeing someone ship the idea I talked myself out of. The essay is a 180-year-old argument against waiting for permission.", d:'2026-02-15'}
+    ],
+    quotes:[
+      "In every work of genius we recognize our own rejected thoughts: they come back to us with a certain alienated majesty.",
+      "A foolish consistency is the hobgoblin of little minds."
+    ],
+    cards:[
+      {q:'What does Emerson mean by "alienated majesty"?', a:'Seeing your own dismissed ideas return in someone else\'s celebrated work — proof you should trust and act on your own thought instead of deferring.', srs:{ivl:5, off:2}}
+    ]
+  },
+  {
+    id:'booksdontwork', type:'article', title:"Why Books Don't Work", author:'Andy Matuschak',
+    pub:'2019', consumed:'2025-04-27', tags:['learning','memory','design'],
+    notes:[
+      {t:"Books silently assume 'people absorb what they read' — and that model is false. Readers retain shockingly little. The fix isn't better prose but better *mediums* with retrieval built in. This app is my attempt at a medium that carries its own practice.", d:'2025-04-28'}
+    ],
+    quotes:[
+      "Books don't work for the same reason that lectures don't work: neither medium has any explicit theory of how people actually learn things, and as a result, both mediums accidentally rely on a theory that's plainly false."
+    ],
+    cards:[
+      {q:'What is the "implicit theory" of the book medium, per Matuschak?', a:'Transmissionism — the false assumption that people absorb knowledge simply by reading sentences. Real understanding requires active engagement the medium never prompts.', srs:{ivl:4, off:-1}},
+      {q:'What does Matuschak propose instead of better books?', a:'Mnemonic mediums — formats with retrieval practice woven into the reading experience itself, so remembering is a property of the medium, not the reader\'s discipline.', srs:{ivl:1, off:3}}
+    ]
+  },
+  {
+    id:'augmem', type:'article', title:'Augmenting Long-term Memory', author:'Michael Nielsen',
+    pub:'2018', consumed:'2025-06-15', tags:['memory','learning','systems'],
+    notes:[
+      {t:"Nielsen's rule of thumb: ~5 minutes of lifetime review per card makes memorizing almost anything 'cheap'. The deeper point: Anki works best as a tool for *understanding* — cards should decompose ideas, not just store trivia.", d:'2025-06-17'}
+    ],
+    quotes:[
+      "Anki makes memory a choice, rather than a haphazard event, to be left to chance.",
+      "The single biggest change that Anki brings about is that it means memory is no longer a haphazard event."
+    ],
+    cards:[
+      {q:'Roughly how much lifetime review time does one Anki card cost, per Nielsen?', a:'About 4–7 minutes total across all future reviews — cheap enough that memorizing most things you care about becomes a simple choice.', srs:{ivl:6, off:-2}},
+      {q:'What makes a good spaced-repetition card, per Nielsen?', a:'Atomic and precise: one idea per card, questions that decompose understanding (why/how/compare), refactored over time like code.', srs:{ivl:3, off:1}}
+    ]
+  },
+  {
+    id:'huberman', type:'podcast', title:'Huberman Lab: Understanding & Improving Memory', author:'Andrew Huberman',
+    pub:'2022', consumed:'2025-10-30', tags:['memory','learning','psychology'],
+    notes:[
+      {t:"Adrenaline *after* learning stamps memories in — cold shower or hard exercise right after a study block, not before. Also: mental repetition during rest gaps (the 10-second pauses) acts like extra reps.", d:'2025-10-31'}
+    ],
+    quotes:[
+      "Repetition works, but what the data really show is that it's the spacing and the emotional state after learning that determine what sticks."
+    ],
+    cards:[
+      {q:'When should arousal (adrenaline) spike to best enhance memory?', a:'Shortly *after* the learning bout — post-learning adrenaline (exercise, cold exposure) strengthens consolidation of what was just studied.', srs:{ivl:2, off:1}},
+      {q:'What do brief rest gaps during practice do for learning?', a:'During 10-second pauses the hippocampus replays the sequence at ~20x speed — effectively free extra repetitions that speed up skill acquisition.', srs:{ivl:7, off:4}}
+    ]
+  },
+  {
+    id:'tkp', type:'podcast', title:'The Knowledge Project: Mental Models', author:'Shane Parrish',
+    pub:'2021', consumed:'2025-11-19', tags:['decision-making','systems','learning'],
+    notes:[
+      {t:"A latticework of models from many disciplines beats depth in one — most bad decisions come from using the one model you know everywhere. Inversion is the cheapest upgrade: ask 'what would guarantee failure?' and avoid that.", d:'2025-11-20'}
+    ],
+    quotes:[
+      "The person with the fewest blind spots wins. Mental models are how you reduce your blind spots."
+    ],
+    cards:[
+      {q:'What is a "latticework of mental models" and why does it matter?', a:'A connected set of core ideas from many disciplines (math, biology, psychology...). Problems get checked against multiple models, which catches the blind spots any single lens leaves.', srs:{ivl:5, off:-1}},
+      {q:'How does inversion improve decisions?', a:'Instead of asking how to succeed, ask what would guarantee failure and systematically avoid it — avoiding stupidity is easier and more reliable than seeking brilliance.', srs:{ivl:1, off:2}}
+    ]
+  }
+];
+
+/* In-memory reflections (seeded with two past entries) */
+const REFLECTIONS = [
+  {
+    quote:"You do not rise to the level of your goals. You fall to the level of your systems.",
+    source:'Atomic Habits — James Clear', workId:'atomic',
+    body:"This app is itself the test case. I don't have a 'remember what I read' goal anymore — I have a system that deals me cards every morning with coffee. Two months in, the goal took care of itself.",
+    d:'2026-08-21'
+  },
+  {
+    quote:"The human mind... operates by association. With one item in its grasp, it snaps instantly to the next.",
+    source:'As We May Think — Vannevar Bush', workId:'memex',
+    body:"Bush in 1945, Matuschak in 2019, and Make It Stick all triangulate the same point from different coasts: storage is not the bottleneck, retrieval is. The tools that win are the ones that make re-encountering an idea inevitable.",
+    d:'2026-09-14'
+  }
+];
+
+/* =====================================================================
+   SRS — simplified SM-2
+===================================================================== */
+const ALL_CARDS = [];
+WORKS.forEach(w => w.cards.forEach(c => {
+  c.workId = w.id;
+  c.ef = 2.5;
+  c.reps = (c.srs.off <= 0) ? 2 : 1;
+  c.ivl = c.srs.ivl;
+  c.due = NOW + c.srs.off * DAY;
+  ALL_CARDS.push(c);
+}));
+
+function dueCards(){ return ALL_CARDS.filter(c => c.due <= Date.now()); }
+
+function gradeCard(card, grade){ // grade: 0 again, 3 hard, 4 good, 5 easy
+  if (grade < 3){
+    card.reps = 0;
+    card.ivl = 0;
+    card.due = Date.now() + 600000; // back in 10 minutes
+  } else {
+    if (card.reps === 0) card.ivl = 1;
+    else if (card.reps === 1) card.ivl = grade === 5 ? 4 : 3;
+    else card.ivl = Math.max(1, Math.round(card.ivl * (grade === 3 ? 1.2 : card.ef * (grade === 5 ? 1.3 : 1))));
+    card.reps += 1;
+    card.due = Date.now() + card.ivl * DAY;
+  }
+  card.ef = Math.max(1.3, card.ef + (0.1 - (5 - grade) * (0.08 + (5 - grade) * 0.02)));
+  updateDueBadges();
+}
+
+function fmtDue(card){
+  const diff = card.due - Date.now();
+  if (diff <= 0) return 'due now';
+  if (diff < DAY) return 'due later today';
+  const d = Math.round(diff / DAY);
+  return 'due in ' + d + ' day' + (d === 1 ? '' : 's');
+}
+
+function updateDueBadges(){
+  const n = dueCards().length;
+  document.getElementById('dueCountBadge').textContent = n;
+  document.getElementById('dueCountLabel').textContent = n === 1 ? 'card due for review' : 'cards due for review';
+  const nav = document.getElementById('navDueBadge');
+  nav.textContent = n;
+  nav.style.display = n > 0 ? '' : 'none';
+  renderLibrary(); // keep per-work due counts fresh
+}
+
+/* =====================================================================
+   Helpers
+===================================================================== */
+const $ = sel => document.querySelector(sel);
+function esc(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function workById(id){ return WORKS.find(w => w.id === id); }
+function fmtDate(iso){
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  const [y,m,d] = iso.split('-').map(Number);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return months[m-1] + ' ' + d + ', ' + y;
+}
+const TYPE_META = {
+  book:{label:'Book', icon:'📘', color:'#1fb6a6'},
+  essay:{label:'Essay', icon:'🪶', color:'#8fd6b4'},
+  article:{label:'Article', icon:'🗞️', color:'#e9724c'},
+  podcast:{label:'Podcast', icon:'🎙️', color:'#e8d5b7'}
+};
+
+/* =====================================================================
+   Views / navigation
+===================================================================== */
+const VIEWS = ['library','detail','flash','recall','reflect','graph'];
+let currentView = 'library';
+
+function showView(name){
+  currentView = name;
+  VIEWS.forEach(v => { document.getElementById('view-' + v).hidden = (v !== name); });
+  document.querySelectorAll('nav.tabs button').forEach(b => {
+    b.setAttribute('aria-selected', String(b.dataset.view === (name === 'detail' ? 'library' : name)));
+  });
+  if (name === 'flash') renderFlash();
+  window.scrollTo({top:0, behavior:'auto'});
+}
+document.querySelectorAll('nav.tabs button').forEach(b => {
+  b.addEventListener('click', () => showView(b.dataset.view));
+});
+document.getElementById('backToLibrary').addEventListener('click', () => showView('library'));
+
+/* =====================================================================
+   LIBRARY
+===================================================================== */
+let typeFilter = 'all';
+function renderTypeFilters(){
+  const counts = {all:WORKS.length};
+  WORKS.forEach(w => counts[w.type] = (counts[w.type]||0)+1);
+  const defs = [['all','All'],['book','Books'],['essay','Essays'],['article','Articles'],['podcast','Podcasts']];
+  const box = document.getElementById('typeFilters');
+  box.innerHTML = defs.map(([k,lab]) =>
+    `<button class="chip" data-type="${k}" aria-pressed="${String(k===typeFilter)}">${lab} (${counts[k]||0})</button>`
+  ).join('');
+  box.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => {
+    typeFilter = c.dataset.type;
+    renderTypeFilters();
+    renderLibrary();
+  }));
+}
+function renderLibrary(){
+  const grid = document.getElementById('libGrid');
+  const list = WORKS.filter(w => typeFilter === 'all' || w.type === typeFilter);
+  grid.innerHTML = list.map(w => {
+    const due = w.cards.filter(c => c.due <= Date.now()).length;
+    return `<button class="work-card" data-id="${w.id}">
+      <span class="type-pill type-${w.type}">${TYPE_META[w.type].icon} ${TYPE_META[w.type].label}</span>
+      <h3>${esc(w.title)}</h3>
+      <p class="byline">${esc(w.author)} · ${esc(w.pub)}</p>
+      <span class="tag-row">${w.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</span>
+      <span class="meta-line">Consumed ${fmtDate(w.consumed)} · ${w.notes.length} note${w.notes.length===1?'':'s'} · ${w.cards.length} card${w.cards.length===1?'':'s'}${due?` · <strong style="color:var(--coral-deep)">${due} due</strong>`:''}</span>
+    </button>`;
+  }).join('');
+  grid.querySelectorAll('.work-card').forEach(c => c.addEventListener('click', () => openDetail(c.dataset.id)));
+}
+
+/* =====================================================================
+   DETAIL
+===================================================================== */
+let detailId = null;
+let editingNote = null; // index being edited, or 'new'
+
+function openDetail(id){
+  detailId = id;
+  editingNote = null;
+  renderDetail();
+  showView('detail');
+}
+function renderDetail(){
+  const w = workById(detailId);
+  if (!w) return;
+  const box = document.getElementById('detailContent');
+  const notesHtml = w.notes.map((n, i) => {
+    if (editingNote === i){
+      return `<div class="note-item note-editor">
+        <label class="sr-only" for="noteEdit">Edit note</label>
+        <textarea id="noteEdit" rows="4">${esc(n.t)}</textarea>
+        <div class="row">
+          <button class="btn btn-teal btn-sm" data-act="save-note" data-i="${i}">Save</button>
+          <button class="btn btn-ghost btn-sm" data-act="cancel-note">Cancel</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="note-item">
+      <p class="note-text">${esc(n.t)}</p>
+      <div class="note-foot">
+        <span class="note-date">🗓️ ${fmtDate(n.d)}</span>
+        <button class="btn btn-sand btn-sm" data-act="edit-note" data-i="${i}">✏️ Edit</button>
+      </div>
+    </div>`;
+  }).join('');
+  const addHtml = editingNote === 'new'
+    ? `<div class="note-item note-editor">
+        <label class="sr-only" for="noteEdit">New note</label>
+        <textarea id="noteEdit" rows="4" placeholder="What stood out? What does it connect to?"></textarea>
+        <div class="row">
+          <button class="btn btn-teal btn-sm" data-act="save-new">Save note</button>
+          <button class="btn btn-ghost btn-sm" data-act="cancel-note">Cancel</button>
+        </div>
+      </div>`
+    : `<button class="btn btn-navy btn-md" data-act="add-note">＋ Add a note</button>`;
+
+  box.innerHTML = `
+    <div class="detail-hero">
+      <span class="type-pill type-${w.type}">${TYPE_META[w.type].icon} ${TYPE_META[w.type].label}</span>
+      <h2>${esc(w.title)}</h2>
+      <p class="byline">by ${esc(w.author)}</p>
+      <span class="tag-row">${w.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</span>
+      <div class="meta-grid">
+        <div><span>Published</span>${esc(w.pub)}</div>
+        <div><span>Consumed</span>${fmtDate(w.consumed)}</div>
+        <div><span>Flashcards</span>${w.cards.length} (${w.cards.filter(c=>c.due<=Date.now()).length} due)</div>
+      </div>
+    </div>
+    <div class="detail-cols">
+      <div class="panel">
+        <h3>📝 Notes</h3>
+        ${notesHtml || '<p style="color:var(--ink-soft)">No notes yet — the beach is empty.</p>'}
+        <div style="margin-top:1rem;">${addHtml}</div>
+      </div>
+      <div class="panel">
+        <h3>💬 Saved quotes</h3>
+        ${w.quotes.map(q => `<blockquote class="quote-block">&ldquo;${esc(q)}&rdquo;</blockquote>`).join('')}
+        <h3 style="margin-top:1.5rem;">🏄 Cards from this work</h3>
+        ${w.cards.map(c => `<div class="note-item"><p class="note-text" style="font-weight:700;margin-bottom:.25rem;">${esc(c.q)}</p><span class="note-date">${fmtDue(c)} · interval ${c.ivl}d</span></div>`).join('')}
+      </div>
+    </div>`;
+
+  box.querySelectorAll('[data-act]').forEach(btn => btn.addEventListener('click', () => {
+    const act = btn.dataset.act;
+    if (act === 'edit-note'){ editingNote = Number(btn.dataset.i); renderDetail(); $('#noteEdit').focus(); }
+    else if (act === 'add-note'){ editingNote = 'new'; renderDetail(); $('#noteEdit').focus(); }
+    else if (act === 'cancel-note'){ editingNote = null; renderDetail(); }
+    else if (act === 'save-note'){
+      const v = $('#noteEdit').value.trim();
+      if (v) w.notes[Number(btn.dataset.i)].t = v;
+      editingNote = null; renderDetail();
+    }
+    else if (act === 'save-new'){
+      const v = $('#noteEdit').value.trim();
+      if (v) w.notes.push({t:v, d:new Date().toISOString().slice(0,10)});
+      editingNote = null; renderDetail();
+    }
+  }));
+}
+
+/* =====================================================================
+   FLASHCARDS
+===================================================================== */
+let flashQueue = [];
+let flashCard = null;
+let flashFlipped = false;
+let freeSurf = false;
+
+function shuffle(arr){
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function renderFlash(){
+  const due = dueCards();
+  const report = document.getElementById('surfReport');
+  report.innerHTML = due.length
+    ? `<span style="font-size:1.6rem;">🌊</span><span><strong>Today's swell:</strong> ${due.length} card${due.length===1?'':'s'} rolling in from ${new Set(due.map(c=>c.workId)).size} work${new Set(due.map(c=>c.workId)).size===1?'':'s'}. Paddle out.</span>`
+    : `<span style="font-size:1.6rem;">🏖️</span><span><strong>Flat day.</strong> Nothing due right now — your schedule is ahead of the tide.</span>`;
+
+  if (!flashCard){
+    flashQueue = shuffle(freeSurf && !due.length ? ALL_CARDS : due);
+    flashCard = flashQueue.shift() || null;
+    flashFlipped = false;
+  }
+  const stage = document.getElementById('flashStage');
+  if (!flashCard){
+    stage.innerHTML = `<div class="flat-day">
+      <div class="big">🐬</div>
+      <h3 style="margin:.6rem 0 .4rem;color:var(--navy);">All clear out there</h3>
+      <p style="color:var(--ink-soft);margin:0 0 1.2rem;">Every card is riding its schedule. Come back when the swell picks up — or free-surf a random set anyway.</p>
+      <button class="btn btn-teal btn-md" id="freeSurfBtn">🏄 Free surf (review anyway)</button>
+    </div>`;
+    const fs = document.getElementById('freeSurfBtn');
+    if (fs) fs.addEventListener('click', () => { freeSurf = true; flashCard = null; renderFlash(); });
+    return;
+  }
+  const w = workById(flashCard.workId);
+  stage.innerHTML = `
+    <div class="flip-scene">
+      <button class="flip-card${flashFlipped?' flipped':''}" id="flipBtn" aria-pressed="${String(flashFlipped)}" aria-label="Flashcard — press to flip">
+        <span class="flip-face flip-front">
+          <span class="kicker">Question</span>
+          <span class="card-q">${esc(flashCard.q)}</span>
+          <span class="card-src">${TYPE_META[w.type].icon} ${esc(w.title)}</span>
+          <span class="flip-hint">tap to flip</span>
+        </span>
+        <span class="flip-face flip-back">
+          <span class="kicker">Answer</span>
+          <span class="card-q">${esc(flashCard.a)}</span>
+          <span class="card-src">${TYPE_META[w.type].icon} ${esc(w.title)} — ${esc(w.author)}</span>
+        </span>
+      </button>
+    </div>
+    <div class="grade-row" id="gradeRow" style="visibility:${flashFlipped?'visible':'hidden'};">
+      <button class="btn btn-coral btn-md" data-g="0">Wipeout<span class="hint">again &lt;10m</span></button>
+      <button class="btn btn-sand btn-md" data-g="3">Choppy<span class="hint">hard</span></button>
+      <button class="btn btn-teal btn-md" data-g="4">Clean ride<span class="hint">good</span></button>
+      <button class="btn btn-navy btn-md" data-g="5">Glassy<span class="hint">easy</span></button>
+    </div>
+    <p style="text-align:center;color:var(--ink-soft);font-size:.85rem;margin-top:1rem;">${flashQueue.length} more in this set</p>`;
+  document.getElementById('flipBtn').addEventListener('click', () => {
+    flashFlipped = !flashFlipped;
+    document.getElementById('flipBtn').classList.toggle('flipped', flashFlipped);
+    document.getElementById('flipBtn').setAttribute('aria-pressed', String(flashFlipped));
+    document.getElementById('gradeRow').style.visibility = flashFlipped ? 'visible' : 'hidden';
+  });
+  document.querySelectorAll('#gradeRow .btn').forEach(b => b.addEventListener('click', () => {
+    gradeCard(flashCard, Number(b.dataset.g));
+    flashCard = flashQueue.shift() || null;
+    flashFlipped = false;
+    if (!flashCard){ freeSurf = false; }
+    renderFlash();
+  }));
+}
+
+/* =====================================================================
+   ACTIVE RECALL
+===================================================================== */
+let recallSession = null; // {cards, i, revealed}
+
+function buildRecallOptions(){
+  const sel = document.getElementById('recallScope');
+  const tagSet = [...new Set(WORKS.flatMap(w => w.tags))].sort();
+  sel.innerHTML = `
+    <optgroup label="One work">
+      ${WORKS.map(w => `<option value="work:${w.id}">${TYPE_META[w.type].icon} ${esc(w.title)}</option>`).join('')}
+    </optgroup>
+    <optgroup label="A whole subject">
+      ${tagSet.map(t => `<option value="tag:${t}">🏷️ ${esc(t)}</option>`).join('')}
+    </optgroup>`;
+}
+
+function startRecall(){
+  const [kind, key] = document.getElementById('recallScope').value.split(':');
+  const cards = kind === 'work'
+    ? ALL_CARDS.filter(c => c.workId === key)
+    : ALL_CARDS.filter(c => workById(c.workId).tags.includes(key));
+  recallSession = {cards: shuffle(cards), i:0, revealed:false, graded:0};
+  renderRecall();
+}
+
+function renderRecall(){
+  const stage = document.getElementById('recallStage');
+  if (!recallSession){
+    stage.innerHTML = `<div class="flat-day">
+      <div class="big">🤿</div>
+      <h3 style="margin:.6rem 0 .4rem;color:var(--navy);">Dive in</h3>
+      <p style="color:var(--ink-soft);margin:0;">Pick a work or a subject above and start a recall session. Writing an answer from memory beats recognizing one every time.</p>
+    </div>`;
+    return;
+  }
+  const s = recallSession;
+  if (s.i >= s.cards.length){
+    stage.innerHTML = `<div class="flat-day">
+      <div class="big">🏆</div>
+      <h3 style="margin:.6rem 0 .4rem;color:var(--navy);">Session complete</h3>
+      <p style="color:var(--ink-soft);margin:0 0 1.2rem;">You worked through ${s.cards.length} prompt${s.cards.length===1?'':'s'}. Every grade fed back into your review schedule.</p>
+      <button class="btn btn-teal btn-md" id="recallAgain">Run it back</button>
+    </div>`;
+    document.getElementById('recallAgain').addEventListener('click', startRecall);
+    updateDueBadges();
+    return;
+  }
+  const card = s.cards[s.i];
+  const w = workById(card.workId);
+  stage.innerHTML = `
+    <div class="panel">
+      <p style="margin:0 0 .3rem;font-size:.8rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--teal-ink);">Prompt ${s.i+1} of ${s.cards.length} · ${TYPE_META[w.type].icon} ${esc(w.title)}</p>
+      <p style="font-size:1.25rem;font-weight:700;color:var(--navy);margin:.2rem 0 1rem;">${esc(card.q)}</p>
+      <label class="sr-only" for="recallAnswer">Your answer</label>
+      <textarea id="recallAnswer" rows="4" placeholder="Write it out from memory — no peeking at the reef..." ${s.revealed?'disabled':''}>${esc(s.answerText||'')}</textarea>
+      ${s.revealed ? `
+        <div class="recall-answer">
+          <h4>The reef says</h4>
+          <p style="margin:0;">${esc(card.a)}</p>
+        </div>
+        <p style="font-weight:700;color:var(--navy);margin:1rem 0 .5rem;">How was your ride?</p>
+        <div class="grade-row" style="justify-content:flex-start;">
+          <button class="btn btn-coral btn-md" data-g="0">Wipeout<span class="hint">again</span></button>
+          <button class="btn btn-sand btn-md" data-g="3">Choppy<span class="hint">hard</span></button>
+          <button class="btn btn-teal btn-md" data-g="4">Clean ride<span class="hint">good</span></button>
+          <button class="btn btn-navy btn-md" data-g="5">Glassy<span class="hint">easy</span></button>
+        </div>`
+      : `<div style="margin-top:.9rem;"><button class="btn btn-teal btn-md" id="revealBtn">Reveal answer</button></div>`}
+      <div class="progress-dots" aria-hidden="true">
+        ${s.cards.map((_,j) => `<span class="${j < s.i ? 'done' : j === s.i ? 'now' : ''}"></span>`).join('')}
+      </div>
+    </div>`;
+  if (!s.revealed){
+    document.getElementById('revealBtn').addEventListener('click', () => {
+      s.answerText = document.getElementById('recallAnswer').value;
+      s.revealed = true;
+      renderRecall();
+    });
+  } else {
+    stage.querySelectorAll('.grade-row .btn').forEach(b => b.addEventListener('click', () => {
+      gradeCard(card, Number(b.dataset.g));
+      s.i += 1; s.revealed = false; s.answerText = '';
+      renderRecall();
+    }));
+  }
+}
+document.getElementById('recallStart').addEventListener('click', startRecall);
+
+/* =====================================================================
+   REFLECTION COVE
+===================================================================== */
+const QUOTE_POOL = WORKS.flatMap(w => w.quotes.map(q => ({q, w})));
+let currentQuote = null;
+
+function pickQuote(){
+  let next;
+  do { next = QUOTE_POOL[Math.floor(Math.random() * QUOTE_POOL.length)]; }
+  while (QUOTE_POOL.length > 1 && next === currentQuote);
+  currentQuote = next;
+  document.getElementById('reflectQuoteBox').innerHTML = `
+    <blockquote>&ldquo;${esc(currentQuote.q)}&rdquo;</blockquote>
+    <cite>— ${esc(currentQuote.w.author)}, <em>${esc(currentQuote.w.title)}</em> (${esc(currentQuote.w.pub)})</cite>`;
+}
+function renderReflections(){
+  const box = document.getElementById('reflectionList');
+  const sorted = REFLECTIONS.slice().sort((a,b) => b.d.localeCompare(a.d));
+  box.innerHTML = sorted.map(r => `
+    <div class="reflection-item">
+      <p class="ref-quote">&ldquo;${esc(r.quote)}&rdquo; — ${esc(r.source)}</p>
+      <p class="ref-body">${esc(r.body)}</p>
+      <span class="ref-date">🐚 ${fmtDate(r.d)}</span>
+    </div>`).join('');
+}
+document.getElementById('newQuoteBtn').addEventListener('click', pickQuote);
+document.getElementById('saveReflection').addEventListener('click', () => {
+  const ta = document.getElementById('reflectInput');
+  const v = ta.value.trim();
+  if (!v){ ta.focus(); return; }
+  REFLECTIONS.push({
+    quote: currentQuote.q,
+    source: currentQuote.w.title + ' — ' + currentQuote.w.author,
+    workId: currentQuote.w.id,
+    body: v,
+    d: new Date().toISOString().slice(0,10)
+  });
+  ta.value = '';
+  renderReflections();
+});
+
+/* =====================================================================
+   REEF MAP (knowledge graph, hand-rolled SVG)
+===================================================================== */
+function buildGraph(){
+  const W = 940, H = 620, cx = W/2, cy = H/2 - 10;
+  const nodes = WORKS.map((w, i) => {
+    const angle = (i / WORKS.length) * Math.PI * 2 - Math.PI / 2;
+    const rx = 350 + (i % 3) * 22, ry = 225 + ((i + 1) % 3) * 16;
+    return {w, x: cx + rx * Math.cos(angle), y: cy + ry * Math.sin(angle)};
+  });
+  const edges = [];
+  for (let i = 0; i < nodes.length; i++){
+    for (let j = i + 1; j < nodes.length; j++){
+      const shared = nodes[i].w.tags.filter(t => nodes[j].w.tags.includes(t));
+      if (shared.length) edges.push({a:i, b:j, shared});
+    }
+  }
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', 'Knowledge graph of library content connected by shared tags');
+
+  const edgeEls = edges.map(e => {
+    const n1 = nodes[e.a], n2 = nodes[e.b];
+    const path = document.createElementNS(svgNS, 'path');
+    const mx = (n1.x + n2.x) / 2 + (n1.y - n2.y) * 0.12;
+    const my = (n1.y + n2.y) / 2 + (n2.x - n1.x) * 0.12;
+    path.setAttribute('d', `M${n1.x},${n1.y} Q${mx},${my} ${n2.x},${n2.y}`);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('class', 'g-edge');
+    path.setAttribute('stroke-width', String(0.8 + e.shared.length * 1.1));
+    path.setAttribute('opacity', String(0.12 + e.shared.length * 0.1));
+    const title = document.createElementNS(svgNS, 'title');
+    title.textContent = `${n1.w.title} ↔ ${n2.w.title}: ${e.shared.join(', ')}`;
+    path.appendChild(title);
+    svg.appendChild(path);
+    return path;
+  });
+
+  const nodeEls = nodes.map((n, i) => {
+    const g = document.createElementNS(svgNS, 'g');
+    g.setAttribute('class', 'g-node');
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('role', 'button');
+    g.setAttribute('aria-label', `${n.w.title} — open detail`);
+    const r = 16 + n.w.cards.length * 3 + n.w.notes.length * 2;
+    const circ = document.createElementNS(svgNS, 'circle');
+    circ.setAttribute('cx', n.x); circ.setAttribute('cy', n.y); circ.setAttribute('r', r);
+    circ.setAttribute('fill', TYPE_META[n.w.type].color);
+    g.appendChild(circ);
+    const label = document.createElementNS(svgNS, 'text');
+    label.setAttribute('x', n.x);
+    label.setAttribute('y', n.y + r + 16);
+    label.setAttribute('text-anchor', 'middle');
+    const short = n.w.title.length > 26 ? n.w.title.slice(0, 24) + '…' : n.w.title;
+    label.textContent = short;
+    g.appendChild(label);
+    const tline = document.createElementNS(svgNS, 'text');
+    tline.setAttribute('x', n.x);
+    tline.setAttribute('y', n.y + r + 30);
+    tline.setAttribute('text-anchor', 'middle');
+    tline.setAttribute('class', 'g-type');
+    tline.textContent = TYPE_META[n.w.type].label;
+    g.appendChild(tline);
+    const title = document.createElementNS(svgNS, 'title');
+    title.textContent = `${n.w.title} — tags: ${n.w.tags.join(', ')}`;
+    g.appendChild(title);
+
+    function light(on){
+      svg.classList.toggle('dimmed', on);
+      if (on){
+        g.classList.add('lit');
+        edges.forEach((e, k) => {
+          if (e.a === i || e.b === i){
+            edgeEls[k].classList.add('lit');
+            nodeEls[e.a === i ? e.b : e.a].classList.add('lit');
+          }
+        });
+      } else {
+        edgeEls.forEach(el => el.classList.remove('lit'));
+        nodeEls.forEach(el => el.classList.remove('lit'));
+      }
+    }
+    g.addEventListener('mouseenter', () => light(true));
+    g.addEventListener('mouseleave', () => light(false));
+    g.addEventListener('focus', () => light(true));
+    g.addEventListener('blur', () => light(false));
+    g.addEventListener('click', () => openDetail(n.w.id));
+    g.addEventListener('keydown', ev => {
+      if (ev.key === 'Enter' || ev.key === ' '){ ev.preventDefault(); openDetail(n.w.id); }
+    });
+    svg.appendChild(g);
+    return g;
+  });
+
+  document.getElementById('graphShell').appendChild(svg);
+  document.getElementById('graphLegend').innerHTML =
+    Object.entries(TYPE_META).map(([k,m]) =>
+      `<span><i style="background:${m.color}"></i>${m.label}s</span>`).join('') +
+    `<span><i style="background:#6fd3c7;border-radius:2px;height:3px;"></i>line weight = shared tags</span>` +
+    `<span>node size = notes + cards</span>`;
+}
+
+/* =====================================================================
+   SERENDIPITY — message in a bottle
+===================================================================== */
+let bottleItem = null;
+
+function pickBottle(){
+  const pool = [];
+  WORKS.forEach(w => w.notes.forEach(n => pool.push({kind:'note', text:n.t, d:n.d, workId:w.id, src:w.title + ' — ' + w.author})));
+  REFLECTIONS.forEach(r => pool.push({kind:'reflection', text:r.body, d:r.d, workId:r.workId, src:'Your reflection on ' + r.source}));
+  let next;
+  do { next = pool[Math.floor(Math.random() * pool.length)]; }
+  while (pool.length > 1 && bottleItem && next.text === bottleItem.text);
+  bottleItem = next;
+  const trimmed = bottleItem.text.length > 180 ? bottleItem.text.slice(0, 178) + '…' : bottleItem.text;
+  document.getElementById('btBody').textContent = '“' + trimmed + '”';
+  document.getElementById('btSrc').textContent =
+    (bottleItem.kind === 'note' ? '📝 Note · ' : '🐚 Reflection · ') + bottleItem.src + ' · ' + fmtDate(bottleItem.d);
+}
+function showBottle(){
+  pickBottle();
+  document.getElementById('bottleToast').hidden = false;
+}
+function hideBottle(){ document.getElementById('bottleToast').hidden = true; }
+
+document.getElementById('btClose').addEventListener('click', hideBottle);
+document.getElementById('btAnother').addEventListener('click', pickBottle);
+document.getElementById('btOpen').addEventListener('click', () => {
+  hideBottle();
+  if (bottleItem.kind === 'reflection'){ showView('reflect'); }
+  else { openDetail(bottleItem.workId); }
+});
+
+/* Auto-surface a few seconds after load — but not inside the gallery iframe */
+if (window.self === window.top){
+  setTimeout(showBottle, 4500);
+}
+
+/* =====================================================================
+   Keyboard — Escape closes toast / backs out of detail
+===================================================================== */
+document.addEventListener('keydown', ev => {
+  if (ev.key !== 'Escape') return;
+  const toast = document.getElementById('bottleToast');
+  if (!toast.hidden){ hideBottle(); return; }
+  if (currentView === 'detail'){ showView('library'); }
+});
+
+/* =====================================================================
+   Init
+===================================================================== */
+updateDueBadges();
+renderTypeFilters();
+renderLibrary();
+buildRecallOptions();
+renderRecall();
+pickQuote();
+renderReflections();
+buildGraph();
+const hashView = location.hash.replace('#','');
+showView(VIEWS.includes(hashView) && hashView !== 'detail' ? hashView : 'library');
+</script>
+</body>
+</html>

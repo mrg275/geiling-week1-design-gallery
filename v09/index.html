@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Totally Recall — v09</title>
+<style>
+/* ============ 1980s ANALOG — Memphis / VHS / mixtape ============ */
+:root{
+  --paper:#FAF1DE;
+  --cream:#FFF8E8;
+  --ink:#1C1A1A;
+  --pink:#FF2E88;
+  --teal:#00B2A4;
+  --purple:#8338EC;
+  --yellow:#FFCF3F;
+  --red:#FF4B33;
+  --blue:#2D7DD2;
+  --cork:#D9A662;
+  --shadow:6px 6px 0 var(--ink);
+  --shadow-sm:4px 4px 0 var(--ink);
+  --head:"Avenir Next","Arial Rounded MT Bold","Trebuchet MS",Verdana,sans-serif;
+  --hand:"Bradley Hand","Snell Roundhand","Brush Script MT","Comic Sans MS",cursive;
+  --mono:"Courier New",ui-monospace,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--head);
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  line-height:1.5;
+  overflow-x:hidden;
+}
+/* subtle paper speckle */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:
+    radial-gradient(circle at 18% 32%, rgba(28,26,26,.05) 1px, transparent 1.6px),
+    radial-gradient(circle at 73% 64%, rgba(28,26,26,.04) 1px, transparent 1.6px);
+  background-size:230px 230px,340px 340px;
+}
+/* ---------- Memphis confetti decorations ---------- */
+.deco{position:fixed;pointer-events:none;z-index:0;opacity:.85}
+.deco-tri{width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:38px solid var(--teal);transform:rotate(-14deg);top:16%;left:2.5%}
+.deco-tri2{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:28px solid var(--pink);transform:rotate(24deg);bottom:12%;right:3%}
+.deco-dot{width:22px;height:22px;border-radius:50%;background:var(--yellow);border:3px solid var(--ink);top:42%;right:2%}
+.deco-dot2{width:14px;height:14px;border-radius:50%;background:var(--purple);bottom:26%;left:2%}
+.deco-zig{top:68%;left:1.4%;width:70px;height:18px;background:
+  repeating-linear-gradient(135deg,var(--red) 0 6px,transparent 6px 12px);transform:rotate(-8deg)}
+.deco-squig{top:8%;right:6%;width:84px;height:26px;color:var(--purple)}
+@media(max-width:900px){.deco{display:none}}
+
+/* ---------- layout ---------- */
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:0 28px 90px}
+a{color:inherit}
+button{font-family:var(--head);cursor:pointer}
+
+/* ---------- header ---------- */
+header{padding-top:22px}
+.gallery-link{
+  display:inline-block;font-weight:800;font-size:.85rem;letter-spacing:.08em;
+  text-transform:uppercase;text-decoration:none;background:var(--cream);
+  border:3px solid var(--ink);box-shadow:var(--shadow-sm);
+  padding:7px 14px;border-radius:10px;margin-bottom:22px;
+}
+.gallery-link:hover{background:var(--yellow)}
+.masthead{
+  position:relative;background:var(--cream);border:4px solid var(--ink);
+  box-shadow:8px 8px 0 var(--ink);border-radius:22px;
+  padding:34px 38px 30px;overflow:hidden;
+}
+.masthead .stripe{
+  position:absolute;top:0;left:0;right:0;height:16px;
+  background:repeating-linear-gradient(-45deg,
+    var(--pink) 0 24px,var(--yellow) 24px 48px,var(--teal) 48px 72px,
+    var(--purple) 72px 96px,var(--red) 96px 120px);
+  border-bottom:4px solid var(--ink);
+}
+.masthead h1{
+  font-size:clamp(2.1rem,4.6vw,3.4rem);font-weight:900;letter-spacing:-.01em;
+  line-height:1.02;margin-top:10px;text-transform:uppercase;
+}
+.masthead h1 .hot{color:var(--pink);text-shadow:3px 3px 0 var(--ink)}
+.masthead h1 .cool{color:var(--teal);text-shadow:3px 3px 0 var(--ink)}
+.tagline{
+  margin-top:10px;font-weight:700;font-size:1rem;max-width:56ch;
+}
+.tagline .name{background:var(--yellow);border:2px solid var(--ink);border-radius:8px;padding:1px 8px;white-space:nowrap}
+.head-meta{
+  margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  font-size:.8rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;
+}
+.head-chip{border:2.5px solid var(--ink);border-radius:999px;padding:4px 12px;background:#fff}
+.head-chip.due{background:var(--red);color:#fff}
+.head-chip.due .n{background:#fff;color:var(--ink);border-radius:999px;padding:0 7px;margin-left:4px}
+
+/* ---------- nav tabs ---------- */
+nav{display:flex;flex-wrap:wrap;gap:12px;margin:26px 0 30px}
+.tab{
+  position:relative;border:3.5px solid var(--ink);border-radius:14px;
+  background:var(--cream);box-shadow:var(--shadow-sm);
+  font-weight:900;font-size:.95rem;text-transform:uppercase;letter-spacing:.05em;
+  padding:12px 20px;transition:transform .12s,box-shadow .12s;
+}
+.tab:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink)}
+.tab[aria-selected="true"]{transform:translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
+.tab.t-lib[aria-selected="true"]{background:var(--teal);color:#fff}
+.tab.t-flash[aria-selected="true"]{background:var(--pink);color:#fff}
+.tab.t-quiz[aria-selected="true"]{background:var(--yellow)}
+.tab.t-diary[aria-selected="true"]{background:var(--purple);color:#fff}
+.tab.t-graph[aria-selected="true"]{background:var(--red);color:#fff}
+.tab .badge{
+  position:absolute;top:-12px;right:-12px;min-width:28px;height:28px;
+  background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:999px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.78rem;font-weight:900;padding:0 5px;
+}
+.tab .badge.zero{background:var(--teal)}
+
+/* ---------- section frame ---------- */
+.view{display:none;animation:pop-in .3s ease}
+.view.active{display:block}
+@keyframes pop-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:22px}
+.sec-title{font-size:clamp(1.5rem,3vw,2.1rem);font-weight:900;text-transform:uppercase;letter-spacing:.01em}
+.sec-title .tilt{display:inline-block;background:var(--ink);color:var(--yellow);padding:2px 12px;border-radius:8px;transform:rotate(-2deg)}
+.sec-sub{font-weight:700;font-size:.92rem;max-width:62ch}
+
+/* ---------- LIBRARY : wall of cassettes ---------- */
+.filter-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.chip{
+  border:3px solid var(--ink);border-radius:999px;background:#fff;
+  font-weight:900;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;
+  padding:7px 16px;box-shadow:3px 3px 0 var(--ink);
+}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--yellow);box-shadow:1px 1px 0 var(--ink)}
+.shelf{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:26px;
+}
+.cassette{
+  position:relative;border:4px solid var(--ink);border-radius:16px;
+  box-shadow:var(--shadow);padding:16px 16px 14px;text-align:left;
+  transition:transform .14s,box-shadow .14s;color:var(--ink);
+}
+.cassette:hover{transform:translate(-3px,-3px) rotate(-.6deg);box-shadow:9px 9px 0 var(--ink)}
+.cassette:focus-visible{outline:4px dashed var(--ink);outline-offset:4px}
+.cassette.book{background:var(--teal)}
+.cassette.essay{background:var(--pink)}
+.cassette.article{background:#A77BF3}
+.cassette.podcast{background:var(--yellow)}
+.cass-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cass-type{
+  background:var(--ink);color:#fff;font-size:.68rem;font-weight:900;
+  letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;border-radius:6px;
+}
+.cass-side{font-family:var(--mono);font-weight:700;font-size:.72rem;background:rgba(255,255,255,.75);border:2px solid var(--ink);border-radius:6px;padding:1px 8px}
+.cass-label{
+  background:var(--cream);border:3px solid var(--ink);border-radius:8px;
+  padding:10px 12px 8px;position:relative;
+}
+.cass-label::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:7px;
+  background:repeating-linear-gradient(-45deg,var(--red) 0 8px,#fff 8px 16px);
+  border-bottom:2px solid var(--ink);border-radius:5px 5px 0 0;
+}
+.cass-title{font-family:var(--hand);font-size:1.38rem;line-height:1.15;margin-top:8px;font-weight:700}
+.cass-author{font-size:.8rem;font-weight:800;margin-top:3px;text-transform:uppercase;letter-spacing:.05em;opacity:.85}
+.cass-window{
+  margin-top:12px;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.7);border:3px solid var(--ink);border-radius:999px;
+  padding:6px 18px;
+}
+.reel{width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--ink);position:relative;flex:none}
+.reel::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--ink)}
+.tape-fill{flex:1;height:10px;margin:0 10px;background:repeating-linear-gradient(90deg,var(--ink) 0 7px,transparent 7px 11px);border-radius:4px;opacity:.65}
+.cass-foot{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center;justify-content:space-between}
+.cass-tags{display:flex;flex-wrap:wrap;gap:6px}
+.mini-tag{font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em;background:#fff;border:2px solid var(--ink);border-radius:999px;padding:2px 9px}
+.cass-count{font-family:var(--mono);font-size:.7rem;font-weight:700;background:var(--ink);color:#fff;border-radius:6px;padding:2px 8px}
+
+/* ---------- DETAIL MODAL : mixtape J-card ---------- */
+.overlay{
+  display:none;position:fixed;inset:0;z-index:60;background:rgba(28,26,26,.55);
+  padding:34px 18px;overflow-y:auto;
+}
+.overlay.open{display:block}
+.jcard{
+  position:relative;max-width:880px;margin:0 auto;background:var(--cream);
+  border:4px solid var(--ink);border-radius:20px;box-shadow:10px 10px 0 var(--ink);
+  display:grid;grid-template-columns:200px 1fr;overflow:hidden;
+}
+.j-spine{
+  position:relative;padding:26px 18px;color:#fff;border-right:4px solid var(--ink);
+  display:flex;flex-direction:column;gap:14px;
+}
+.j-spine.book{background:var(--teal)}
+.j-spine.essay{background:var(--pink)}
+.j-spine.article{background:#8E5BEE}
+.j-spine.podcast{background:var(--yellow);color:var(--ink)}
+.j-spine .vtitle{
+  font-family:var(--hand);font-size:1.5rem;line-height:1.1;font-weight:700;
+  text-shadow:2px 2px 0 rgba(0,0,0,.22);
+}
+.j-spine.podcast .vtitle{text-shadow:none}
+.j-type{align-self:flex-start;background:var(--ink);color:#fff;font-size:.68rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;padding:4px 11px;border-radius:7px}
+.j-meta{font-size:.78rem;font-weight:800;line-height:1.7}
+.j-meta b{display:block;font-size:.64rem;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.j-body{padding:26px 30px 30px;min-width:0}
+.j-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px}
+.j-body h2{font-size:1.7rem;font-weight:900;line-height:1.15}
+.close-x{
+  flex:none;width:44px;height:44px;border:3px solid var(--ink);border-radius:12px;
+  background:var(--red);color:#fff;font-size:1.25rem;font-weight:900;
+  box-shadow:3px 3px 0 var(--ink);
+}
+.close-x:hover{background:var(--ink)}
+.j-tags{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+.j-tag{font-size:.7rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em;background:var(--yellow);border:2.5px solid var(--ink);border-radius:999px;padding:3px 12px;box-shadow:2px 2px 0 var(--ink)}
+.side-label{
+  display:inline-block;margin:22px 0 12px;background:var(--ink);color:var(--yellow);
+  font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.16em;
+  padding:5px 14px;border-radius:8px;transform:rotate(-1.4deg);
+}
+.quote-item{
+  border:3px solid var(--ink);border-left-width:12px;border-radius:10px;
+  background:#fff;padding:12px 16px;margin-bottom:12px;
+  font-family:var(--hand);font-size:1.12rem;line-height:1.35;
+}
+.quote-item.q0{border-left-color:var(--pink)}
+.quote-item.q1{border-left-color:var(--teal)}
+.quote-item small{display:block;font-family:var(--head);font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-top:6px;opacity:.7}
+.track{
+  display:flex;gap:12px;align-items:flex-start;background:#fff;
+  border:3px solid var(--ink);border-radius:10px;padding:12px 14px;margin-bottom:12px;
+}
+.track-no{
+  flex:none;width:30px;height:30px;border-radius:50%;background:var(--purple);color:#fff;
+  border:2.5px solid var(--ink);font-weight:900;font-size:.82rem;
+  display:flex;align-items:center;justify-content:center;
+}
+.track-body{flex:1;min-width:0}
+.track-text{font-size:.93rem;font-weight:600}
+.track-date{font-family:var(--mono);font-size:.68rem;margin-top:5px;opacity:.65}
+.track-edit{
+  flex:none;border:2.5px solid var(--ink);border-radius:8px;background:var(--yellow);
+  font-size:.68rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em;
+  padding:5px 11px;box-shadow:2px 2px 0 var(--ink);
+}
+.track-edit:hover{background:var(--pink);color:#fff}
+.track textarea,.add-note textarea{
+  width:100%;border:3px solid var(--ink);border-radius:8px;background:var(--cream);
+  font-family:var(--head);font-size:.92rem;font-weight:600;padding:10px;resize:vertical;min-height:72px;
+}
+.btn{
+  border:3px solid var(--ink);border-radius:10px;box-shadow:var(--shadow-sm);
+  font-weight:900;font-size:.82rem;text-transform:uppercase;letter-spacing:.07em;
+  padding:10px 18px;transition:transform .1s,box-shadow .1s;background:#fff;color:var(--ink);
+}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.pink{background:var(--pink);color:#fff}
+.btn.teal{background:var(--teal);color:#fff}
+.btn.yellow{background:var(--yellow)}
+.btn.purple{background:var(--purple);color:#fff}
+.btn.red{background:var(--red);color:#fff}
+.btn.ink{background:var(--ink);color:var(--yellow)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:var(--shadow-sm)}
+.add-note{margin-top:14px}
+.add-note .row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+.j-cards-note{font-size:.8rem;font-weight:700;background:#fff;border:3px dashed var(--ink);border-radius:10px;padding:10px 14px}
+
+/* ---------- FLASHCARDS : polaroid flip ---------- */
+.flash-zone{display:grid;grid-template-columns:minmax(0,440px) minmax(260px,1fr);gap:34px;align-items:start}
+.polaroid-stage{perspective:1400px;min-height:470px}
+.polaroid{
+  position:relative;width:100%;max-width:420px;height:460px;margin:0 auto;
+  transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,.1,.2,1.2);
+}
+.polaroid.flipped{transform:rotateY(180deg)}
+.pface{
+  position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  background:#fff;border:4px solid var(--ink);border-radius:8px;
+  box-shadow:var(--shadow);padding:18px 18px 0;display:flex;flex-direction:column;
+}
+.pface .tape{
+  position:absolute;top:-16px;left:50%;transform:translateX(-50%) rotate(-3deg);
+  width:120px;height:30px;background:rgba(255,207,63,.9);border:2px solid var(--ink);border-radius:3px;
+}
+.pback{transform:rotateY(180deg)}
+.photo{
+  flex:1;border:3px solid var(--ink);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  padding:22px;font-weight:800;font-size:1.08rem;line-height:1.45;
+  background:
+    radial-gradient(circle at 80% 15%, rgba(255,46,136,.16), transparent 42%),
+    radial-gradient(circle at 15% 85%, rgba(0,178,164,.16), transparent 42%),
+    var(--cream);
+}
+.pback .photo{background:
+    radial-gradient(circle at 20% 15%, rgba(131,56,236,.16), transparent 42%),
+    radial-gradient(circle at 85% 85%, rgba(255,207,63,.3), transparent 42%),
+    var(--cream)}
+.photo .qa-tag{position:absolute;top:30px;left:30px;background:var(--ink);color:#fff;font-size:.66rem;font-weight:900;letter-spacing:.16em;padding:3px 9px;border-radius:6px}
+.caption{
+  height:84px;display:flex;flex-direction:column;justify-content:center;text-align:center;gap:2px;
+}
+.caption .src{font-family:var(--hand);font-size:1.15rem;line-height:1.1}
+.caption .hint{font-size:.66rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;opacity:.55}
+.due-stamp{
+  position:absolute;top:26px;right:-10px;transform:rotate(8deg);
+  background:var(--red);color:#fff;border:3px solid var(--ink);border-radius:8px;
+  font-size:.7rem;font-weight:900;letter-spacing:.12em;padding:4px 10px;z-index:2;
+}
+.flash-side{display:flex;flex-direction:column;gap:18px}
+.panel{
+  background:var(--cream);border:4px solid var(--ink);border-radius:16px;
+  box-shadow:var(--shadow);padding:20px 22px;
+}
+.panel h3{font-size:.85rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;margin-bottom:12px}
+.grade-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.grade-row .btn{padding:12px 4px;font-size:.78rem}
+.grade-sub{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:6px;text-align:center;font-family:var(--mono);font-size:.64rem;opacity:.7}
+.flash-stats{display:flex;flex-wrap:wrap;gap:10px}
+.stat-pill{background:#fff;border:3px solid var(--ink);border-radius:12px;padding:8px 14px;font-weight:900;font-size:.8rem}
+.stat-pill b{color:var(--pink)}
+.all-done{
+  text-align:center;padding:60px 26px;border:4px dashed var(--ink);border-radius:16px;
+  background:var(--cream);max-width:420px;margin:0 auto;
+}
+.all-done .big{font-family:var(--hand);font-size:2rem;margin-bottom:10px}
+
+/* ---------- POP QUIZ : notebook worksheet ---------- */
+.quiz-setup{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:24px}
+select{
+  font-family:var(--head);font-weight:800;font-size:.9rem;padding:10px 14px;
+  border:3px solid var(--ink);border-radius:10px;background:#fff;box-shadow:var(--shadow-sm);
+  max-width:100%;
+}
+.worksheet{
+  position:relative;max-width:760px;background:#FDFBF2;
+  border:4px solid var(--ink);border-radius:6px;box-shadow:var(--shadow);
+  padding:34px 34px 30px 76px;
+  background-image:
+    linear-gradient(90deg,transparent 54px,var(--red) 54px,var(--red) 57px,transparent 57px),
+    repeating-linear-gradient(transparent 0 30px,#A8C6E8 30px 32px);
+  background-attachment:local;
+}
+.worksheet::before{
+  content:"";position:absolute;left:18px;top:60px;width:14px;height:14px;border-radius:50%;
+  background:var(--paper);border:3px solid var(--ink);box-shadow:0 110px 0 -3px var(--paper),0 110px 0 0 var(--ink),0 220px 0 -3px var(--paper),0 220px 0 0 var(--ink);
+}
+.ws-head{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;align-items:baseline;margin-bottom:8px}
+.ws-title{font-family:var(--hand);font-size:1.9rem;color:var(--blue)}
+.ws-name{font-family:var(--mono);font-size:.76rem;font-weight:700}
+.ws-q{font-size:1.06rem;font-weight:800;line-height:2;margin-top:10px}
+.ws-q .qnum{color:var(--red);font-weight:900}
+.worksheet textarea{
+  width:100%;margin-top:8px;border:none;border-bottom:3px dashed var(--blue);
+  background:transparent;font-family:var(--hand);font-size:1.3rem;line-height:32px;
+  min-height:96px;resize:vertical;outline:none;color:#23407A;
+}
+.ws-answer{
+  margin-top:16px;background:rgba(255,207,63,.35);border:3px solid var(--ink);
+  border-radius:8px;padding:14px 16px;font-weight:700;font-size:.95rem;
+}
+.ws-answer b{display:block;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:5px}
+.ws-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:20px;align-items:center}
+.ws-grade-label{font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.1em;width:100%}
+.ws-progress{font-family:var(--mono);font-size:.74rem;margin-top:16px;opacity:.7}
+.ws-sticker{
+  position:absolute;top:-20px;right:26px;transform:rotate(6deg);
+  background:var(--pink);color:#fff;border:3px solid var(--ink);border-radius:999px;
+  font-size:.74rem;font-weight:900;letter-spacing:.1em;padding:9px 16px;box-shadow:3px 3px 0 var(--ink);
+}
+
+/* ---------- DIARY : reflections ---------- */
+.diary-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:30px;align-items:start}
+.diary-quote{
+  position:relative;background:var(--cream);border:4px solid var(--ink);border-radius:16px;
+  box-shadow:var(--shadow);padding:26px 26px 22px;
+  background-image:repeating-linear-gradient(45deg,transparent 0 14px,rgba(131,56,236,.05) 14px 28px);
+}
+.diary-quote::before{
+  content:"";position:absolute;inset:8px;border:3px dashed var(--purple);border-radius:10px;pointer-events:none;
+}
+.dq-inner{position:relative;padding:10px 8px}
+.dq-label{display:inline-block;background:var(--purple);color:#fff;font-size:.68rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;padding:4px 12px;border-radius:7px;margin-bottom:14px;transform:rotate(-1.6deg)}
+.dq-text{font-family:var(--hand);font-size:1.5rem;line-height:1.3}
+.dq-attr{margin-top:12px;font-size:.8rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.dq-attr span{color:var(--pink)}
+.diary-editor textarea{
+  width:100%;min-height:130px;margin-top:14px;border:3px solid var(--ink);border-radius:10px;
+  background:#fff;font-family:var(--head);font-weight:600;font-size:.95rem;padding:12px;resize:vertical;
+}
+.diary-editor .row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.refl-item{
+  background:#fff;border:3px solid var(--ink);border-radius:12px;box-shadow:var(--shadow-sm);
+  padding:16px 18px;margin-bottom:16px;
+}
+.refl-item .refl-quote{font-family:var(--hand);font-size:1.02rem;opacity:.8;border-left:5px solid var(--yellow);padding-left:10px;margin-bottom:8px}
+.refl-item .refl-text{font-size:.92rem;font-weight:600}
+.refl-item .refl-meta{font-family:var(--mono);font-size:.68rem;margin-top:8px;opacity:.6}
+
+/* ---------- CORKBOARD : knowledge graph ---------- */
+.corkboard{
+  position:relative;border:14px solid #8A5A2B;border-radius:14px;
+  box-shadow:var(--shadow),inset 0 0 60px rgba(90,55,16,.35);
+  background:
+    radial-gradient(circle at 12% 22%, rgba(120,76,28,.28) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 64% 48%, rgba(120,76,28,.22) 1.5px, transparent 2.5px),
+    radial-gradient(circle at 38% 78%, rgba(255,232,186,.5) 1px, transparent 2px),
+    radial-gradient(circle at 86% 14%, rgba(120,76,28,.25) 1.5px, transparent 2.5px),
+    var(--cork);
+  background-size:67px 53px,43px 71px,53px 47px,89px 83px,auto;
+  overflow:hidden;
+}
+.corkboard svg{display:block;width:100%;height:auto}
+.yarn{stroke:#C0272D;stroke-width:2.5;fill:none;opacity:.75;transition:opacity .15s,stroke-width .15s}
+.yarn.lit{opacity:1;stroke-width:4.5;stroke:#E8102E}
+.yarn.dim{opacity:.12}
+.gnode{cursor:pointer}
+.gnode .pin-shadow{fill:rgba(60,30,5,.3)}
+.gnode .label-bg{fill:#FFF8E8;stroke:#1C1A1A;stroke-width:2.5;transition:fill .15s}
+.gnode .label-tx{font-family:var(--head);font-weight:800;font-size:13px;fill:#1C1A1A}
+.gnode.dim{opacity:.25}
+.gnode.lit .label-bg{fill:#FFCF3F}
+.gnode:focus-visible{outline:none}
+.gnode:focus-visible .label-bg{stroke-width:4}
+.graph-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;font-size:.74rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;align-items:center}
+.lg{display:flex;align-items:center;gap:7px}
+.lg i{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--ink);display:inline-block}
+.graph-tip{
+  margin-top:10px;font-size:.8rem;font-weight:700;font-family:var(--mono);
+  background:#fff;border:3px solid var(--ink);border-radius:10px;padding:8px 14px;display:inline-block;
+}
+
+/* ---------- SERENDIPITY : VHS rewind toast ---------- */
+.vhs-toast{
+  position:fixed;right:26px;bottom:26px;z-index:80;width:min(400px,calc(100vw - 40px));
+  background:var(--cream);border:4px solid var(--ink);border-radius:14px;
+  box-shadow:8px 8px 0 var(--ink);overflow:hidden;
+  display:none;
+}
+.vhs-toast.show{display:block;animation:vhs-roll .4s ease}
+@keyframes vhs-roll{from{transform:translateY(24px);opacity:0}to{transform:none;opacity:1}}
+.vhs-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--ink);color:#6CF3E2;font-family:var(--mono);font-weight:700;
+  font-size:.78rem;letter-spacing:.14em;padding:8px 14px;
+  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.07) 0 2px,transparent 2px 4px);
+}
+.vhs-bar .blink{animation:vhs-blink 1.1s steps(2) infinite}
+@keyframes vhs-blink{to{opacity:.15}}
+.vhs-bar button{background:none;border:none;color:#fff;font-size:1rem;font-weight:900;padding:0 2px}
+.vhs-body{padding:16px 18px 18px;position:relative}
+.vhs-body::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.4;
+  background:repeating-linear-gradient(0deg,transparent 0 5px,rgba(28,26,26,.03) 5px 7px);
+}
+.vhs-kind{display:inline-block;background:var(--teal);color:#fff;border:2.5px solid var(--ink);border-radius:7px;font-size:.64rem;font-weight:900;letter-spacing:.14em;text-transform:uppercase;padding:3px 10px;margin-bottom:10px}
+.vhs-text{font-family:var(--hand);font-size:1.12rem;line-height:1.3}
+.vhs-src{margin-top:10px;font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.07em}
+.vhs-src span{color:var(--purple)}
+.vhs-date{font-family:var(--mono);font-size:.68rem;opacity:.6;margin-top:3px}
+.vhs-actions{display:flex;gap:10px;margin-top:14px}
+.vhs-actions .btn{padding:8px 14px;font-size:.72rem}
+
+/* ---------- responsive ---------- */
+@media(max-width:1020px){
+  .flash-zone{grid-template-columns:1fr;justify-items:center}
+  .flash-side{width:100%;max-width:560px}
+  .diary-grid{grid-template-columns:1fr}
+}
+@media(max-width:860px){
+  .wrap{padding:0 18px 80px}
+  .jcard{grid-template-columns:1fr}
+  .j-spine{border-right:none;border-bottom:4px solid var(--ink);flex-direction:row;flex-wrap:wrap;align-items:center}
+  .j-spine .vtitle{font-size:1.25rem}
+  .worksheet{padding:28px 22px 26px 60px}
+  .masthead{padding:28px 24px 24px}
+}
+/* ---------- reduced motion ---------- */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important;scroll-behavior:auto}
+  .polaroid{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Memphis confetti -->
+<div class="deco deco-tri" aria-hidden="true"></div>
+<div class="deco deco-tri2" aria-hidden="true"></div>
+<div class="deco deco-dot" aria-hidden="true"></div>
+<div class="deco deco-dot2" aria-hidden="true"></div>
+<div class="deco deco-zig" aria-hidden="true"></div>
+<svg class="deco deco-squig" viewBox="0 0 84 26" aria-hidden="true"><path d="M2 13 Q 12 2 22 13 T 42 13 T 62 13 T 82 13" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/></svg>
+
+<div class="wrap">
+<header>
+  <a class="gallery-link" href="../index.html">&larr; Gallery</a>
+  <div class="masthead">
+    <div class="stripe" aria-hidden="true"></div>
+    <h1><span class="hot">Totally</span> <span class="cool">Recall</span></h1>
+    <p class="tagline">Matthew's personal memory arcade, 1986 edition. Everything <span class="name">you've</span> read &amp; heard, dubbed onto tape &mdash; rewind it, quiz it, keep it forever.</p>
+    <div class="head-meta">
+      <span class="head-chip" id="statWorks">0 tapes</span>
+      <span class="head-chip" id="statCards">0 cards</span>
+      <span class="head-chip due">Due now<span class="n" id="statDue">0</span></span>
+      <span class="head-chip" id="todayChip"></span>
+    </div>
+  </div>
+
+  <nav role="tablist" aria-label="Main sections">
+    <button class="tab t-lib" role="tab" aria-selected="true" data-view="library">Tape Wall</button>
+    <button class="tab t-flash" role="tab" aria-selected="false" data-view="flash">Polaroids <span class="badge" id="dueBadge">0</span></button>
+    <button class="tab t-quiz" role="tab" aria-selected="false" data-view="quiz">Pop Quiz</button>
+    <button class="tab t-diary" role="tab" aria-selected="false" data-view="diary">Dear Diary</button>
+    <button class="tab t-graph" role="tab" aria-selected="false" data-view="graph">Corkboard</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ============ LIBRARY ============ -->
+  <section class="view active" id="view-library" aria-label="Library">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">The <span class="tilt">Tape Wall</span></h2>
+        <p class="sec-sub">Every book, essay, article &amp; podcast, dubbed to cassette. Pop one in for liner notes.</p>
+      </div>
+    </div>
+    <div class="filter-row" id="filterRow" role="group" aria-label="Filter by type">
+      <button class="chip" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" data-filter="book" aria-pressed="false">Books</button>
+      <button class="chip" data-filter="essay" aria-pressed="false">Essays</button>
+      <button class="chip" data-filter="article" aria-pressed="false">Articles</button>
+      <button class="chip" data-filter="podcast" aria-pressed="false">Podcasts</button>
+    </div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <!-- ============ FLASHCARDS ============ -->
+  <section class="view" id="view-flash" aria-label="Flashcards">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">Polaroid <span class="tilt">Flashcards</span></h2>
+        <p class="sec-sub">Shake it like a&hellip; well, you know. Tap the photo to flip, then grade yourself honestly.</p>
+      </div>
+    </div>
+    <div id="flashWrap"></div>
+  </section>
+
+  <!-- ============ POP QUIZ ============ -->
+  <section class="view" id="view-quiz" aria-label="Active recall quiz">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">Pop <span class="tilt">Quiz!</span></h2>
+        <p class="sec-sub">No peeking. Pick one tape or a whole subject, write your answer in pen, then check it.</p>
+      </div>
+    </div>
+    <div class="quiz-setup">
+      <label for="quizScope" style="font-weight:900;font-size:.8rem;text-transform:uppercase;letter-spacing:.1em">Quiz me on</label>
+      <select id="quizScope"></select>
+      <button class="btn pink" id="quizStart">Start Quiz</button>
+    </div>
+    <div id="quizStage"></div>
+  </section>
+
+  <!-- ============ DIARY / REFLECTIONS ============ -->
+  <section class="view" id="view-diary" aria-label="Reflections">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">Dear <span class="tilt">Diary</span></h2>
+        <p class="sec-sub">One quote, resurfaced. Sit with it, scribble what it means to you now.</p>
+      </div>
+    </div>
+    <div class="diary-grid">
+      <div>
+        <div class="diary-quote">
+          <div class="dq-inner">
+            <span class="dq-label">Tonight's Prompt</span>
+            <p class="dq-text" id="dqText"></p>
+            <p class="dq-attr" id="dqAttr"></p>
+          </div>
+        </div>
+        <div class="diary-editor">
+          <textarea id="reflInput" placeholder="Dear diary... what does this actually change about how I live?" aria-label="Write your reflection"></textarea>
+          <div class="row">
+            <button class="btn purple" id="reflSave">Save Entry</button>
+            <button class="btn yellow" id="reflShuffle">New Quote</button>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3 style="font-size:.85rem;font-weight:900;text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px">Past entries <span id="reflCount" style="color:var(--pink)"></span></h3>
+        <div id="reflList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ KNOWLEDGE GRAPH ============ -->
+  <section class="view" id="view-graph" aria-label="Knowledge graph">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">The <span class="tilt">Corkboard</span></h2>
+        <p class="sec-sub">Red yarn between pushpins = shared tags. Hover a pin to trace its threads, click to open the tape.</p>
+      </div>
+    </div>
+    <div class="corkboard" id="corkboard"></div>
+    <div class="graph-legend">
+      <span class="lg"><i style="background:var(--teal)"></i>Book</span>
+      <span class="lg"><i style="background:var(--pink)"></i>Essay</span>
+      <span class="lg"><i style="background:#8E5BEE"></i>Article</span>
+      <span class="lg"><i style="background:var(--yellow)"></i>Podcast</span>
+      <span class="lg"><i style="background:#C0272D;border-radius:3px;height:5px;margin-top:5px"></i>Shared-tag yarn</span>
+    </div>
+    <p class="graph-tip" id="graphTip">Hover a pushpin&hellip;</p>
+  </section>
+</main>
+</div>
+
+<!-- ============ DETAIL MODAL (mixtape J-card) ============ -->
+<div class="overlay" id="detailOverlay" role="dialog" aria-modal="true" aria-labelledby="jTitle">
+  <div class="jcard" id="jcard"></div>
+</div>
+
+<!-- ============ SERENDIPITY VHS TOAST ============ -->
+<div class="vhs-toast" id="vhsToast" role="status" aria-live="polite">
+  <div class="vhs-bar">
+    <span><span class="blink">&#9664;&#9664;</span> REWIND</span>
+    <span id="vhsCounter">SP 0:00:00</span>
+    <button id="vhsClose" aria-label="Close rewind popup">&#10005;</button>
+  </div>
+  <div class="vhs-body">
+    <span class="vhs-kind" id="vhsKind">Old Note</span>
+    <p class="vhs-text" id="vhsText"></p>
+    <p class="vhs-src" id="vhsSrc"></p>
+    <p class="vhs-date" id="vhsDate"></p>
+    <div class="vhs-actions">
+      <button class="btn yellow" id="vhsAnother">&#9664;&#9664; Another</button>
+      <button class="btn teal" id="vhsOpen">&#9654; Open</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =======================================================================
+   MOCK DATA — all in-memory, single user: Matthew Geiling
+   ======================================================================= */
+const DAY = 86400000;
+const NOW = Date.now();
+
+const WORKS = [
+  {
+    id:'tfs', type:'book', title:'Thinking, Fast and Slow', author:'Daniel Kahneman',
+    pub:'2011', consumed:'2025-02-11', short:'Thinking, Fast & Slow',
+    tags:['psychology','decision-making','memory'],
+    notes:[
+      {text:'System 1 vs System 2 is less a brain map, more a budgeting metaphor: attention is expensive, so I default to the cheap guess. My worst decisions at work are almost always System 1 answers delivered with System 2 confidence.', date:'2025-02-12'},
+      {text:'The experiencing self vs remembering self split explains why I rate vacations by their endings. Design the peak and the ending, not the average.', date:'2025-02-15'}
+    ],
+    quotes:[
+      {text:'Nothing in life is as important as you think it is, while you are thinking about it.'},
+      {text:'A reliable way to make people believe in falsehoods is frequent repetition, because familiarity is not easily distinguished from truth.'}
+    ],
+    cards:[
+      {q:'What are System 1 and System 2?', a:'System 1 is fast, automatic, intuitive thinking; System 2 is slow, deliberate, effortful reasoning. System 1 runs by default because attention is costly.', seed:-2},
+      {q:'What is the peak-end rule?', a:'We judge an experience mostly by its most intense moment (the peak) and its ending, not by the sum or average of every moment.', seed:-1},
+      {q:'What is anchoring?', a:'The bias where an initial number (even an arbitrary one) pulls later estimates toward it, e.g. first offers in a negotiation.', seed:4}
+    ]
+  },
+  {
+    id:'ah', type:'book', title:'Atomic Habits', author:'James Clear',
+    pub:'2018', consumed:'2025-03-02', short:'Atomic Habits',
+    tags:['habits','systems','psychology'],
+    notes:[
+      {text:'Identity-first framing is the real engine: "I am a person who reviews his notes" beats "I should review my notes." Vote for the identity with tiny reps.', date:'2025-03-04'}
+    ],
+    quotes:[
+      {text:'You do not rise to the level of your goals. You fall to the level of your systems.'},
+      {text:'Every action you take is a vote for the type of person you wish to become.'}
+    ],
+    cards:[
+      {q:'What are the four laws of behavior change?', a:'Make it obvious, make it attractive, make it easy, make it satisfying — and invert each one to break a bad habit.', seed:-3},
+      {q:'What is habit stacking?', a:'Anchoring a new habit to an existing one: "After [current habit], I will [new habit]." The old routine becomes the cue.', seed:6}
+    ]
+  },
+  {
+    id:'dw', type:'book', title:'Deep Work', author:'Cal Newport',
+    pub:'2016', consumed:'2025-04-18', short:'Deep Work',
+    tags:['focus','habits','creativity'],
+    notes:[
+      {text:'The "any-benefit" trap: I justify every app by some benefit instead of weighing net cost to attention. Tools should pass a craftsman test, not an any-benefit test.', date:'2025-04-20'},
+      {text:'Scheduling every minute felt rigid until I tried it — the plan is disposable, the act of planning is the win.', date:'2025-04-25'}
+    ],
+    quotes:[
+      {text:'Clarity about what matters provides clarity about what does not.'}
+    ],
+    cards:[
+      {q:'How does Newport define deep work?', a:'Professional activity performed in distraction-free concentration that pushes cognitive capabilities to their limit, creating new value that is hard to replicate.', seed:-1},
+      {q:'What is attention residue?', a:'When you switch tasks, part of your attention stays stuck on the previous task, degrading performance on the next one — the hidden tax of multitasking.', seed:9}
+    ]
+  },
+  {
+    id:'mis', type:'book', title:'Make It Stick', author:'Brown, Roediger & McDaniel',
+    pub:'2014', consumed:'2025-01-20', short:'Make It Stick',
+    tags:['learning','memory','psychology'],
+    notes:[
+      {text:'The whole premise of this app comes from here: rereading feels productive and does almost nothing. Retrieval difficulty is the feature, not the bug.', date:'2025-01-22'}
+    ],
+    quotes:[
+      {text:'Learning is deeper and more durable when it is effortful. Learning that is easy is like writing in sand, here today and gone tomorrow.'},
+      {text:'Retrieval practice — recalling facts or concepts from memory — is a more effective learning strategy than review by rereading.'}
+    ],
+    cards:[
+      {q:'Why is rereading a poor study strategy?', a:'It creates fluency illusions — the text feels familiar, so you mistake recognition for recall. Testing yourself reveals and repairs the gap.', seed:-4},
+      {q:'What is interleaving?', a:'Mixing different topics or problem types in one session. It feels harder and slower than blocking, but produces far better long-term retention and transfer.', seed:2},
+      {q:'What are "desirable difficulties"?', a:'Obstacles like spacing, testing, and interleaving that slow visible progress but strengthen encoding and long-term retention.', seed:12}
+    ]
+  },
+  {
+    id:'doet', type:'book', title:'The Design of Everyday Things', author:'Don Norman',
+    pub:'1988', consumed:'2025-06-07', short:'Everyday Things',
+    tags:['design','psychology','systems'],
+    notes:[
+      {text:'"Human error" is almost always design error. When I fumble a door, blame the door. Applies to my own systems too: if I keep skipping reviews, redesign the cue, not the willpower.', date:'2025-06-09'}
+    ],
+    quotes:[
+      {text:'Good design is actually a lot harder to notice than poor design, in part because good designs fit our needs so well that the design is invisible.'}
+    ],
+    cards:[
+      {q:'What is an affordance?', a:'A relationship between an object and a user that signals possible actions — a flat plate affords pushing, a handle affords pulling.', seed:-1},
+      {q:'What is the Gulf of Execution?', a:'The gap between what a user wants to do and the actions a system makes available. Good design narrows it with visible, mapped controls.', seed:15}
+    ]
+  },
+  {
+    id:'med', type:'book', title:'Meditations', author:'Marcus Aurelius',
+    pub:'c. 180 AD', consumed:'2025-08-14', short:'Meditations',
+    tags:['philosophy','habits','focus'],
+    notes:[
+      {text:'It reads like a private journal because it is one — he was doing spaced self-persuasion, rehearsing the same principles until they stuck. Basically Stoic flashcards.', date:'2025-08-16'},
+      {text:'"The impediment to action advances action" pairs weirdly well with Clear: obstacles are just cues for a different habit.', date:'2025-08-20'}
+    ],
+    quotes:[
+      {text:'You have power over your mind — not outside events. Realize this, and you will find strength.'},
+      {text:'The happiness of your life depends upon the quality of your thoughts.'}
+    ],
+    cards:[
+      {q:'What is the Stoic "dichotomy of control"?', a:'Separate what is up to you (judgments, intentions, actions) from what is not (events, others’ opinions, outcomes) — and spend yourself only on the first.', seed:-2},
+      {q:'Why did Marcus Aurelius write Meditations?', a:'As private notes to himself — repeated rehearsal of Stoic principles to keep them active under pressure. It was never meant for publication.', seed:20}
+    ]
+  },
+  {
+    id:'hgw', type:'essay', title:'How to Do Great Work', author:'Paul Graham',
+    pub:'2023', consumed:'2025-09-03', short:'Great Work',
+    tags:['creativity','focus','learning'],
+    notes:[
+      {text:'The compounding argument: work on what you’re excessively curious about, because curiosity is the only fuel that survives the boring middle. My note system should optimize for following curiosity, not coverage.', date:'2025-09-05'}
+    ],
+    quotes:[
+      {text:'The way to figure out what to work on is by working. If you’re not sure what to work on, guess.'}
+    ],
+    cards:[
+      {q:'What three qualities does Graham say your work should have?', a:'It should be something you have a natural aptitude for, a deep interest in, and that offers scope to do great work.', seed:-1},
+      {q:'What role does curiosity play in great work, per Graham?', a:'It is the engine of all four steps: choosing a field, reaching the frontier, noticing gaps, and exploring them. Optimize your life to feed it.', seed:7}
+    ]
+  },
+  {
+    id:'awmt', type:'essay', title:'As We May Think', author:'Vannevar Bush',
+    pub:'1945', consumed:'2025-10-12', short:'As We May Think',
+    tags:['systems','memory','design'],
+    notes:[
+      {text:'The memex predicted this exact app 80 years early: trails of association, not filing cabinets. The corkboard view is my tiny memex.', date:'2025-10-14'}
+    ],
+    quotes:[
+      {text:'The human mind operates by association. With one item in its grasp, it snaps instantly to the next that is suggested by the association of thoughts.'}
+    ],
+    cards:[
+      {q:'What was the memex?', a:'Bush’s 1945 concept of a desk-sized device storing all one’s books and records, linked by associative "trails" the user builds — a proto-hypertext personal memory.', seed:-3},
+      {q:'Why did Bush think indexing systems fail us?', a:'Because they are artificial and hierarchical, while the mind works by association — so our tools should link items the way thoughts link.', seed:11}
+    ]
+  },
+  {
+    id:'sr', type:'essay', title:'Self-Reliance', author:'Ralph Waldo Emerson',
+    pub:'1841', consumed:'2026-01-05', short:'Self-Reliance',
+    tags:['philosophy','creativity'],
+    notes:[
+      {text:'"Envy is ignorance; imitation is suicide" hits different when every feed is a comparison machine. The diary section exists so I synthesize instead of just collect.', date:'2026-01-06'}
+    ],
+    quotes:[
+      {text:'Trust thyself: every heart vibrates to that iron string.'},
+      {text:'A foolish consistency is the hobgoblin of little minds, adored by little statesmen and philosophers and divines.'}
+    ],
+    cards:[
+      {q:'What does Emerson mean by "a foolish consistency is the hobgoblin of little minds"?', a:'Clinging to past positions just to appear consistent blocks growth — speak what you think today, even if it contradicts yesterday.', seed:-1}
+    ]
+  },
+  {
+    id:'wbdw', type:'article', title:"Why Books Don't Work", author:'Andy Matuschak',
+    pub:'2019', consumed:'2025-05-11', short:"Books Don't Work",
+    tags:['learning','memory','design'],
+    notes:[
+      {text:'Books silently assume readers absorb ideas by reading sentences — a "transmissionism" model nobody actually defends out loud. The fix isn’t better books, it’s mediums with retrieval built in. Hence: this app.', date:'2025-05-12'}
+    ],
+    quotes:[
+      {text:'Books don’t work for the same reason lectures don’t work: the medium lacks a functioning cognitive model of how people learn.'}
+    ],
+    cards:[
+      {q:'What is "transmissionism"?', a:'The implicit model that knowledge transfers from page to mind just by reading. Matuschak argues books are built on it even though everyone knows it’s false.', seed:-2},
+      {q:'What does Matuschak propose instead of books?', a:'"Mnemonic mediums" — reading environments with embedded spaced-repetition prompts, so remembering is part of the medium, not an afterthought.', seed:5}
+    ]
+  },
+  {
+    id:'altm', type:'article', title:'Augmenting Long-term Memory', author:'Michael Nielsen',
+    pub:'2018', consumed:'2025-05-24', short:'LT Memory',
+    tags:['memory','learning','systems'],
+    notes:[
+      {text:'Nielsen’s rule of thumb: a card takes maybe 5 minutes of lifetime review. That reframes "is this worth memorizing?" into a concrete cost — most things are worth it.', date:'2025-05-26'},
+      {text:'He uses Anki to read hard papers: shallow pass, cards for basics, reread deeper. Memory is a ratchet for understanding, not a substitute for it.', date:'2025-05-30'}
+    ],
+    quotes:[
+      {text:'Anki makes memory a choice, rather than a haphazard event, to be left to chance.'}
+    ],
+    cards:[
+      {q:'What is Nielsen’s estimated lifetime cost of one spaced-repetition card?', a:'Roughly 5 minutes of total review time over 20 years — which makes memorizing almost anything useful a bargain.', seed:-1},
+      {q:'How does Nielsen use spaced repetition to read difficult papers?', a:'Several passes: first skim and card the basic terms and claims, then reread with that foundation, carding deeper ideas each pass.', seed:8}
+    ]
+  },
+  {
+    id:'hub', type:'podcast', title:'Huberman Lab: Improve Memory', author:'Andrew Huberman',
+    pub:'2022', consumed:'2025-07-19', short:'Huberman: Memory',
+    tags:['memory','learning','psychology'],
+    notes:[
+      {text:'Adrenaline AFTER encoding strengthens the memory — cold shower or hard exercise right after a study block, not before. Emotion stamps the save file.', date:'2025-07-20'}
+    ],
+    quotes:[
+      {text:'Repetition works, but the most powerful way to enhance memory is to attach an emotional or neurochemical state to the thing you just learned.'}
+    ],
+    cards:[
+      {q:'When should arousal (adrenaline) occur to best strengthen a memory?', a:'Shortly AFTER learning, not before — post-encoding spikes of epinephrine/cortisol tag the just-learned material for consolidation.', seed:-2},
+      {q:'What did Huberman say mental "gap effects" do during learning?', a:'Random 10-second pauses while studying let the hippocampus replay the material at high speed, acting like free extra repetitions.', seed:10}
+    ]
+  },
+  {
+    id:'tkp', type:'podcast', title:'The Knowledge Project: Mental Models', author:'Shane Parrish',
+    pub:'2021', consumed:'2026-02-08', short:'Mental Models',
+    tags:['decision-making','systems','philosophy'],
+    notes:[
+      {text:'A latticework beats a pile: models only pay off when they’re connected across disciplines. Tags in this app are my cheap latticework — the corkboard makes it visible.', date:'2026-02-10'}
+    ],
+    quotes:[
+      {text:'You don’t need a thousand mental models. You need a handful you actually use, wired together so you can see a problem from multiple angles.'}
+    ],
+    cards:[
+      {q:'What is inversion as a mental model?', a:'Solve problems backward: instead of asking "how do I succeed?", ask "what would guarantee failure?" and avoid that. Avoiding stupidity beats seeking brilliance.', seed:-1},
+      {q:'Why build a "latticework" of mental models rather than a list?', a:'Isolated models don’t transfer; connected models from many disciplines let you triangulate reality and notice when one model is misleading you.', seed:14}
+    ]
+  }
+];
+
+/* seed reflections (in-memory) */
+const reflections = [
+  {quote:'You do not rise to the level of your goals. You fall to the level of your systems.',
+   source:'Atomic Habits — James Clear', workId:'ah', date:'2025-03-10',
+   text:'This whole app is me taking that seriously. I kept setting the goal "remember what I read" with no system under it. A review queue is a system; good intentions are a goal. Build the queue, trust the queue.'},
+  {quote:'The human mind operates by association.',
+   source:'As We May Think — Vannevar Bush', workId:'awmt', date:'2025-10-20',
+   text:'Struck by how my best ideas this year came from collisions: Kahneman’s remembering self + Norman’s design-for-error = design my habits for the person I’ll be at 9pm, tired. Maybe the corkboard matters more than the archive.'}
+];
+
+/* =======================================================================
+   SRS — simple SM-2-style scheduler (in-memory)
+   ======================================================================= */
+const ALL_CARDS = [];
+WORKS.forEach(w=>{
+  w.cards.forEach((c,i)=>{
+    ALL_CARDS.push({
+      id:w.id+'-'+i, workId:w.id, q:c.q, a:c.a,
+      ease:2.5, interval:0, reps:0,
+      due:NOW + c.seed*DAY
+    });
+  });
+});
+
+function gradeCard(card, g){ // 0 Again, 1 Hard, 2 Good, 3 Easy
+  if(g===0){
+    card.reps = 0; card.interval = 0;
+    card.ease = Math.max(1.3, card.ease - 0.2);
+    card.due = Date.now() + 10*60000; // 10 min
+  }else{
+    if(g===1) card.ease = Math.max(1.3, card.ease - 0.15);
+    if(g===3) card.ease = card.ease + 0.15;
+    if(card.reps === 0 || card.interval < 1){
+      card.interval = (g===1) ? 1 : (g===2) ? 1 : 3;
+    }else{
+      const mult = (g===1) ? 1.2 : (g===2) ? card.ease : card.ease*1.3;
+      card.interval = Math.max(card.interval+1, Math.round(card.interval*mult));
+    }
+    card.reps++;
+    card.due = Date.now() + card.interval*DAY;
+  }
+  updateDueUI();
+}
+function dueCards(){ return ALL_CARDS.filter(c=>c.due<=Date.now()); }
+function workById(id){ return WORKS.find(w=>w.id===id); }
+function fmtDate(s){
+  if(!s) return '';
+  const d = (s instanceof Date) ? s : new Date(s+'T12:00:00');
+  if(isNaN(d)) return s;
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function esc(str){
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function dueLabel(card){
+  const diff = card.due - Date.now();
+  if(diff<=0) return 'DUE NOW';
+  if(diff<DAY) return 'due today';
+  const d = Math.round(diff/DAY);
+  return 'due in '+d+'d';
+}
+const TYPE_LABEL = {book:'Book', essay:'Essay', article:'Article', podcast:'Podcast'};
+
+function updateDueUI(){
+  const n = dueCards().length;
+  const badge = document.getElementById('dueBadge');
+  badge.textContent = n;
+  badge.classList.toggle('zero', n===0);
+  document.getElementById('statDue').textContent = n;
+}
+
+/* =======================================================================
+   NAVIGATION
+   ======================================================================= */
+const tabs = document.querySelectorAll('.tab');
+function showView(name){
+  tabs.forEach(t=>t.setAttribute('aria-selected', String(t.dataset.view===name)));
+  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active', v.id==='view-'+name));
+  if(name==='flash') renderFlash();
+  if(name==='diary') renderReflList();
+}
+tabs.forEach(t=>t.addEventListener('click', ()=>showView(t.dataset.view)));
+
+/* =======================================================================
+   LIBRARY — cassette wall
+   ======================================================================= */
+let libFilter = 'all';
+function renderLibrary(){
+  const shelf = document.getElementById('shelf');
+  shelf.innerHTML = '';
+  WORKS.filter(w=>libFilter==='all'||w.type===libFilter).forEach(w=>{
+    const nCards = w.cards.length, nNotes = w.notes.length;
+    const btn = document.createElement('button');
+    btn.className = 'cassette '+w.type;
+    btn.setAttribute('aria-label','Open '+w.title);
+    btn.innerHTML =
+      '<div class="cass-top"><span class="cass-type">'+TYPE_LABEL[w.type]+'</span>'+
+      '<span class="cass-side">90 min &bull; HI-FI</span></div>'+
+      '<div class="cass-label"><div class="cass-title">'+esc(w.title)+'</div>'+
+      '<div class="cass-author">'+esc(w.author)+' &middot; '+esc(w.pub)+'</div></div>'+
+      '<div class="cass-window"><span class="reel"></span><span class="tape-fill"></span><span class="reel"></span></div>'+
+      '<div class="cass-foot"><span class="cass-tags">'+
+        w.tags.map(t=>'<span class="mini-tag">'+esc(t)+'</span>').join('')+
+      '</span><span class="cass-count">'+nNotes+' note'+(nNotes===1?'':'s')+' / '+nCards+' card'+(nCards===1?'':'s')+'</span></div>';
+    btn.addEventListener('click', ()=>openDetail(w.id));
+    shelf.appendChild(btn);
+  });
+}
+document.getElementById('filterRow').addEventListener('click', e=>{
+  const chip = e.target.closest('.chip');
+  if(!chip) return;
+  libFilter = chip.dataset.filter;
+  document.querySelectorAll('#filterRow .chip').forEach(c=>c.setAttribute('aria-pressed', String(c===chip)));
+  renderLibrary();
+});
+
+/* =======================================================================
+   DETAIL — mixtape J-card modal, notes view/add/edit
+   ======================================================================= */
+const overlay = document.getElementById('detailOverlay');
+let currentDetail = null;
+let lastFocus = null;
+
+function openDetail(workId){
+  currentDetail = workId;
+  lastFocus = document.activeElement;
+  renderDetail();
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  const x = overlay.querySelector('.close-x');
+  if(x) x.focus();
+}
+function closeDetail(){
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  currentDetail = null;
+  if(lastFocus && lastFocus.focus) lastFocus.focus();
+}
+overlay.addEventListener('click', e=>{ if(e.target===overlay) closeDetail(); });
+
+function renderDetail(editIdx){
+  const w = workById(currentDetail);
+  if(!w) return;
+  const jc = document.getElementById('jcard');
+  const quotesHtml = w.quotes.map((q,i)=>
+    '<div class="quote-item q'+(i%2)+'">&ldquo;'+esc(q.text)+'&rdquo;<small>&mdash; '+esc(w.author)+'</small></div>').join('');
+  const notesHtml = w.notes.map((n,i)=>{
+    if(editIdx===i){
+      return '<div class="track"><span class="track-no">'+(i+1)+'</span><div class="track-body">'+
+        '<textarea id="noteEdit'+i+'" aria-label="Edit note">'+esc(n.text)+'</textarea>'+
+        '<div style="display:flex;gap:8px;margin-top:8px">'+
+        '<button class="track-edit" data-save="'+i+'">Save</button>'+
+        '<button class="track-edit" data-cancel="1">Cancel</button></div></div></div>';
+    }
+    return '<div class="track"><span class="track-no">'+(i+1)+'</span><div class="track-body">'+
+      '<div class="track-text">'+esc(n.text)+'</div>'+
+      '<div class="track-date">logged '+esc(fmtDate(n.date))+'</div></div>'+
+      '<button class="track-edit" data-edit="'+i+'">Edit</button></div>';
+  }).join('');
+
+  jc.innerHTML =
+    '<div class="j-spine '+w.type+'">'+
+      '<span class="j-type">'+TYPE_LABEL[w.type]+'</span>'+
+      '<div class="vtitle">'+esc(w.title)+'</div>'+
+      '<div class="j-meta">'+
+        '<b>Artist</b>'+esc(w.author)+
+        '<b style="margin-top:8px">Released</b>'+esc(w.pub)+
+        '<b style="margin-top:8px">Dubbed (consumed)</b>'+esc(fmtDate(w.consumed))+
+      '</div>'+
+    '</div>'+
+    '<div class="j-body">'+
+      '<div class="j-head"><h2 id="jTitle">'+esc(w.title)+'</h2>'+
+      '<button class="close-x" id="jClose" aria-label="Close detail view">&#10005;</button></div>'+
+      '<div class="j-tags">'+w.tags.map(t=>'<span class="j-tag">'+esc(t)+'</span>').join('')+'</div>'+
+      '<span class="side-label">Side A &mdash; Quotes</span>'+quotesHtml+
+      '<span class="side-label">Side B &mdash; Liner Notes</span>'+
+      (notesHtml || '<p class="j-cards-note">No notes yet — add the first one below.</p>')+
+      '<div class="add-note"><textarea id="noteNew" placeholder="Add a new liner note..." aria-label="New note"></textarea>'+
+      '<div class="row"><button class="btn teal" id="noteAdd">Add Note</button>'+
+      '<span class="j-cards-note">'+w.cards.length+' flashcard'+(w.cards.length===1?'':'s')+' cut from this tape</span></div></div>'+
+    '</div>';
+
+  jc.querySelector('#jClose').addEventListener('click', closeDetail);
+  jc.querySelector('#noteAdd').addEventListener('click', ()=>{
+    const ta = jc.querySelector('#noteNew');
+    const val = ta.value.trim();
+    if(!val) { ta.focus(); return; }
+    w.notes.push({text:val, date:todayStr()});
+    renderDetail();
+    renderLibrary();
+  });
+  jc.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click', ()=>renderDetail(+b.dataset.edit)));
+  jc.querySelectorAll('[data-cancel]').forEach(b=>b.addEventListener('click', ()=>renderDetail()));
+  jc.querySelectorAll('[data-save]').forEach(b=>b.addEventListener('click', ()=>{
+    const i = +b.dataset.save;
+    const val = jc.querySelector('#noteEdit'+i).value.trim();
+    if(val) w.notes[i].text = val;
+    renderDetail();
+  }));
+}
+
+/* =======================================================================
+   FLASHCARDS — polaroid review
+   ======================================================================= */
+let flashQueue = [];
+let flashCard = null;
+let flashFlipped = false;
+let sessionReviewed = 0;
+
+function buildFlashQueue(){
+  const due = shuffle(dueCards());
+  flashQueue = due;
+  flashCard = flashQueue.shift() || null;
+  flashFlipped = false;
+}
+function renderFlash(){
+  const wrap = document.getElementById('flashWrap');
+  if(!flashCard){
+    buildFlashQueue();
+  }
+  if(!flashCard){
+    wrap.innerHTML =
+      '<div class="all-done"><div class="big">Be kind, rewind!</div>'+
+      '<p style="font-weight:700;margin-bottom:16px">No cards due right now. '+sessionReviewed+' reviewed this session.</p>'+
+      '<button class="btn pink" id="flashAnyway">Review anyway (shuffle all)</button></div>';
+    wrap.querySelector('#flashAnyway').addEventListener('click', ()=>{
+      flashQueue = shuffle(ALL_CARDS.slice());
+      flashCard = flashQueue.shift();
+      flashFlipped = false;
+      renderFlash();
+    });
+    return;
+  }
+  const w = workById(flashCard.workId);
+  const isDue = flashCard.due <= Date.now();
+  wrap.innerHTML =
+    '<div class="flash-zone">'+
+      '<div class="polaroid-stage">'+
+        '<div class="polaroid'+(flashFlipped?' flipped':'')+'" id="polaroid" tabindex="0" role="button" aria-label="Flashcard, press to flip">'+
+          (isDue?'<span class="due-stamp">DUE</span>':'')+
+          '<div class="pface pfront"><span class="tape"></span>'+
+            '<div class="photo"><span class="qa-tag">Q</span>'+esc(flashCard.q)+'</div>'+
+            '<div class="caption"><span class="src">'+esc(w.title)+'</span>'+
+            '<span class="hint">tap photo to flip</span></div></div>'+
+          '<div class="pface pback"><span class="tape"></span>'+
+            '<div class="photo"><span class="qa-tag">A</span>'+esc(flashCard.a)+'</div>'+
+            '<div class="caption"><span class="src">'+esc(w.author)+'</span>'+
+            '<span class="hint">'+TYPE_LABEL[w.type]+' &middot; '+esc(dueLabel(flashCard))+'</span></div></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="flash-side">'+
+        '<div class="panel"><h3>Grade it</h3>'+
+          '<div class="grade-row">'+
+            '<button class="btn red" data-grade="0" '+(flashFlipped?'':'disabled')+'>Again</button>'+
+            '<button class="btn yellow" data-grade="1" '+(flashFlipped?'':'disabled')+'>Hard</button>'+
+            '<button class="btn teal" data-grade="2" '+(flashFlipped?'':'disabled')+'>Good</button>'+
+            '<button class="btn pink" data-grade="3" '+(flashFlipped?'':'disabled')+'>Easy</button>'+
+          '</div>'+
+          '<div class="grade-sub"><span>10 min</span><span>~1 d</span><span>spaced</span><span>spaced+</span></div>'+
+          (flashFlipped?'':'<p style="margin-top:12px;font-size:.78rem;font-weight:700;opacity:.65">Flip the polaroid first, then grade your recall.</p>')+
+        '</div>'+
+        '<div class="panel"><h3>This session</h3>'+
+          '<div class="flash-stats">'+
+            '<span class="stat-pill"><b>'+dueCards().length+'</b> due</span>'+
+            '<span class="stat-pill"><b>'+flashQueue.length+'</b> left in stack</span>'+
+            '<span class="stat-pill"><b>'+sessionReviewed+'</b> reviewed</span>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+
+  const pol = wrap.querySelector('#polaroid');
+  const flip = ()=>{ flashFlipped = !flashFlipped; renderFlash(); };
+  pol.addEventListener('click', flip);
+  pol.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flip(); } });
+  wrap.querySelectorAll('[data-grade]').forEach(b=>b.addEventListener('click', e=>{
+    e.stopPropagation();
+    gradeCard(flashCard, +b.dataset.grade);
+    sessionReviewed++;
+    flashCard = flashQueue.shift() || null;
+    flashFlipped = false;
+    renderFlash();
+  }));
+}
+
+/* =======================================================================
+   POP QUIZ — active recall on a work or a tag
+   ======================================================================= */
+const ALL_TAGS = [...new Set(WORKS.flatMap(w=>w.tags))].sort();
+function fillQuizScope(){
+  const sel = document.getElementById('quizScope');
+  let html = '<optgroup label="One tape">';
+  WORKS.forEach(w=>{ html += '<option value="w:'+w.id+'">'+esc(w.title)+'</option>'; });
+  html += '</optgroup><optgroup label="A whole subject">';
+  ALL_TAGS.forEach(t=>{ html += '<option value="t:'+t+'">#'+esc(t)+'</option>'; });
+  html += '</optgroup>';
+  sel.innerHTML = html;
+}
+let quizQueue = [], quizCard = null, quizRevealed = false, quizDone = 0, quizTotal = 0, quizScopeName='';
+
+function startQuiz(){
+  const v = document.getElementById('quizScope').value;
+  let pool;
+  if(v.startsWith('w:')){
+    const w = workById(v.slice(2));
+    pool = ALL_CARDS.filter(c=>c.workId===w.id);
+    quizScopeName = w.title;
+  }else{
+    const tag = v.slice(2);
+    const ids = WORKS.filter(w=>w.tags.includes(tag)).map(w=>w.id);
+    pool = ALL_CARDS.filter(c=>ids.includes(c.workId));
+    quizScopeName = '#'+tag;
+  }
+  // due first, then the rest
+  const due = shuffle(pool.filter(c=>c.due<=Date.now()));
+  const rest = shuffle(pool.filter(c=>c.due>Date.now()));
+  quizQueue = due.concat(rest);
+  quizTotal = quizQueue.length;
+  quizDone = 0;
+  quizCard = quizQueue.shift() || null;
+  quizRevealed = false;
+  renderQuiz();
+}
+document.getElementById('quizStart').addEventListener('click', startQuiz);
+
+function renderQuiz(){
+  const stage = document.getElementById('quizStage');
+  if(quizTotal===0 && !quizCard){
+    stage.innerHTML = '<p class="j-cards-note" style="max-width:560px">Pick a tape or a subject above and hit <b>Start Quiz</b>. Due cards come first.</p>';
+    return;
+  }
+  if(!quizCard){
+    stage.innerHTML =
+      '<div class="worksheet"><span class="ws-sticker">A+ EFFORT</span>'+
+      '<div class="ws-head"><span class="ws-title">Pop Quiz &mdash; done!</span></div>'+
+      '<p class="ws-q">All '+quizDone+' questions on <b>'+esc(quizScopeName)+'</b> answered. The scheduler took notes.</p>'+
+      '<div class="ws-actions"><button class="btn pink" id="quizAgain">Quiz me again</button></div></div>';
+    stage.querySelector('#quizAgain').addEventListener('click', startQuiz);
+    return;
+  }
+  const w = workById(quizCard.workId);
+  stage.innerHTML =
+    '<div class="worksheet"><span class="ws-sticker">NO PEEKING</span>'+
+    '<div class="ws-head"><span class="ws-title">Pop Quiz</span>'+
+    '<span class="ws-name">Name: <u>&nbsp;Matthew G.&nbsp;</u> &nbsp; Subject: <u>&nbsp;'+esc(quizScopeName)+'&nbsp;</u></span></div>'+
+    '<p class="ws-q"><span class="qnum">Q'+(quizDone+1)+'.</span> '+esc(quizCard.q)+
+    ' <span style="opacity:.55;font-size:.75rem;font-weight:800">('+esc(w.title)+')</span></p>'+
+    '<textarea id="quizAnswer" placeholder="Write it from memory..." aria-label="Your answer" '+(quizRevealed?'readonly':'')+'></textarea>'+
+    (quizRevealed ?
+      '<div class="ws-answer"><b>Answer key</b>'+esc(quizCard.a)+'</div>'+
+      '<div class="ws-actions"><span class="ws-grade-label">How did you really do?</span>'+
+        '<button class="btn red" data-qgrade="0">Again</button>'+
+        '<button class="btn yellow" data-qgrade="1">Hard</button>'+
+        '<button class="btn teal" data-qgrade="2">Good</button>'+
+        '<button class="btn pink" data-qgrade="3">Easy</button></div>'
+      :
+      '<div class="ws-actions"><button class="btn purple" id="quizReveal">Check answer key</button></div>'
+    )+
+    '<p class="ws-progress">Question '+(quizDone+1)+' of '+quizTotal+' &bull; '+esc(quizScopeName)+'</p>'+
+    '</div>';
+
+  const ta = stage.querySelector('#quizAnswer');
+  if(ta){ ta.value = quizTyped; ta.addEventListener('input', ()=>{ quizTyped = ta.value; }); if(!quizRevealed) ta.focus(); }
+  const rv = stage.querySelector('#quizReveal');
+  if(rv) rv.addEventListener('click', ()=>{ quizRevealed = true; renderQuiz(); });
+  stage.querySelectorAll('[data-qgrade]').forEach(b=>b.addEventListener('click', ()=>{
+    gradeCard(quizCard, +b.dataset.qgrade);
+    quizDone++;
+    quizCard = quizQueue.shift() || null;
+    quizRevealed = false;
+    quizTyped = '';
+    renderQuiz();
+  }));
+}
+let quizTyped = '';
+
+/* =======================================================================
+   DIARY — reflection engine
+   ======================================================================= */
+let currentQuote = null;
+function pickQuote(){
+  const pool = [];
+  WORKS.forEach(w=>w.quotes.forEach(q=>pool.push({text:q.text, work:w})));
+  let pick = pool[Math.floor(Math.random()*pool.length)];
+  if(currentQuote && pool.length>1){
+    while(pick.text===currentQuote.text){ pick = pool[Math.floor(Math.random()*pool.length)]; }
+  }
+  currentQuote = pick;
+  document.getElementById('dqText').innerHTML = '&ldquo;'+esc(pick.text)+'&rdquo;';
+  document.getElementById('dqAttr').innerHTML = '&mdash; '+esc(pick.work.author)+', <span>'+esc(pick.work.title)+'</span> ('+esc(pick.work.pub)+')';
+}
+document.getElementById('reflShuffle').addEventListener('click', pickQuote);
+document.getElementById('reflSave').addEventListener('click', ()=>{
+  const ta = document.getElementById('reflInput');
+  const val = ta.value.trim();
+  if(!val){ ta.focus(); return; }
+  reflections.unshift({
+    quote: currentQuote.text,
+    source: currentQuote.work.title+' — '+currentQuote.work.author,
+    workId: currentQuote.work.id,
+    date: todayStr(),
+    text: val
+  });
+  ta.value = '';
+  renderReflList();
+  pickQuote();
+});
+function renderReflList(){
+  const list = document.getElementById('reflList');
+  document.getElementById('reflCount').textContent = '('+reflections.length+')';
+  list.innerHTML = reflections.map(r=>
+    '<div class="refl-item">'+
+    '<div class="refl-quote">&ldquo;'+esc(r.quote)+'&rdquo; &mdash; '+esc(r.source)+'</div>'+
+    '<div class="refl-text">'+esc(r.text)+'</div>'+
+    '<div class="refl-meta">entry &bull; '+esc(fmtDate(r.date))+'</div></div>'
+  ).join('');
+}
+
+/* =======================================================================
+   CORKBOARD — knowledge graph (SVG, yarn + pushpins)
+   ======================================================================= */
+const NODE_POS = {
+  tfs:[115,115], ah:[330,72], dw:[560,84], doet:[775,120],
+  mis:[150,290], hgw:[412,222], awmt:[668,268],
+  hub:[248,428], wbdw:[505,392], altm:[742,438],
+  med:[122,548], sr:[378,548], tkp:[630,560]
+};
+const TYPE_FILL = {book:'#00B2A4', essay:'#FF2E88', article:'#8E5BEE', podcast:'#FFCF3F'};
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const graphEdges = []; // {a,b,shared,el}
+const graphNodes = {}; // id -> {g, neighbors:Set}
+
+function sharedTags(a,b){ return a.tags.filter(t=>b.tags.includes(t)); }
+
+function buildGraph(){
+  const board = document.getElementById('corkboard');
+  const svg = document.createElementNS(SVG_NS,'svg');
+  svg.setAttribute('viewBox','0 0 900 640');
+  svg.setAttribute('role','img');
+  svg.setAttribute('aria-label','Knowledge graph of content connected by shared tags');
+
+  // edges first (under pins)
+  for(let i=0;i<WORKS.length;i++){
+    for(let j=i+1;j<WORKS.length;j++){
+      const sh = sharedTags(WORKS[i],WORKS[j]);
+      if(!sh.length) continue;
+      const [x1,y1]=NODE_POS[WORKS[i].id], [x2,y2]=NODE_POS[WORKS[j].id];
+      const mx=(x1+x2)/2, my=(y1+y2)/2 + 18 + sh.length*4; // yarn sag
+      const p = document.createElementNS(SVG_NS,'path');
+      p.setAttribute('d','M'+x1+' '+y1+' Q '+mx+' '+my+' '+x2+' '+y2);
+      p.setAttribute('class','yarn');
+      if(sh.length>1) p.setAttribute('stroke-width', 2.5+sh.length);
+      svg.appendChild(p);
+      graphEdges.push({a:WORKS[i].id, b:WORKS[j].id, shared:sh, el:p});
+    }
+  }
+  // nodes
+  WORKS.forEach(w=>{
+    const [x,y] = NODE_POS[w.id];
+    const g = document.createElementNS(SVG_NS,'g');
+    g.setAttribute('class','gnode');
+    g.setAttribute('tabindex','0');
+    g.setAttribute('role','button');
+    g.setAttribute('aria-label','Open '+w.title);
+
+    const labelW = Math.max(74, w.short.length*7.6+20);
+    const rect = document.createElementNS(SVG_NS,'rect');
+    rect.setAttribute('x', x-labelW/2); rect.setAttribute('y', y+14);
+    rect.setAttribute('width', labelW); rect.setAttribute('height', 24);
+    rect.setAttribute('rx', 6);
+    rect.setAttribute('class','label-bg');
+    rect.setAttribute('transform','rotate('+((Math.random()*4-2).toFixed(1))+' '+x+' '+(y+26)+')');
+
+    const tx = document.createElementNS(SVG_NS,'text');
+    tx.setAttribute('x', x); tx.setAttribute('y', y+31);
+    tx.setAttribute('text-anchor','middle');
+    tx.setAttribute('class','label-tx');
+    tx.textContent = w.short;
+    tx.setAttribute('transform', rect.getAttribute('transform'));
+
+    const shadow = document.createElementNS(SVG_NS,'circle');
+    shadow.setAttribute('cx', x+3); shadow.setAttribute('cy', y+3); shadow.setAttribute('r', 10);
+    shadow.setAttribute('class','pin-shadow');
+
+    const pin = document.createElementNS(SVG_NS,'circle');
+    pin.setAttribute('cx', x); pin.setAttribute('cy', y); pin.setAttribute('r', 10);
+    pin.setAttribute('fill', TYPE_FILL[w.type]);
+    pin.setAttribute('stroke', '#1C1A1A'); pin.setAttribute('stroke-width','3');
+
+    const gleam = document.createElementNS(SVG_NS,'circle');
+    gleam.setAttribute('cx', x-3); gleam.setAttribute('cy', y-3); gleam.setAttribute('r', 2.6);
+    gleam.setAttribute('fill', 'rgba(255,255,255,.85)');
+
+    g.appendChild(rect); g.appendChild(tx);
+    g.appendChild(shadow); g.appendChild(pin); g.appendChild(gleam);
+    svg.appendChild(g);
+    graphNodes[w.id] = {g, neighbors:new Set()};
+
+    g.addEventListener('mouseenter', ()=>highlightNode(w.id));
+    g.addEventListener('mouseleave', clearHighlight);
+    g.addEventListener('focus', ()=>highlightNode(w.id));
+    g.addEventListener('blur', clearHighlight);
+    g.addEventListener('click', ()=>openDetail(w.id));
+    g.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); openDetail(w.id); } });
+  });
+  graphEdges.forEach(e=>{
+    graphNodes[e.a].neighbors.add(e.b);
+    graphNodes[e.b].neighbors.add(e.a);
+  });
+  board.appendChild(svg);
+}
+function highlightNode(id){
+  const w = workById(id);
+  const nb = graphNodes[id].neighbors;
+  Object.entries(graphNodes).forEach(([nid,n])=>{
+    n.g.classList.toggle('lit', nid===id || nb.has(nid));
+    n.g.classList.toggle('dim', !(nid===id || nb.has(nid)));
+  });
+  graphEdges.forEach(e=>{
+    const on = e.a===id || e.b===id;
+    e.el.classList.toggle('lit', on);
+    e.el.classList.toggle('dim', !on);
+  });
+  document.getElementById('graphTip').innerHTML =
+    '<b>'+esc(w.title)+'</b> &mdash; tied to '+nb.size+' other'+(nb.size===1?'':'s')+' by '+
+    w.tags.map(t=>'#'+esc(t)).join(' ');
+}
+function clearHighlight(){
+  Object.values(graphNodes).forEach(n=>n.g.classList.remove('lit','dim'));
+  graphEdges.forEach(e=>e.el.classList.remove('lit','dim'));
+  document.getElementById('graphTip').innerHTML = 'Hover a pushpin&hellip;';
+}
+
+/* =======================================================================
+   SERENDIPITY — VHS rewind toast
+   ======================================================================= */
+const toast = document.getElementById('vhsToast');
+let toastItem = null;
+
+function serendipityPool(){
+  const pool = [];
+  WORKS.forEach(w=>w.notes.forEach(n=>pool.push({
+    kind:'Old Note', text:n.text, src:w.title+' — '+w.author, workId:w.id, date:n.date
+  })));
+  reflections.forEach(r=>pool.push({
+    kind:'Past Reflection', text:r.text, src:r.source, workId:r.workId, date:r.date
+  }));
+  return pool;
+}
+function showRewind(){
+  const pool = serendipityPool();
+  let pick = pool[Math.floor(Math.random()*pool.length)];
+  if(toastItem && pool.length>1){
+    while(pick.text===toastItem.text){ pick = pool[Math.floor(Math.random()*pool.length)]; }
+  }
+  toastItem = pick;
+  document.getElementById('vhsKind').textContent = pick.kind;
+  const t = pick.text.length>180 ? pick.text.slice(0,177)+'…' : pick.text;
+  document.getElementById('vhsText').textContent = '“'+t+'”';
+  document.getElementById('vhsSrc').innerHTML = 'from <span>'+esc(pick.src)+'</span>';
+  document.getElementById('vhsDate').textContent = 'recorded '+fmtDate(pick.date);
+  const mins = String(Math.floor(Math.random()*59)).padStart(2,'0');
+  const secs = String(Math.floor(Math.random()*59)).padStart(2,'0');
+  document.getElementById('vhsCounter').textContent = 'SP 0:'+mins+':'+secs;
+  toast.classList.add('show');
+}
+function hideRewind(){ toast.classList.remove('show'); }
+document.getElementById('vhsClose').addEventListener('click', hideRewind);
+document.getElementById('vhsAnother').addEventListener('click', showRewind);
+document.getElementById('vhsOpen').addEventListener('click', ()=>{
+  const item = toastItem;
+  hideRewind();
+  if(item && item.workId){ openDetail(item.workId); }
+  else { showView('diary'); }
+});
+
+/* =======================================================================
+   GLOBAL — escape key, init
+   ======================================================================= */
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape'){
+    if(overlay.classList.contains('open')) closeDetail();
+    else if(toast.classList.contains('show')) hideRewind();
+  }
+});
+
+/* init */
+document.getElementById('statWorks').textContent = WORKS.length+' tapes';
+document.getElementById('statCards').textContent = ALL_CARDS.length+' cards';
+document.getElementById('todayChip').textContent = new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+updateDueUI();
+renderLibrary();
+fillQuizScope();
+renderQuiz();
+pickQuote();
+renderReflList();
+buildGraph();
+
+/* auto serendipity a few seconds after load — but not inside the gallery iframe */
+if(window.self === window.top){
+  setTimeout(showRewind, 4500);
+}
+</script>
+</body>
+</html>
