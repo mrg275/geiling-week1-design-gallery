@@ -64,12 +64,22 @@ SRS card state: `{ ease, interval, reps, due }` with the `nextState` grading con
 
 ## Roadmap
 
-- **Phase 0 — restructure (done):** v25 promoted to `/`, gallery archived, this document.
-- **Phase 1 — blockout:** gray-box the hall in Blender from v25's dimensions; name objects and set `act` properties; verify proportions against `/legacy/` screenshots at 1.7 m eye height.
-- **Phase 2 — modeling:** shell → windows → bookcases (hero modeled once, instanced; spines instanced per work) → furniture → statues (stylized marble, from v25's `statueSVG` silhouettes).
-- **Phase 3 — materials, lighting, bake, export:** Principled BSDF from the design-token palette; Cycles bake to UV2 lightmaps; glTF + Draco + KTX2.
-- **Phase 4 — three.js app:** `/src/` modules; first-person controls (port v25's walk/collision/click-to-approach); raycast picking → shared `handleAct()`; glass UI lifted verbatim; WebGL-capability check falls back to `/legacy/`. Then data phase D2 (localStorage).
-- **Phase 5 — deploy:** Vercel, verify redirects + MIME types, live test on Retina Chrome.
+Phases 0–5 of the migration are **done** (Oct 2026): the hall is modeled in `blender/library.blend`, baked by `blender/bake_export.py` (headless, CPU — see Known pitfalls), and served at `/` as the three.js app with localStorage persistence (D2), deployed on Vercel.
+
+### Next: quality pass
+
+- **Statues & busts:** refine the primitive-composed marble figures (or enable an MCP 3D generator / Poly Haven and replace them); engraved plaque textures.
+- **Bake quality:** raise lightmap samples + denoise (current: 64 samples, no denoise — slight blotch on large surfaces); real window vistas (mountain/lake backdrop) instead of white emissive glass; sunbeam volumes.
+- **Surface detail:** wood-plank floor normal/roughness maps, coffered-ceiling frescoes (paint in Blender or bake the v25 SVG), book-spine title textures for the 13 works.
+- **Assets:** KTX2/BasisU texture compression (needs KTX2Loader + transcoder vendored); current payload ~5 MB via WebP + quantization.
+- **Data phase D3:** real backend for Matthew's actual library.
+
+### Known pitfalls (hard-won — do not rediscover)
+
+- `gltf-transform optimize` **joins nodes and destroys the `act` extras** — use `webp` + `quantize` commands only.
+- Metal GPU Cycles bakes segfault while the interactive Blender session holds the GPU; `bake_export.py` runs CPU-only (full pipeline ≈ 2 min).
+- In Blender MCP execs, call `bpy.context.view_layer.update()` after adding modifiers before depsgraph evaluation; prefer direct bmesh construction over boolean modifiers (flaky through MCP, worse lightmap topology).
+- The 3D click-picking listener must sit on `#viewport`, not the canvas: the drag-look handler takes pointer capture on `#viewport`, which retargets clicks.
 
 ## Verification norms
 
