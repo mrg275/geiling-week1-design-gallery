@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design Gallery</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --card-bg: #ffffff;
+    --ink: #111110;
+    --ink-soft: #6f6e6a;
+    --line: #e4e2dd;
+    --accent: #e8325a;
+    --thumb-bg: #f3f2ef;
+    --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 14px rgba(0,0,0,.05);
+    --shadow-hover: 0 2px 6px rgba(0,0,0,.06), 0 10px 28px rgba(0,0,0,.10);
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #141413;
+      --card-bg: #1e1e1c;
+      --ink: #f0efec;
+      --ink-soft: #969590;
+      --line: #32322f;
+      --accent: #ff5c80;
+      --thumb-bg: #262624;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+      --shadow-hover: 0 2px 6px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413;
+    --card-bg: #1e1e1c;
+    --ink: #f0efec;
+    --ink-soft: #969590;
+    --line: #32322f;
+    --accent: #ff5c80;
+    --thumb-bg: #262624;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 14px rgba(0,0,0,.25);
+    --shadow-hover: 0 2px 6px rgba(0,0,0,.35), 0 10px 28px rgba(0,0,0,.4);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { background: var(--bg); }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 16px 96px;
+  }
+
+  header { margin-bottom: 44px; }
+
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 10px;
+  }
+
+  h1 {
+    font-size: clamp(26px, 4vw, 38px);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    margin: 0 0 12px;
+  }
+
+  .sub {
+    color: var(--ink-soft);
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 560px;
+    margin: 0;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 16px;
+    align-items: baseline;
+    margin-top: 18px;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .meta-row b { color: var(--ink); font-weight: 600; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 22px 18px;
+  }
+
+  .slot { display: block; text-decoration: none; color: inherit; }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--card-bg);
+    overflow: hidden;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  }
+
+  a.slot .thumb { box-shadow: var(--shadow); }
+  a.slot:hover .thumb {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--accent);
+  }
+  a.slot:focus-visible { outline: none; }
+  a.slot:focus-visible .thumb { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+
+  /* live scaled-down iframe preview */
+  .thumb iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 1280px;
+    height: 960px;
+    border: 0;
+    transform-origin: top left;
+    pointer-events: none;
+    background: #fff;
+  }
+
+  .empty .thumb {
+    border-style: dashed;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .empty .thumb span {
+    color: var(--ink-soft);
+    font-size: 12px;
+    opacity: .55;
+  }
+
+  .caption { margin-top: 9px; padding: 0 2px; }
+
+  .vlabel {
+    font-size: 12px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .04em;
+  }
+  .empty .vlabel { color: var(--ink-soft); font-weight: 500; opacity: .6; }
+
+  .note {
+    margin-top: 3px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: var(--ink-soft);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    color: var(--ink-soft);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  footer code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    background: var(--thumb-bg);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 1px 5px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Design history — archived</p>
+    <h1>The Geiling Library — Design Iteration Gallery</h1>
+    <p class="sub" style="margin-bottom:6px;">
+      <a href="../index.html" style="color:var(--accent); font-weight:600;">← The live app is at /</a>
+    </p>
+    <p class="sub">
+      Every design concept for the personal knowledge-management &amp; active-recall app,
+      in order. Each card is a live preview of that version with a short note on what changed.
+      v25 won and became the app; it is preserved at <a href="../legacy/index.html" style="color:var(--accent)">/legacy/</a>.
+    </p>
+    <div class="meta-row">
+      <span><b id="count-done">0</b> of 25 versions explored</span>
+      <span>Matthew Geiling</span>
+      <button id="storyBtn" style="font: inherit; color: var(--accent); background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline;">The story of how I got to v25</button>
+    </div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <footer>
+    To add a version: create <code>vNN/index.html</code>, then register it in the
+    <code>VERSIONS</code> array at the top of this file's script with a one-line note on what changed.
+    Every version page links back here with <code>← Gallery</code>.
+  </footer>
+</div>
+
+<div id="storyModal" style="display:none; position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.5); align-items:center; justify-content:center; padding:16px;">
+  <div style="background:var(--card-bg); color:var(--ink); max-width:560px; border:1px solid var(--line); border-radius:12px; box-shadow:var(--shadow-hover); padding:28px 30px;">
+    <h2 style="margin:0 0 14px; font-size:20px;">How I got to v25</h2>
+    <p style="margin:0 0 12px; font-size:15px; line-height:1.65;">After playing around with different form factors I realized that I loved the interactive nature of <a href="v11/index.html" style="color:var(--accent)">v11</a>, which was a museum. However, for the purposes of this product I felt a library was more fitting. I then made a page for <a href="v15/index.html" style="color:var(--accent)">Harper Library</a> and tried to model off of that a bit.</p>
+    <p style="margin:0 0 12px; font-size:15px; line-height:1.65;">After building, I spent a few versions refining details and pulling together things I liked from previous designs. Notably, I kept the old-school library feel while porting over the Apple liquid glass design from <a href="v04/index.html" style="color:var(--accent)">v04</a>.</p>
+    <p style="margin:0 0 18px; font-size:15px; line-height:1.65;">I'm really happy with how it turned out — but still have work to do!</p>
+    <button id="storyClose" style="font:inherit; font-size:14px; padding:8px 18px; border-radius:999px; border:1px solid var(--line); background:var(--thumb-bg); color:var(--ink); cursor:pointer;">Close</button>
+  </div>
+</div>
+
+<script>
+  const storyModal = document.getElementById('storyModal');
+  document.getElementById('storyBtn').addEventListener('click', () => storyModal.style.display = 'flex');
+  document.getElementById('storyClose').addEventListener('click', () => storyModal.style.display = 'none');
+  storyModal.addEventListener('click', e => { if (e.target === storyModal) storyModal.style.display = 'none'; });
+  addEventListener('keydown', e => { if (e.key === 'Escape') storyModal.style.display = 'none'; });
+
+  // ── Register each completed version here ─────────────────────────────
+  // { id: 'v01', note: 'what changed in this iteration' }
+  const VERSIONS = [
+    { id: 'v01', note: '3D library room — pull books off CSS-3D shelves; desk objects open flashcards, recall, reflection; wall map opens the knowledge graph' },
+    { id: 'v02', note: 'Notion-esque workspace — sidebar page tree, database-table library, property rows, pastel tag pills, hover-reveal actions' },
+    { id: 'v03', note: 'Coastal "Tidepool" — navy-to-teal waves into sandy cards, surf microcopy ("Today’s swell" dues, "Message in a bottle" serendipity), night-ocean reef map graph' },
+    { id: 'v04', note: 'Liquid Glass "Prism" — visionOS glassmorphism, drifting blurred color orbs behind frosted panes, pill dock nav, brighter second-layer glass modals' },
+    { id: 'v05', note: 'RPG "NEURAL_CODEX" — CRT scanlines, neon HUD, Quest Log library with rarity + mastery bars, XP level-ups, Boss Fight recall, Star Map graph' },
+    { id: 'v06', note: 'Ultra-minimalist Swiss — white ground, black Helvetica, hairline rules, dense lists, single red accent reserved for due counts' },
+    { id: 'v07', note: 'Dusk Studio — my room as a style: amber lamp glow on charcoal, navy + cream boucle, wood-slat header, works as framed travel prints' },
+    { id: 'v08', note: 'Mets "Clubhouse" — royal blue & orange ballpark, scoreboard header, trading-card lineup, Strikeout→Home run grading, baseball-diamond graph' },
+    { id: 'v09', note: 'Retro ’80s "Totally Recall" — Memphis confetti on cream, cassette tape wall, Polaroid flashcards, corkboard-and-yarn graph, VHS rewind toast' },
+    { id: 'v10', note: 'Renaissance "Bibliotheca Memoriae" — parchment & gold leaf, illuminated initials, marginalia notes, Latin grading (Iterum→Optime), celestial Arbor Scientiae graph' },
+    { id: 'v11', note: 'Walkable 3D Museum "The Geiling Collection" — WASD/click-to-approach gallery hall, works as framed paintings with brass plaques, wings by type, Collection Map graph' },
+    { id: 'v12', note: 'Private Vault — CSS vault door with spinning handle & retracting lugs on load, safe-deposit-drawer library, dossier details, blueprint wiring-diagram graph' },
+    { id: 'v13', note: 'KNOWLEDGE OPS — sleek defense-tech command center: graphite + tactical amber, INTEL ARCHIVE with readiness bars, LIVE EXERCISE recall with mission timer, FLASH TRAFFIC toasts' },
+    { id: 'v14', note: 'Walkable 3D Mind Gym — WASD/click-to-walk CSS-3D facility; power-rack flashcard reps, treadmill recall sprints, locker-wall library, mirror muscle-map graph' },
+    { id: 'v15', note: 'Harper Library — collegiate-gothic reading room: pointed-arch leaded windows, maroon & banker’s-lamp green, card-catalog library, oak tables lit by brass lamps' },
+    { id: 'v16', note: 'Louvre "La Grande Mémoire" — baroque ceiling mural over crimson salon walls, gilt-framed works, Encore→Excellent grading, night-sky constellation graph' },
+    { id: 'v17', note: 'Outer space "The Orrery" — works as CSS planets on elliptical orbits around a core-mind sun; probe-launch flashcards, EVA recall, Deep Space Signal serendipity' },
+    { id: 'v18', note: 'Situation Room — first-person seat at the conference table, everything plays on the wall TV across 6 channels; world clocks, SECURE lamp, ARCHIVE FLASH breaking banners' },
+    { id: 'v19', note: 'CORTEX — the app as an SVG human brain: zoom into lobes (occipital library, hippocampus flashcards, prefrontal recall), synaptic sparks, neuron-and-dendrite graph' },
+    { id: 'v20', note: 'The Geiling Library — walkable 3D library with ceiling fresco & "Look up"; shelf sections by type, quote fountain, UChicago transcript, writing & trophy exhibits (★ FILL IN placeholders)' },
+    { id: 'v21', note: 'Geiling Library — Daylight: six arched windows onto a parallax mountain-and-lake vista, sunbeam shafts & floor pools, vault raised 580→860 for a loftier fresco' },
+    { id: 'v22', note: 'Geiling Library — Grand Hall: ~2.5× floor area, 12 windows, coffered frescoes, triple-width shelf runs with "shelf available" tags, 4 reserved exhibit plinths' },
+    { id: 'v23', note: 'Geiling Library — Glass: Grand Hall with visionOS liquid-glass chrome — frosted HUD dock, glass command-palette menu, layered glass placards & overlays' },
+    { id: 'v24', note: 'Geiling Library — Bound Editions: textured realistic books — worn leather with gilt-stamped spines & raised hubs, cloth and jackets, leaning volumes, scuffs & sun-fade' },
+    { id: 'v25', path: '../legacy/index.html', note: 'Geiling Library — Statuary: four marble mock statues on the aisle plinths (Thinker, Orator, Discobolus, Owl of Minerva), engraved plaques, clickable & replaceable. The winner — promoted to the app, preserved at /legacy/' },
+  ];
+  // ─────────────────────────────────────────────────────────────────────
+
+  const TOTAL_SLOTS = 25;
+  const byId = Object.fromEntries(VERSIONS.map(v => [v.id, v]));
+  const grid = document.getElementById('grid');
+
+  for (let i = 1; i <= TOTAL_SLOTS; i++) {
+    const id = 'v' + String(i).padStart(2, '0');
+    const v = byId[id];
+
+    if (v) {
+      const a = document.createElement('a');
+      a.className = 'slot';
+      const page = v.path || (id + '/index.html');
+      a.href = page;
+      a.innerHTML = `
+        <div class="thumb" data-src="${page}" data-title="Preview of ${id}"></div>
+        <div class="caption">
+          <div class="vlabel">${id}</div>
+          <div class="note">${v.note}</div>
+        </div>`;
+      grid.appendChild(a);
+    } else {
+      const d = document.createElement('div');
+      d.className = 'slot empty';
+      d.innerHTML = `
+        <div class="thumb"><span>empty</span></div>
+        <div class="caption"><div class="vlabel">${id}</div></div>`;
+      grid.appendChild(d);
+    }
+  }
+
+  document.getElementById('count-done').textContent = VERSIONS.length;
+
+  // Scale an iframe so its 1280px-wide page fits the thumbnail
+  function scaleThumb(f) {
+    const w = f.parentElement.clientWidth;
+    const s = w / 1280;
+    f.style.transform = `scale(${s})`;
+    f.style.height = (f.parentElement.clientHeight / s) + 'px';
+  }
+  addEventListener('resize', () => document.querySelectorAll('.thumb iframe').forEach(scaleThumb));
+
+  // Mount live previews only near the viewport; unmount when scrolled far away.
+  // 25 simultaneous live apps (several are heavy 3D scenes) overwhelm the page otherwise.
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      const thumb = e.target;
+      const existing = thumb.querySelector('iframe');
+      if (e.isIntersecting && !existing) {
+        const f = document.createElement('iframe');
+        f.src = thumb.dataset.src;
+        f.tabIndex = -1;
+        f.scrolling = 'no';
+        f.title = thumb.dataset.title;
+        thumb.appendChild(f);
+        scaleThumb(f);
+      } else if (!e.isIntersecting && existing) {
+        existing.remove();
+      }
+    });
+  }, { rootMargin: '500px 0px' });
+  document.querySelectorAll('.thumb[data-src]').forEach(t => io.observe(t));
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+# Local Blender MCP tooling (installed per-machine, not part of the app)
+.blender-setup/
+
+# macOS
+.DS_Store
+
+# Node (only used for dev tooling like gltf-transform, never app deps)
+node_modules/
+
+# Blender backup/autosave files
+*.blend1
+*.blend2
+*.blend@

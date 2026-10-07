@@ -1,0 +1,30 @@
+{
+  "redirects": [
+    { "source": "/v25", "destination": "/legacy/", "permanent": true },
+    { "source": "/v25/:path*", "destination": "/legacy/:path*", "permanent": true },
+    { "source": "/v01/:path*", "destination": "/gallery/v01/:path*", "permanent": true },
+    { "source": "/v02/:path*", "destination": "/gallery/v02/:path*", "permanent": true },
+    { "source": "/v03/:path*", "destination": "/gallery/v03/:path*", "permanent": true },
+    { "source": "/v04/:path*", "destination": "/gallery/v04/:path*", "permanent": true },
+    { "source": "/v05/:path*", "destination": "/gallery/v05/:path*", "permanent": true },
+    { "source": "/v06/:path*", "destination": "/gallery/v06/:path*", "permanent": true },
+    { "source": "/v07/:path*", "destination": "/gallery/v07/:path*", "permanent": true },
+    { "source": "/v08/:path*", "destination": "/gallery/v08/:path*", "permanent": true },
+    { "source": "/v09/:path*", "destination": "/gallery/v09/:path*", "permanent": true },
+    { "source": "/v10/:path*", "destination": "/gallery/v10/:path*", "permanent": true },
+    { "source": "/v11/:path*", "destination": "/gallery/v11/:path*", "permanent": true },
+    { "source": "/v12/:path*", "destination": "/gallery/v12/:path*", "permanent": true },
+    { "source": "/v13/:path*", "destination": "/gallery/v13/:path*", "permanent": true },
+    { "source": "/v14/:path*", "destination": "/gallery/v14/:path*", "permanent": true },
+    { "source": "/v15/:path*", "destination": "/gallery/v15/:path*", "permanent": true },
+    { "source": "/v16/:path*", "destination": "/gallery/v16/:path*", "permanent": true },
+    { "source": "/v17/:path*", "destination": "/gallery/v17/:path*", "permanent": true },
+    { "source": "/v18/:path*", "destination": "/gallery/v18/:path*", "permanent": true },
+    { "source": "/v19/:path*", "destination": "/gallery/v19/:path*", "permanent": true },
+    { "source": "/v20/:path*", "destination": "/gallery/v20/:path*", "permanent": true },
+    { "source": "/v21/:path*", "destination": "/gallery/v21/:path*", "permanent": true },
+    { "source": "/v22/:path*", "destination": "/gallery/v22/:path*", "permanent": true },
+    { "source": "/v23/:path*", "destination": "/gallery/v23/:path*", "permanent": true },
+    { "source": "/v24/:path*", "destination": "/gallery/v24/:path*", "permanent": true }
+  ]
+}
