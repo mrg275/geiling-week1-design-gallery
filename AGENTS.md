@@ -80,6 +80,9 @@ Phases 0–5 of the migration are **done** (Oct 2026): the hall is modeled in `b
 - Metal GPU Cycles bakes segfault while the interactive Blender session holds the GPU; `bake_export.py` runs CPU-only (full pipeline ≈ 2 min).
 - In Blender MCP execs, call `bpy.context.view_layer.update()` after adding modifiers before depsgraph evaluation; prefer direct bmesh construction over boolean modifiers (flaky through MCP, worse lightmap topology).
 - The 3D click-picking listener must sit on `#viewport`, not the canvas: the drag-look handler takes pointer capture on `#viewport`, which retargets clicks.
+- **Vertex-colored (vista/fx) meshes:** author colors **linear** (glTF COLOR_0 is linear; the scene flag `vista_colors_linear` marks the conversion done); export needs `export_vertex_color='ACTIVE'` (the exporter's material scan misses Color Attribute nodes and silently writes white); and **never run `gltf-transform quantize`** on this scene — it scrambles COLOR_0. Compression is WebP-only.
+- `blender/bake_export.py --resume` reuses the existing baked PNGs and re-exports in ~30 s — use it for any scene tweak that doesn't change lighting.
+- Blender 5 compositor: `scene.node_tree` is gone; denoising runs through `scene.compositing_node_group` (the script falls back to a plain save if that API shifts again).
 
 ## Verification norms
 
