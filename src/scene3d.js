@@ -13,7 +13,7 @@ export async function initScene(canvas, onProgress) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.35;
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x14110c);
@@ -22,7 +22,7 @@ export async function initScene(canvas, onProgress) {
   camera.rotation.order = 'YXZ';
 
   // cool-sky / warm-ground fill keeps corners alive without deadening form
-  scene.add(new THREE.HemisphereLight(0xe8eef5, 0x3f3526, 0.18));
+  scene.add(new THREE.HemisphereLight(0xe8eef5, 0x3f3526, 0.32));
 
   function resize() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -69,7 +69,7 @@ export async function initScene(canvas, onProgress) {
     if (n.startsWith('Vista_SunGlow')) return { mult: 1.3, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
     if (n.startsWith('Vista_Cloud')) return { mult: 1.1, transparent: true, depthWrite: false };
     if (n.startsWith('Vista_Glint')) return { mult: 1.4 };
-    if (n.startsWith('Fx_Beam')) return { mult: 1.0, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide };
+    if (n.startsWith('Fx_Beam')) return { mult: 1.0, opacity: 0.4, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide };
     return { mult: 1.0 };
   };
   gltf.scene.traverse((o) => {
@@ -81,6 +81,7 @@ export async function initScene(canvas, onProgress) {
         vertexColors: true,
         color: new THREE.Color(cfg.mult, cfg.mult, cfg.mult),
         transparent: !!cfg.transparent,
+        opacity: cfg.opacity !== undefined ? cfg.opacity : 1.0,
         depthWrite: cfg.depthWrite !== false,
         side: cfg.side || THREE.FrontSide,
       });
@@ -104,7 +105,7 @@ export async function initScene(canvas, onProgress) {
     const lm = LM_BY_MAT[name];
     if (lm) {
       o.material.lightMap = lm;
-      o.material.lightMapIntensity = 2.0;
+      o.material.lightMapIntensity = name.startsWith('Tiled_') ? 3.0 : 2.6;
       if (o.material.map && name.startsWith('Tiled_')) {
         const mirrored = name.includes('Plaster') || name.includes('Rug');
         const wrap = mirrored ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;

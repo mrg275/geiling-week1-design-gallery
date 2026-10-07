@@ -11,7 +11,9 @@
 # All lightmaps on UV layer "Atlas" (TEXCOORD_1); tiled albedo on "Tile" (TEXCOORD_0).
 # CPU only (Metal bakes segfault alongside the live session).
 
-import bpy, bmesh, os, math, time
+import bpy, bmesh, os, sys, math, time
+
+RESUME = '--resume' in sys.argv   # reuse existing baked PNGs, just rebuild materials + export
 
 T0 = time.time()
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(bpy.data.filepath)))
@@ -79,6 +81,11 @@ log('groups: floor=%d shell=%d deco=%d cont=%d' % (len(g_floor), len(g_shell), l
 # ---------------- tile textures ----------------
 def bake_tile(mat_name, stem):
     path = os.path.join(TEXDIR, stem + '.png')
+    if RESUME and os.path.exists(path):
+        img = bpy.data.images.load(path)
+        img.name = 'tile_' + mat_name
+        log('tile (resume)', stem)
+        return img
     me = bpy.data.meshes.new('tq')
     bm = bmesh.new()
     vs = [bm.verts.new(p) for p in ((0, 0, 0), (1, 0, 0), (1, 1, 0), (0, 1, 0))]
@@ -229,20 +236,29 @@ def save_plain(img, path):
     log('saved', os.path.basename(path))
 
 # ---------------- run bakes ----------------
-alb_cont = bpy.data.images.new('alb_cont', SIZE_ALB, SIZE_ALB, alpha=False)
-bind_image(g_cont, alb_cont)
-log('bake albedo cont...')
-bake(g_cont, 'albedo')
-save_plain(alb_cont, os.path.join(TEXDIR, 'alb_cont.png'))
+alb_path = os.path.join(TEXDIR, 'alb_cont.png')
+if RESUME and os.path.exists(alb_path):
+    alb_cont = bpy.data.images.load(alb_path); alb_cont.name = 'alb_cont'
+    log('albedo cont (resume)')
+else:
+    alb_cont = bpy.data.images.new('alb_cont', SIZE_ALB, SIZE_ALB, alpha=False)
+    bind_image(g_cont, alb_cont)
+    log('bake albedo cont...')
+    bake(g_cont, 'albedo')
+    save_plain(alb_cont, alb_path)
 
 LM_JOBS = [('lm_floor', g_floor, 4096), ('lm_shell', g_shell, 2048),
            ('lm_deco', g_deco, 2048), ('lm_cont', g_cont, 2048)]
 for name, objs, size in LM_JOBS:
+    lm_path = os.path.join(TEXDIR, name + '.png')
+    if RESUME and os.path.exists(lm_path):
+        log('%s (resume)' % name)
+        continue
     img = bpy.data.images.new(name, size, size, alpha=False, float_buffer=True)
     bind_image(objs, img)
     log('bake %s (%d, %d samples)...' % (name, size, SAMPLES_LM))
     bake(objs, 'light')
-    denoise_and_save(img, os.path.join(TEXDIR, name + '.png'))
+    denoise_and_save(img, lm_path)
 
 # ---------------- rebuild export materials ----------------
 def export_mat(name, image, uv_layer, roughness):
@@ -294,6 +310,8 @@ bpy.ops.export_scene.gltf(
     use_selection=True,
     export_format='GLB',
     export_extras=True,
+    export_vertex_color='ACTIVE',   # vista/fx colors live in attributes the
+                                    # exporter's material scan does not detect
     export_yup=True,
     export_apply=True,
     export_cameras=False,
