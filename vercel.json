@@ -1,6 +1,8 @@
 {
   "redirects": [
     { "source": "/v25", "destination": "/legacy/", "permanent": true },
+    { "source": "/v25/", "destination": "/legacy/", "permanent": true },
+    { "source": "/:ver(v[0-9]{2})/", "destination": "/gallery/:ver/", "permanent": true },
     { "source": "/v25/:path*", "destination": "/legacy/:path*", "permanent": true },
     { "source": "/v01/:path*", "destination": "/gallery/v01/:path*", "permanent": true },
     { "source": "/v02/:path*", "destination": "/gallery/v02/:path*", "permanent": true },
