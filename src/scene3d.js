@@ -42,8 +42,8 @@ export async function initScene(canvas, onProgress) {
   // baked lightmaps (same atlas UVs as the albedo, channel 0)
   const tl = new THREE.TextureLoader();
   const [lmArch, lmCont] = await Promise.all([
-    tl.loadAsync('assets/textures/lm_arch.png'),
-    tl.loadAsync('assets/textures/lm_cont.png'),
+    tl.loadAsync('assets/textures/lm_arch.webp'),
+    tl.loadAsync('assets/textures/lm_cont.webp'),
   ]);
   for (const lm of [lmArch, lmCont]) {
     lm.flipY = false;

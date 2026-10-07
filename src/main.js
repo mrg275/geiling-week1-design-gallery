@@ -1,8 +1,12 @@
 // App entry: boots the WebGL hall, wires the badge, and falls back to the
 // CSS-3D build at /legacy/ when WebGL is unavailable or loading fails.
 import { updateBadge, $ } from './core.js';
+import { restoreState, autosaveOn } from './store.js';
 import './panels.js';   // panels, menu, serendipity (self-wiring)
 import './nav.js';      // camera state, input, click router, HUD buttons
+
+restoreState();          // D2: apply saved card state / notes / reflections
+autosaveOn();
 
 function fail(msg) {
   const el = $('#loading');
