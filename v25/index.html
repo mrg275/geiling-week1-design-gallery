@@ -73,43 +73,61 @@
         #71532d 637px, #604626 828px,                      /* wainscot       */
         #3c2b13 830px, #251807 860px);                     /* skirting       */
   }
+  /* NOTE: the frame "rings" on floor / rug / ceiling / coffer used to be inset
+     box-shadows. Those don't survive tiling (each GPU-sized tile would draw its
+     own frame), so they are drawn as edge-strip gradients in the background
+     stack instead — background-size/position offsets reproduce them exactly. */
   .floor{
     background:
+      linear-gradient(180deg, rgba(46,70,52,.5) 0 48px, rgba(176,141,74,.55) 48px 54px, rgba(32,21,9,.6) 54px 58px, transparent 58px),
+      linear-gradient(0deg,   rgba(46,70,52,.5) 0 48px, rgba(176,141,74,.55) 48px 54px, rgba(32,21,9,.6) 54px 58px, transparent 58px),
+      linear-gradient(90deg,  rgba(46,70,52,.5) 0 48px, rgba(176,141,74,.55) 48px 54px, rgba(32,21,9,.6) 54px 58px, transparent 58px),
+      linear-gradient(270deg, rgba(46,70,52,.5) 0 48px, rgba(176,141,74,.55) 48px 54px, rgba(32,21,9,.6) 54px 58px, transparent 58px),
       radial-gradient(ellipse 58% 50% at 50% 46%, rgba(255,238,194,.28), rgba(26,16,8,.24) 95%),
       repeating-linear-gradient(45deg, rgba(50,30,12,.13) 0 2px, transparent 2px 46px),
       repeating-linear-gradient(-45deg, rgba(50,30,12,.11) 0 2px, transparent 2px 46px),
       repeating-linear-gradient(0deg, rgba(255,236,190,.06) 0 3px, transparent 3px 92px),
       linear-gradient(180deg,#a3815a,#8a6840);
-    box-shadow:inset 0 0 0 48px rgba(46,70,52,.5), inset 0 0 0 54px rgba(176,141,74,.55), inset 0 0 0 58px rgba(32,21,9,.6);
   }
   .rug{
     background:
+      linear-gradient(180deg, #38201b 0 10px, #ad8a4e 10px 14px, #38201b 14px 28px, rgba(173,138,78,.55) 28px 31px, transparent 31px),
+      linear-gradient(0deg,   #38201b 0 10px, #ad8a4e 10px 14px, #38201b 14px 28px, rgba(173,138,78,.55) 28px 31px, transparent 31px),
+      linear-gradient(90deg,  #38201b 0 10px, #ad8a4e 10px 14px, #38201b 14px 28px, rgba(173,138,78,.55) 28px 31px, transparent 31px),
+      linear-gradient(270deg, #38201b 0 10px, #ad8a4e 10px 14px, #38201b 14px 28px, rgba(173,138,78,.55) 28px 31px, transparent 31px),
       radial-gradient(ellipse 46% 36% at 50% 50%, rgba(226,186,120,.10), transparent 70%),
       repeating-linear-gradient(0deg, rgba(0,0,0,.055) 0 2px, transparent 2px 17px),
       linear-gradient(180deg,#53302a,#472824);
-    box-shadow:inset 0 0 0 10px #38201b, inset 0 0 0 14px #ad8a4e, inset 0 0 0 28px #38201b, inset 0 0 0 31px rgba(173,138,78,.55);
   }
 
   /* ---- ceiling + coffered fresco panels ---- */
   .ceiling{
-    display:flex;flex-direction:column;align-items:center;justify-content:space-around;
     background:
+      linear-gradient(180deg, #a98745 0 26px, #6a5226 26px 32px, #d2c4a2 32px 58px, #97763c 58px 64px, transparent 64px),
+      linear-gradient(0deg,   #a98745 0 26px, #6a5226 26px 32px, #d2c4a2 32px 58px, #97763c 58px 64px, transparent 64px),
+      linear-gradient(90deg,  #a98745 0 26px, #6a5226 26px 32px, #d2c4a2 32px 58px, #97763c 58px 64px, transparent 64px),
+      linear-gradient(270deg, #a98745 0 26px, #6a5226 26px 32px, #d2c4a2 32px 58px, #97763c 58px 64px, transparent 64px),
+      linear-gradient(180deg, rgba(62,44,22,.3), transparent 180px),
+      linear-gradient(0deg,   rgba(62,44,22,.3), transparent 180px),
+      linear-gradient(90deg,  rgba(62,44,22,.22), transparent 180px),
+      linear-gradient(270deg, rgba(62,44,22,.22), transparent 180px),
       repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 3px, transparent 3px 170px),
       repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 3px, transparent 3px 170px),
       linear-gradient(135deg,#e7dcc2,#d1c4a6 55%,#dfd2b3);
-    box-shadow:
-      inset 0 0 0 26px #a98745, inset 0 0 0 32px #6a5226,
-      inset 0 0 0 58px #d2c4a2, inset 0 0 0 64px #97763c,
-      inset 0 0 180px rgba(62,44,22,.34);
   }
-  .ceiling svg{display:block}
   .coffer{
-    flex:none;display:flex;align-items:center;justify-content:center;
-    width:88%;height:30.5%;
-    background:linear-gradient(135deg,#dcd0b4,#c6b795);
-    box-shadow:inset 0 0 0 12px #a98745, inset 0 0 0 18px #6a5226,
-      inset 0 0 0 34px #d2c4a2, inset 0 0 120px rgba(62,44,22,.3);
+    background:
+      linear-gradient(180deg, #a98745 0 12px, #6a5226 12px 18px, #d2c4a2 18px 34px, transparent 34px),
+      linear-gradient(0deg,   #a98745 0 12px, #6a5226 12px 18px, #d2c4a2 18px 34px, transparent 34px),
+      linear-gradient(90deg,  #a98745 0 12px, #6a5226 12px 18px, #d2c4a2 18px 34px, transparent 34px),
+      linear-gradient(270deg, #a98745 0 12px, #6a5226 12px 18px, #d2c4a2 18px 34px, transparent 34px),
+      linear-gradient(180deg, rgba(62,44,22,.26), transparent 120px),
+      linear-gradient(0deg,   rgba(62,44,22,.26), transparent 120px),
+      linear-gradient(90deg,  rgba(62,44,22,.18), transparent 120px),
+      linear-gradient(270deg, rgba(62,44,22,.18), transparent 120px),
+      linear-gradient(135deg,#dcd0b4,#c6b795);
   }
+  .fresco svg{display:block;width:100%;height:100%}
 
   /* ---- bookcases ---- */
   .case{
@@ -119,6 +137,22 @@
       inset 0 0 0 10px #2d1c0a, inset 0 0 0 13px #7a5a33, inset 0 0 0 15px #2d1c0a,
       0 18px 40px rgba(0,0,0,.5);
     cursor:pointer;
+  }
+  /* a section run is split into one plane per bay (GPU texture limits);
+     the shared frame is rebuilt so the three planes read as one cabinet */
+  .case.seg{box-shadow:0 18px 40px rgba(0,0,0,.5)}
+  .case.seg-l{background:
+    linear-gradient(90deg, #2d1c0a 0 10px, #7a5a33 10px 13px, #2d1c0a 13px 15px, transparent 15px),
+    linear-gradient(180deg,#53391f,#432d16)}
+  .case.seg-r{background:
+    linear-gradient(270deg, #2d1c0a 0 10px, #7a5a33 10px 13px, #2d1c0a 13px 15px, transparent 15px),
+    linear-gradient(180deg,#53391f,#432d16)}
+  .seg .bays{margin:0}
+  .seg-l .bays{margin-left:20px}
+  .seg-r .bays{margin-right:20px}
+  .seg-div .bay{
+    border-left:14px solid;
+    border-image:linear-gradient(180deg,#2d1c0a,#7a5a33 30% 70%,#2d1c0a) 1;
   }
   .case-head{
     height:78px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -1275,8 +1309,13 @@ function updateBadge(){ $('#badge-n').textContent = dueCards().length+' due'; }
 var HW=1700, HD=3400, WH=860, PERSP=760, EYE=186;   /* grand hall: ~2.5x v21 floor area */
 var world = $('#world');
 
+/* every plane registers for behind-camera culling: CSS3D rasterizes planes
+   even when they're behind the eye, and the full hall overruns the GPU's
+   raster-memory budget, which makes Chrome drop visible tiles to black */
+var PLANES=[];
 function plane(w,h,x,y,z,ry,rx,cls,html,act){
   var d=document.createElement('div');
+  PLANES.push({el:d,x:x,z:z,r:Math.hypot(w,h)/2});
   d.className='pl'+(cls?' '+cls:'');
   d.style.width=w+'px'; d.style.height=h+'px';
   d.style.marginLeft=(-w/2)+'px'; d.style.marginTop=(-h/2)+'px';
@@ -1294,13 +1333,47 @@ function box(cx,cz,w,d,h,cls,act){
   plane(w,d,cx,-h,cz,0,90,cls+' f-t',null,act);
 }
 
-/* architecture */
-plane(2*HW,WH,0,-WH/2,-HD,0,0,'wall');
-plane(2*HW,WH,0,-WH/2, HD,180,0,'wall');
-plane(2*HD,WH,-HW,-WH/2,0, 90,0,'wall');
-plane(2*HD,WH, HW,-WH/2,0,-90,0,'wall');
-plane(2*HW,2*HD,0,0,0,0,90,'floor');
-plane(430,5900,0,-1,0,0,90,'rug');
+/* architecture.
+   Walls and ceiling are tiled into segments: a single 6800px-wide plane
+   exceeds the GPU compositor's texture limits on Retina displays and Chrome
+   silently culls parts of it (black void). Each segment paints the same
+   full-width background, offset with background-position, so the artwork
+   is pixel-identical to one continuous plane. */
+var TILE=1700;
+/* Large architectural surfaces are tiled (a single huge plane trips the GPU
+   compositor's max-texture limit and Chrome culls it to black), and each tile
+   is laid out at half size then composited up with scale(2): these are soft
+   gradient surfaces, and full-resolution rasterization of walls+floor+ceiling
+   costs over a gigabyte of GPU raster memory on Retina, which makes Chrome
+   drop tiles. The painted result is pixel-positioned identically. */
+function tiled(w,h,x,y,z,ry,rx,cls,res){
+  res=res||2;
+  var nx=Math.ceil(w/TILE), ny=Math.ceil(h/TILE), tw=w/nx, th=h/ny;
+  for (var i=0;i<nx;i++) for (var j=0;j<ny;j++){
+    var d=plane(tw/res,th/res,x,y,z,ry,rx,'');
+    /* in-plane offset after the rotations, so it works for any orientation */
+    var ox=(i+0.5)*tw-w/2, oy=(j+0.5)*th-h/2;
+    d.style.transform+=' translate('+ox+'px,'+oy+'px) scale('+res+')';
+    /* fix the culling entry to this tile's true world center + radius */
+    var rry=ry*Math.PI/180, rrx=rx*Math.PI/180, P=PLANES[PLANES.length-1];
+    P.x = x + Math.cos(rry)*ox + Math.sin(rrx)*Math.sin(rry)*oy;
+    P.z = z - Math.sin(rry)*ox + Math.sin(rrx)*Math.cos(rry)*oy;
+    P.r = Math.hypot(tw,th)/2;
+    d.style.overflow='hidden';
+    var inner=document.createElement('div');
+    inner.className=cls;
+    inner.style.cssText='position:absolute;left:0;top:0;width:'+tw+'px;height:'+th+'px;'+
+      'transform:scale('+(1/res)+');transform-origin:0 0;'+
+      'background-size:'+w+'px '+h+'px;background-position:'+(-i*tw)+'px '+(-j*th)+'px;background-repeat:no-repeat;';
+    d.appendChild(inner);
+  }
+}
+tiled(2*HW,WH, 0,-WH/2,-HD,   0,0,'wall');
+tiled(2*HW,WH, 0,-WH/2, HD, 180,0,'wall');
+tiled(2*HD,WH,-HW,-WH/2,0,   90,0,'wall');
+tiled(2*HD,WH, HW,-WH/2,0,  -90,0,'wall');
+tiled(2*HW,2*HD,0,0,0,0,90,'floor');
+tiled(430,5900,0,-1,0,0,90,'rug');
 
 /* ceiling: three coffered baroque fresco panels down the hall */
 (function(){
@@ -1363,8 +1436,16 @@ plane(430,5900,0,-1,0,0,90,'rug');
      '<path d="M1060 1760 q11 -13 22 0 q11 -13 22 0" stroke="#44586a" stroke-width="3" fill="none"/>'+
    '</g>'+
   '</svg>';
-  var panel='<div class="coffer">'+svg+'</div>';
-  plane(2*HW,2*HD,0,-WH,0,0,-90,'ceiling',panel+panel+panel);
+  /* ceiling field, coffer frames and fresco paintings are separate tiled
+     planes — one huge plane blows past GPU texture limits and Chrome culls it */
+  tiled(2*HW,2*HD,0,-WH,0,0,-90,'ceiling',4);
+  var tileD=2*HD/3;
+  var COF_W=Math.round(2*HW*0.88), COF_H=Math.round(tileD*0.915);
+  for (var t=0;t<3;t++){
+    var cz=-HD+tileD*(t+0.5);
+    tiled(COF_W,COF_H,0,-WH+0.6,cz,0,-90,'coffer',4);
+    plane(1370,1960,0,-WH+1.2,cz,0,-90,'fresco',svg);
+  }
 })();
 
 /* ——————————————————————— DAYLIGHT WINDOWS ——————————————————————— */
@@ -1552,16 +1633,26 @@ function bayHTML(bayWorks,innerW){
   }
   return h+'</div>';
 }
+/* each bay is its own plane: a full 2640px-wide cabinet plane exceeds the
+   GPU compositor's texture limit on Retina and Chrome culls it to black */
 SECTIONS.forEach(function(sec){
   var bays = sectionBays(sectionWorks(sec));
-  var innerW = sec.w/BAYS - 60;
-  var html =
-    '<div class="case" data-act="go:'+sec.id+'">'+
-      '<div class="case-head"><b>'+sec.label+'</b><span>'+sec.sub+'</span></div>'+
-      '<div class="bays">'+bays.map(function(b){ return bayHTML(b,innerW); }).join('')+'</div>'+
-      '<div class="case-base"></div>'+
-    '</div>';
-  plane(sec.w,452,sec.x,-226,sec.z,sec.ry,0,'',html);
+  var innerW = sec.w/BAYS - 60, bw = sec.w/BAYS;
+  var rad=sec.ry*Math.PI/180, dx=Math.cos(rad), dz=-Math.sin(rad);
+  bays.forEach(function(b,i){
+    var segCls = 'case seg'+(i===0?' seg-l':'')+(i===BAYS-1?' seg-r':'')+(i>0?' seg-div':'');
+    var head = (i===1)
+      ? '<div class="case-head"><b>'+sec.label+'</b><span>'+sec.sub+'</span></div>'
+      : '<div class="case-head"></div>';
+    var html =
+      '<div class="'+segCls+'" data-act="go:'+sec.id+'">'+
+        head+
+        '<div class="bays">'+bayHTML(b,innerW)+'</div>'+
+        '<div class="case-base"></div>'+
+      '</div>';
+    var off=-sec.w/2+bw*(i+0.5);
+    plane(bw,452,sec.x+dx*off,-226,sec.z+dz*off,sec.ry,0,'',html);
+  });
 });
 
 /* ——————————————————————— EXHIBITS ——————————————————————— */
@@ -1951,6 +2042,14 @@ function step(dt,ts){
   world.style.transform=
     'translateZ('+PERSP+'px) rotateX('+(cam.pitch)+'rad) rotateY('+(-(cam.yaw+yawOff))+'rad) '+
     'translate3d('+(-cam.x)+'px,'+(EYE+yOff)+'px,'+(-cam.z)+'px)';
+
+  /* hide planes fully behind the camera so their GPU textures are released */
+  var fx=-Math.sin(cam.yaw), fz=-Math.cos(cam.yaw);
+  for (var pi=0; pi<PLANES.length; pi++){
+    var P=PLANES[pi];
+    var behind = (P.x-cam.x)*fx + (P.z-cam.z)*fz < -(P.r+260);
+    if (behind!==P.hidden){ P.hidden=behind; P.el.style.visibility=behind?'hidden':''; }
+  }
 
   /* window parallax: the vista slides against the frame as you walk */
   for (var wi=0; wi<WINLAYERS.length; wi++){
