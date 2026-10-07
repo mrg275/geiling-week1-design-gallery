@@ -11,11 +11,28 @@ var glideOpen = null, gliding = false, glideTimer = null;
 var lastTs = 0;
 var lookingUp = false;
 
+/* solid furniture: plinth statues, corner busts, writing desk (css units, half-extents incl. margin) */
+var SOLIDS = [
+  { x:-620, z:-1600, hx:110, hz:110 }, { x:620, z:-1600, hx:110, hz:110 },
+  { x:-620, z: 1800, hx:110, hz:110 }, { x:620, z: 1800, hx:110, hz:110 },
+  { x:-1360, z:-2880, hx:95, hz:95 },  { x:1360, z:-2880, hx:95, hz:95 },
+  { x:-1360, z: 2880, hx:95, hz:95 },  { x:1360, z: 2880, hx:95, hz:95 },
+  { x:-800, z: 3180, hx:195, hz:105 },
+  { x:-860, z: 100, hx:105, hz:390 }, { x:860, z: 100, hx:105, hz:390 },
+  { x:-860, z:-2300, hx:105, hz:390 }, { x:860, z:-2300, hx:105, hz:390 },
+];
 function clampPos(p){
   p.x=clamp(p.x,-(HW-235),HW-235);
   p.z=clamp(p.z,-(HD-225),HD-225);
   var dx=p.x-FTN.x, dz=p.z-FTN.z, d=Math.hypot(dx,dz), keep=FTN.r+140;
   if (d<keep){ if(d<1){dx=0;dz=1;d=1;} p.x=FTN.x+dx/d*keep; p.z=FTN.z+dz/d*keep; }
+  for (var i=0;i<SOLIDS.length;i++){
+    var s=SOLIDS[i], ox=p.x-s.x, oz=p.z-s.z;
+    if (Math.abs(ox)<s.hx && Math.abs(oz)<s.hz){
+      if (s.hx-Math.abs(ox) < s.hz-Math.abs(oz)) p.x = s.x + (ox<0?-s.hx:s.hx);
+      else                                        p.z = s.z + (oz<0?-s.hz:s.hz);
+    }
+  }
 }
 function glideTo(stand,open){
   gliding=true; glideOpen=open||null;
