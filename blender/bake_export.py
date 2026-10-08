@@ -74,7 +74,8 @@ def skip_obj(ob):
 bakeable = [ob for ob in bpy.data.objects if not skip_obj(ob)]
 g_floor = [ob for ob in bakeable if mats_of(ob) <= FLOOR_SET]
 g_shell = [ob for ob in bakeable if mats_of(ob) <= SHELL_SET and ob not in g_floor]
-g_deco  = [ob for ob in bakeable if mats_of(ob) <= DECO_SET]
+# PH_* imports keep their authored PBR materials (like deco) and share lm_deco
+g_deco  = [ob for ob in bakeable if mats_of(ob) <= DECO_SET or ob.name.startswith('PH_')]
 g_cont  = [ob for ob in bakeable if ob not in g_floor and ob not in g_shell and ob not in g_deco]
 log('groups: floor=%d shell=%d deco=%d cont=%d' % (len(g_floor), len(g_shell), len(g_deco), len(g_cont)))
 
@@ -123,6 +124,11 @@ from mathutils import Vector
 
 def ensure_layers(ob):
     uvs = ob.data.uv_layers
+    if ob.name.startswith('PH_'):
+        # imported scans: keep their authored UV0 (textures depend on it), add Atlas
+        if 'Atlas' not in [u.name for u in uvs]:
+            uvs.new(name='Atlas')
+        return
     names = [u.name for u in uvs]
     if names == ['Tile', 'Atlas']:
         return
@@ -261,7 +267,23 @@ for name, objs, size in LM_JOBS:
     denoise_and_save(img, lm_path)
 
 # ---------------- rebuild export materials ----------------
-def export_mat(name, image, uv_layer, roughness):
+PH_TEX = os.path.join(ROOT, 'blender', 'textures', 'ph')
+EXTRA_MAPS = {   # tiled export materials gain real normal/roughness maps
+    'Lib_Floor':   'herringbone_parquet',
+    'Lib_Plaster': 'painted_plaster_wall',
+    'Lib_Oak':     'mocha_oak_veneer',
+}
+
+def load_img(path, noncolor=False):
+    img = bpy.data.images.get(os.path.basename(path))
+    if not img:
+        img = bpy.data.images.load(path)
+        img.name = os.path.basename(path)
+    if noncolor:
+        img.colorspace_settings.name = 'Non-Color'
+    return img
+
+def export_mat(name, image, uv_layer, roughness, src_mat=None):
     mat = bpy.data.materials.new(name)
     mat.use_nodes = True
     nt = mat.node_tree; nt.nodes.clear()
@@ -273,10 +295,24 @@ def export_mat(name, image, uv_layer, roughness):
     nt.links.new(uv.outputs['UV'], tex.inputs['Vector'])
     nt.links.new(tex.outputs['Color'], bsdf.inputs['Base Color'])
     nt.links.new(bsdf.outputs[0], out.inputs['Surface'])
+    stem = EXTRA_MAPS.get(src_mat or '')
+    if stem:
+        rp = os.path.join(PH_TEX, stem + '_rough.jpg')
+        np_ = os.path.join(PH_TEX, stem + '_nor.jpg')
+        if os.path.exists(rp):
+            rt = nt.nodes.new('ShaderNodeTexImage'); rt.image = load_img(rp, True)
+            nt.links.new(uv.outputs['UV'], rt.inputs['Vector'])
+            nt.links.new(rt.outputs['Color'], bsdf.inputs['Roughness'])
+        if os.path.exists(np_):
+            ntx = nt.nodes.new('ShaderNodeTexImage'); ntx.image = load_img(np_, True)
+            nm = nt.nodes.new('ShaderNodeNormalMap')
+            nt.links.new(uv.outputs['UV'], ntx.inputs['Vector'])
+            nt.links.new(ntx.outputs['Color'], nm.inputs['Color'])
+            nt.links.new(nm.outputs['Normal'], bsdf.inputs['Normal'])
     return mat
 
 ROUGH = {'Lib_Floor': 0.45, 'Lib_Plaster': 0.92, 'Lib_Rug': 1.0, 'Lib_Oak': 0.5}
-tile_export = {m: export_mat('Tiled_' + m, tile_imgs[m], 'Tile', ROUGH.get(m, 0.7))
+tile_export = {m: export_mat('Tiled_' + m, tile_imgs[m], 'Tile', ROUGH.get(m, 0.7), src_mat=m)
                for m in TILE_MATS}
 atlas_export = export_mat('Baked_cont', alb_cont, 'Atlas', 0.6)
 

@@ -5,6 +5,7 @@
 // rotation.y = yaw, rotation.x = pitch).
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { EYE, RM } from './core.js';
 import { approach, wasDrag } from './nav.js';
 
@@ -17,6 +18,10 @@ export async function initScene(canvas, onProgress) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x14110c);
+  // metals need an environment to reflect, or brass/finials render black
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  scene.environmentIntensity = 0.45;
 
   const camera = new THREE.PerspectiveCamera(58, 1, 0.05, 3200);   // vista dome at r 2800
   camera.rotation.order = 'YXZ';
@@ -102,7 +107,8 @@ export async function initScene(canvas, onProgress) {
         o.material[slot].anisotropy = maxAniso;
       }
     }
-    const lm = LM_BY_MAT[name];
+    let lm = LM_BY_MAT[name];
+    if (!lm && o.name.startsWith('PH_')) lm = lmDeco;   // imported scans share the deco atlas
     if (lm) {
       o.material.lightMap = lm;
       o.material.lightMapIntensity = name.startsWith('Tiled_') ? 3.0 : 2.6;

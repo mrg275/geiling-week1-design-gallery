@@ -82,11 +82,11 @@ var FUTURE_EXHIBITS = [
   { title:'The Orator',         statue:'orator',     caption:'Mock exhibit — to be replaced',
     idea:'[A robed scholar holds this spot. What belongs here?]',
     hint:'North aisle, east plinth.' },
-  { title:'The Discobolus',     statue:'discobolus', caption:'Mock exhibit — to be replaced',
-    idea:'[An athlete mid-throw holds this spot. What belongs here?]',
+  { title:'The Bronze Steed',   statue:'discobolus', caption:'Mock exhibit — to be replaced',
+    idea:'[A sculpted horse holds this spot. What belongs here?]',
     hint:'South aisle, west plinth.' },
   { title:'The Owl of Minerva', statue:'owl',        caption:'Mock exhibit — to be replaced',
-    idea:'[Wisdom&rsquo;s owl holds this spot. What belongs here?]',
+    idea:'[Wisdom\u2019s owl holds this spot. What belongs here?]',
     hint:'South aisle, east plinth.' }
 ];
 
