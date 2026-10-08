@@ -23,11 +23,19 @@ export const EXTRA = [
   put(oceanDusk,  'ocean-w-north',  'W', -30.6, { shift: [0.06, 0.01] }),
   put(poolGolden, 'golden-e-north', 'E', -30.6, { shift: [-0.05, 0] }),
 
-  // north wall, left to right — four different places behind the Collection Map
-  put(hawaiiDawn, 'hawaii-n-1', 'N', -13.8, { shift: [0.05, 0] }),
-  put(poolDusk,   'dusk-n-2',   'N',  -7.6, { shift: [-0.06, 0.01] }),
-  put(oceanDusk,  'ocean-n-3',  'N',   7.6, { shift: [-0.04, 0] }),
-  put(poolGolden, 'golden-n-4', 'N',  13.8, { shift: [0.06, 0] }),
+  // North wall, left to right. These four windows are only 6.2 m apart, so a
+  // wide plate would overlap its neighbours — and plates at equal depth
+  // z-fight (flicker) and occlude each other, putting the wrong photo in a
+  // window. They therefore sit close to the glass with a proportionally
+  // smaller photo, giving each window its own plate with a clear gap:
+  // 5.98 m wide on a 6.2 m pitch.
+  ...[[hawaiiDawn, 'hawaii-n-1', -13.8, 0.05],
+      [poolDusk,   'dusk-n-2',    -7.6, -0.06],
+      [oceanDusk,  'ocean-n-3',    7.6, -0.04],
+      [poolGolden, 'golden-n-4',  13.8, 0.06]
+  ].map(([base, id, x, su]) => put(base, id, 'N', x, {
+    distance: 1.5, photoWidth: 4.4, cover: 1.36, centerY: 3.9, shift: [su, 0],
+  })),
 
   // south wall, flanking the entrance portal
   put(poolDusk,   'dusk-s-1',   'S', -14.2, { shift: [0.05, 0] }),
