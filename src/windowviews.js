@@ -50,6 +50,13 @@ uniform float uExposure;
 uniform float uSaturate;
 uniform float uAspect;
 
+// the sampler decodes the sRGB photo to linear, so we must encode on the way
+// out; without this every view displays as photo^2.2 (crushed, oversaturated)
+vec3 lin2srgb(vec3 c) {
+  c = max(c, vec3(0.0));
+  return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
+}
+
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -61,7 +68,8 @@ float vnoise(vec2 p) {
 void main() {
   // map the plane into photo space; the texture clamps, so the margins
   // continue the photo's edge pixels instead of showing a seam
-  vec2 uv = (vUv - 0.5) / uFit + 0.5 + uShift;
+  vec2 puv = (vUv - 0.5) / uFit + 0.5 + uShift;   // stable photo-space uv
+  vec2 uv = puv;                                   // animated copy
   float t = uTime;
 
   // ---- water: layered swell + chop, growing toward the near shore ----
@@ -97,18 +105,18 @@ void main() {
 
   // ---- sun-glitter path on the water ----
   if (uGlitter > 0.0001) {
-    float gm = smoothstep(wTop + 0.008, wTop - 0.008, vUv.y)
-             * smoothstep(wBot - 0.02, wBot + 0.02, vUv.y);
-    float band = exp(-pow((vUv.x - uSunUV.x) / max(uGlitterWidth, 0.01), 2.0));
-    float n1 = vnoise(vec2(vUv.x * 320.0, vUv.y * 760.0 - t * 2.3));
-    float n2 = vnoise(vec2(vUv.x * 185.0 + t * 0.8, vUv.y * 430.0 + t * 0.4));
+    float gm = smoothstep(wTop + 0.008, wTop - 0.008, puv.y)
+             * smoothstep(wBot - 0.02, wBot + 0.02, puv.y);
+    float band = exp(-pow((puv.x - uSunUV.x) / max(uGlitterWidth, 0.01), 2.0));
+    float n1 = vnoise(vec2(puv.x * 320.0, puv.y * 760.0 - t * 2.3));
+    float n2 = vnoise(vec2(puv.x * 185.0 + t * 0.8, puv.y * 430.0 + t * 0.4));
     float spark = smoothstep(0.80, 0.99, n1 * 0.55 + n2 * 0.6);
-    float near = smoothstep(wTop, wBot, vUv.y);           // more sparkle closer in
+    float near = smoothstep(wTop, wBot, puv.y);           // more sparkle closer in
     c += uSunColor * spark * band * gm * uGlitter * (0.45 + 0.75 * near);
   }
 
   // ---- sun bloom + rays ----
-  vec2 sd = (vUv - uSunUV) * vec2(uAspect, 1.0);
+  vec2 sd = (puv - uSunUV) * vec2(uAspect, 1.0);
   float dist = length(sd);
   if (uSunGlow > 0.0001) {
     c += uSunColor * exp(-dist / max(uSunSize, 0.001)) * uSunGlow;
@@ -124,7 +132,7 @@ void main() {
   // ---- grade ----
   float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(l), c, uSaturate) * uExposure;
-  gl_FragColor = vec4(c, 1.0);
+  gl_FragColor = vec4(lin2srgb(c), 1.0);
 }`;
 
 const WALLS = {
