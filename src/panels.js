@@ -66,7 +66,9 @@ function detailHTML(w){
     } else {
       h+='<div class="note"><div class="note-meta"><span>'+fmtDate(n.d)+'</span>'+
         '<button class="mini" data-edit="'+i+'">Edit</button></div>'+
-        '<div class="note-text">'+esc(n.t)+'</div></div>';
+        '<div class="note-text">'+esc(n.t)+'</div>'+
+        (n.tight ? '<div class="note-tight"><span>tightened</span>'+esc(n.tight)+'</div>' : '')+
+        '</div>';
     }
   });
   h+='<div class="note" style="background:transparent">'+
@@ -113,8 +115,11 @@ function bindDetail(w){
 }
 
 /* ——————————————————————— KNOWLEDGE GRAPH ——————————————————————— */
+/* The map charts the works he has actually taken notes on — the queue would
+   add 56 unread nodes with nothing to connect them. */
+function graphWorks(){ return WORKS.filter(function(w){ return w.notes && w.notes.length; }); }
 function graphLayout(W,H,R){
-  var pos={};
+  var pos={}, WORKS=graphWorks();
   WORKS.forEach(function(w,i){
     var a=i*2*Math.PI/WORKS.length-Math.PI/2;
     pos[w.id]=[ W/2+Math.cos(a)*R, H/2+Math.sin(a)*R*0.86 ];
@@ -123,7 +128,7 @@ function graphLayout(W,H,R){
 }
 function graphSVG(interactive,focusId){
   var W=interactive?760:300, H=interactive?620:190, R=interactive?252:78;
-  var pos=graphLayout(W,H,R);
+  var pos=graphLayout(W,H,R), WORKS=graphWorks();
   var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Knowledge graph">';
   for (var i=0;i<WORKS.length;i++) for (var j=i+1;j<WORKS.length;j++){
     var st=sharedTags(WORKS[i],WORKS[j]);
@@ -481,8 +486,8 @@ function showPlan(){
   });
   rect(-HW+60,-1490,90,2640,'go:sec-books','BOOKS',46,4);
   rect(-HW+60, 1690,90,1980,'go:sec-essays','ESSAYS',50,4);
-  rect( HW-60,-1790,90,1980,'go:sec-articles','ARTICLES',-56,4);
-  rect( HW-60,  850,90,1980,'go:sec-podcasts','PODCASTS',-60,4);
+  rect( HW-60,-1790,90,1980,'go:sec-qbooks','PIPELINE',-58,4);
+  rect( HW-60,  850,90,1980,'go:sec-qessays','PIPELINE',-58,4);
   rect(0,-HD+70,560,90,'go:graph','MAP',0,26);
   rect(HW-60,2350,90,350,'go:transcript','TRANSCRIPT',-62,4);
   rect(-800,3230,330,150,'go:writing','PAPERS',0,-14);
@@ -508,7 +513,7 @@ function showPlan(){
 
   var items=[
     ['go:sec-books','Books shelf','Section I'],['go:sec-essays','Essays shelf','Section II'],
-    ['go:sec-articles','Articles shelf','Section III'],['go:sec-podcasts','Podcasts shelf','Section IV'],
+    ['go:sec-qbooks','Pipeline · Books','Section III'],['go:sec-qessays','Pipeline · Essays','Section IV'],
     ['go:graph','Knowledge Graph','exhibit'],['go:fountain','Quote Fountain','exhibit'],
     ['go:transcript','UChicago Transcript','exhibit'],['go:writing','Writing Collection','exhibit'],
     ['go:trophies','Trophy Case','exhibit'],
@@ -546,8 +551,8 @@ function buildMenu(){
     { h:'The Stacks', items:[
       ['go:sec-books','Books',stackSub('book','volume','west wall')],
       ['go:sec-essays','Essays',stackSub('essay','essay','west wall')],
-      ['go:sec-articles','Articles',stackSub('article','article','east wall')],
-      ['go:sec-podcasts','Podcasts',stackSub('podcast','episode','east wall')]]},
+      ['go:sec-qbooks','The Pipeline · Books',stackSub('qbook','book','east wall')],
+      ['go:sec-qessays','The Pipeline · Essays',stackSub('qessay','essay','east wall')]]},
     { h:'Exhibits', items:[
       ['go:graph','Knowledge Graph','the collection map · north wall'],
       ['go:fountain','Quote Fountain','heart of the hall'],

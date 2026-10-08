@@ -3,10 +3,10 @@
 import { WORKS, FUTURE_EXHIBITS } from './data.js';
 
 var DAY = 86400e3;
-var TYPE_LABEL = { book:'Book', essay:'Essay', article:'Article', podcast:'Podcast' };
-var SECTION_OF = { book:'BOOKS \u00b7 west stacks', essay:'ESSAYS \u00b7 west stacks', article:'ARTICLES \u00b7 east stacks', podcast:'PODCASTS \u00b7 east stacks' };
-var MAT_OF = { book:'cloth', essay:'folio', article:'jacket', podcast:'slip' };
-var MAT_OVERRIDE = { med:'leather', emer:'leather', tfs:'jacket', det:'jacket', mis:'leather' };
+var TYPE_LABEL = { book:'Book', essay:'Essay', qbook:'Book · queued', qessay:'Essay · queued' };
+var SECTION_OF = { book:'BOOKS \u00b7 west stacks', essay:'ESSAYS \u00b7 west stacks', qbook:'THE PIPELINE \u00b7 east stacks', qessay:'THE PIPELINE \u00b7 east stacks' };
+var MAT_OF = { book:'cloth', essay:'folio', qbook:'jacket', qessay:'slip' };
+var MAT_OVERRIDE = { med:'leather', shortness:'leather', ulb:'leather', amf:'jacket', msfm:'leather' };
 var NOW0 = Date.now();
 var MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var RM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -99,11 +99,14 @@ var PLINTHS = [
     { x:-1420, z: HD-6, ry:180, beam:false, sun:false },
     { x: 1420, z: HD-6, ry:180, beam:false, sun:false }
   ];
+/* The four runs mirror the Notion Knowledge Base: what he has read sits on the
+   west wall, what is still queued sits on the east. Read and unread never mix,
+   which is the rule the whole system turns on. */
 var SECTIONS = [
-  { id:'sec-books',    label:'BOOKS',    sub:'Section I · Long-form · three bays',  type:'book',    x:-HW+5, z:-1490, ry:90,  w:2640 },
-  { id:'sec-essays',   label:'ESSAYS',   sub:'Section II · Arguments · three bays', type:'essay',   x:-HW+5, z: 1690, ry:90,  w:1980 },
-  { id:'sec-articles', label:'ARTICLES', sub:'Section III · The Web · three bays',  type:'article', x: HW-5, z:-1790, ry:-90, w:1980 },
-  { id:'sec-podcasts', label:'PODCASTS', sub:'Section IV · The Ear · three bays',   type:'podcast', x: HW-5, z:  850, ry:-90, w:1980 }
+  { id:'sec-books',   label:'BOOKS',    sub:'Section I · Read & reading',     type:'book',   x:-HW+5, z:-1490, ry:90,  w:2640 },
+  { id:'sec-essays',  label:'ESSAYS',   sub:'Section II · Essays & articles', type:'essay',  x:-HW+5, z: 1690, ry:90,  w:1980 },
+  { id:'sec-qbooks',  label:'THE PIPELINE · BOOKS',  sub:'Section III · Queued, unread', type:'qbook',  x: HW-5, z:-1790, ry:-90, w:1980 },
+  { id:'sec-qessays', label:'THE PIPELINE · ESSAYS', sub:'Section IV · Queued, unread',  type:'qessay', x: HW-5, z:  850, ry:-90, w:1980 }
 ];
 var BAYS=3;
 function sectionWorks(sec){ return WORKS.filter(function(w){ return w.type===sec.type; }); }

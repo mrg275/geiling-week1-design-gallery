@@ -56,6 +56,25 @@ Shape of a work (keep this exact shape; it is shared by the legacy app and the t
 
 SRS card state: `{ ease, interval, reps, due }` with the `nextState` grading contract from v25 (`legacy/index.html` ~line 1288): four grades 0–3 (Again / Hard / Good / Easy), ease range 1.3–2.8, grade 0 = retry in 5 minutes.
 
+### Where the content comes from
+
+`src/data.js` is **translated from Matthew's Notion Knowledge Base**, not authored here.
+Regenerate it with `node tools/gen-data.js src/data.js /tmp/out.js` rather than
+hand-editing in bulk; that script records the mapping:
+
+| Notion | Library |
+|---|---|
+| Book Reading Log (Read / Reading) | `type: 'book'` — Section I, west wall |
+| Article Reading Log (Read / Reading) | `type: 'essay'` — Section II, essays and articles combined |
+| Content Pipeline Log (Queued) | `type: 'qbook'` / `'qessay'` — Sections III & IV, east wall |
+| Convictions, Misc. | `REFLECTIONS`, each carrying its source and date |
+
+Two rules from his system are load-bearing. **Verbatim first:** his exact words
+live in a note's `t`, typos and all; the tightened companion sits alongside in
+`tight` and never replaces it. **Read and unread never mix:** anything started or
+finished is on the west wall and is removed from the queue on the east, even
+where Notion still lists it in both.
+
 ### Data phases
 
 - **D1 (current):** hardcoded mock data inline in the page.
