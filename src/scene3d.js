@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { buildFountain } from './fountain.js';
 import { EYE, RM } from './core.js';
 import { approach, wasDrag } from './nav.js';
 
@@ -162,8 +163,11 @@ export async function initScene(canvas, onProgress) {
     camera.position.set(cam.x / 100, EYE / 100 + yOff, cam.z / 100);
     camera.rotation.y = cam.yaw + yawOff;
     camera.rotation.x = cam.pitch;
+    fountain.update(ts);
     renderer.render(scene, camera);
   };
+
+  const fountain = buildFountain(THREE, scene, gltf.scene);
 
   window.__scene3d = { renderer, scene, camera, gltf, THREE, ray };
   return { renderer, scene, camera };
