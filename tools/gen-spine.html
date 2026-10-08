@@ -1,0 +1,48 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  body { margin: 0; }
+  .sp { width: 256px; height: 2048px; position: relative; overflow: hidden;
+        font-family: Georgia, 'Iowan Old Style', Palatino, serif; }
+  .bands i { position: absolute; left: 0; right: 0; height: 10px; }
+  .title { position: absolute; top: 230px; bottom: 460px; left: 0; right: 0;
+           writing-mode: vertical-rl; display: flex; align-items: center; justify-content: flex-start;
+           font-size: 86px; letter-spacing: 0.1em; font-variant: small-caps; }
+  .author { position: absolute; bottom: 260px; left: 0; right: 0; text-align: center;
+            font-size: 54px; letter-spacing: 0.12em; }
+  .orn { position: absolute; top: 110px; left: 0; right: 0; text-align: center; font-size: 70px; }
+</style></head>
+<body>
+<script>
+const WORKS = JSON.parse(`__WORKS__`);
+const PAL = {
+  book:    [['#4a3524','#2e2014'], ['#5f2f26','#3c1d16'], ['#2c4034','#1b2a21'], ['#2e3a4c','#1d2634'], ['#604832','#3e2d1d'], ['#512d20','#331b12']],
+  essay:   [['#6d5a3a','#4a3c24'], ['#44583f','#2c3a28'], ['#53607a','#38425a']],
+  article: [['#71543a','#4c3824'], ['#405a66','#2a3c46']],
+  podcast: [['#3a3a52','#26263a'], ['#5c3a46','#3c242e']],
+};
+const counters = {};
+const i = +(new URLSearchParams(location.search).get('i') || 0);
+const w = WORKS[i];
+let c = 0; for (let k = 0; k < i; k++) if (WORKS[k].type === w.type) c++;
+const [tc, bc] = PAL[w.type][c % PAL[w.type].length];
+const gold = '#ddbc78', goldDim = '#c9a85c';
+const lastName = w.author.split(',')[0].trim().split(' ').pop().toUpperCase();
+const title = w.title.length > 34 ? w.title.slice(0, 32) + '…' : w.title;
+document.body.innerHTML = `
+<div class="sp" id="art" style="background:
+  linear-gradient(90deg, rgba(0,0,0,.45) 0, rgba(255,255,255,.10) 18%, rgba(255,255,255,.16) 30%, transparent 55%, rgba(0,0,0,.25) 86%, rgba(0,0,0,.5) 100%),
+  repeating-linear-gradient(0deg, rgba(255,250,235,.04) 0 2px, transparent 2px 6px),
+  linear-gradient(180deg, ${tc}, ${bc} 75%, #14100a)">
+  <div class="bands">
+    <i style="top:170px;  background:linear-gradient(180deg,${gold},${goldDim}); box-shadow:0 3px 6px rgba(0,0,0,.5)"></i>
+    <i style="top:196px;  height:4px; background:${goldDim}; opacity:.8"></i>
+    <i style="bottom:420px; background:linear-gradient(180deg,${gold},${goldDim}); box-shadow:0 3px 6px rgba(0,0,0,.5)"></i>
+    <i style="bottom:398px; height:4px; background:${goldDim}; opacity:.8"></i>
+    <i style="bottom:120px; height:26px; background:linear-gradient(180deg,${gold},${goldDim})"></i>
+  </div>
+  <div class="orn" style="color:${gold}">&#10022;</div>
+  <div class="title" style="color:${gold}; text-shadow:0 0 6px rgba(0,0,0,.6)">${title}</div>
+  <div class="author" style="color:${goldDim}">${lastName}</div>
+</div>`;
+</script>
+</body></html>

@@ -1,0 +1,196 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{margin:0}svg{display:block}</style></head>
+<body>
+<script>
+// Procedural baroque ceiling mural, triptych. ?bay=0|1|2 (north dawn / center sun / south dusk)
+const bay = +(new URLSearchParams(location.search).get('bay') || 1);
+const W = 2160, H = 1500, CX = W/2, CY = H/2;
+
+const GOLD1='#e9c97c', GOLD2='#a87f3a', GOLD3='#8a6527', CREAM='#fdf4da',
+      PARCH='#c8b995', INKB='#2a2114', OX='#6d3328', GREEN='#2e4634';
+
+function lerp(a,b,t){return a+(b-a)*t}
+let out = [];
+function P(s){ out.push(s); }
+
+// ---------- defs ----------
+P(`<defs>
+<radialGradient id="sky" cx="50%" cy="50%" r="68%">`);
+if (bay===0){ // dawn: luminous rose-gold to clear morning blue
+P(`<stop offset="0%" stop-color="#fae4b4"/><stop offset="28%" stop-color="#f3c893"/>
+<stop offset="55%" stop-color="#e3a98c"/><stop offset="78%" stop-color="#8fa3b8"/><stop offset="100%" stop-color="#5e7f9e"/>`);
+} else if (bay===1){ // noon: luminous gold-blue
+P(`<stop offset="0%" stop-color="#f2ddae"/><stop offset="26%" stop-color="#d6d2ba"/>
+<stop offset="52%" stop-color="#a4bac6"/><stop offset="78%" stop-color="#7593a6"/><stop offset="100%" stop-color="#55708a"/>`);
+} else { // dusk: violet-indigo with ember rim
+P(`<stop offset="0%" stop-color="#e8c9a0"/><stop offset="30%" stop-color="#b9a0a0"/>
+<stop offset="62%" stop-color="#6f7593"/><stop offset="100%" stop-color="#3c4866"/>`);
+}
+P(`</radialGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="${GOLD1}"/><stop offset="45%" stop-color="${GOLD2}"/>
+<stop offset="75%" stop-color="#e3bd6e"/><stop offset="100%" stop-color="${GOLD3}"/></linearGradient>
+<radialGradient id="burst" cx="50%" cy="50%" r="50%">
+<stop offset="0%" stop-color="#fff6da"/><stop offset="55%" stop-color="#f2d891"/><stop offset="100%" stop-color="#caa14e"/></radialGradient>
+<linearGradient id="ray" x1="0" y1="1" x2="0" y2="0">
+<stop offset="0%" stop-color="#eecf8a"/><stop offset="100%" stop-color="#eecf8a" stop-opacity="0"/></linearGradient>
+<radialGradient id="moon" cx="42%" cy="40%" r="60%">
+<stop offset="0%" stop-color="#fffdf1"/><stop offset="70%" stop-color="#e8e2cd"/><stop offset="100%" stop-color="#b9b49e"/></radialGradient>
+</defs>`);
+
+// ---------- ground + sky oval ----------
+P(`<rect width="${W}" height="${H}" fill="${PARCH}"/>`);
+// corner texture: gold quatrefoil diaper
+P(`<defs><pattern id="diaper" width="84" height="84" patternUnits="userSpaceOnUse">
+<rect width="84" height="84" fill="${PARCH}"/>
+<g fill="none" stroke="#b09a6a" stroke-width="1.6" opacity="0.55">
+<path d="M42,8 a13,13 0 0 1 0,26 a13,13 0 0 1 0,-26 M42,50 a13,13 0 0 1 0,26 a13,13 0 0 1 0,-26 M8,42 a13,13 0 0 1 26,0 a13,13 0 0 1 -26,0 M50,42 a13,13 0 0 1 26,0 a13,13 0 0 1 -26,0"/>
+<circle cx="42" cy="42" r="4"/><circle cx="0" cy="0" r="4"/><circle cx="84" cy="0" r="4"/><circle cx="0" cy="84" r="4"/><circle cx="84" cy="84" r="4"/>
+</g></pattern></defs>
+<rect width="${W}" height="${H}" fill="url(#diaper)"/>`);
+const RX = W*0.415, RY = H*0.405;
+P(`<ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="url(#sky)"/>`);
+
+// ---------- corner scrollwork (acanthus spirals, layered) ----------
+function scroll(x,y,sx,sy){
+  P(`<g transform="translate(${x},${y}) scale(${sx},${sy})" fill="none" stroke="url(#gold)" stroke-linecap="round">
+  <path d="M0,0 C80,-52 190,-52 244,14 C284,64 244,124 190,116 C150,110 136,64 170,54 C190,48 206,62 198,80" stroke-width="10"/>
+  <path d="M30,40 C94,6 160,8 198,46" stroke-width="5" opacity=".8"/>
+  <path d="M14,-16 C60,-48 130,-56 180,-34" stroke-width="4" opacity=".6"/>
+  <path d="M222,20 C250,36 252,74 226,92" stroke-width="5" opacity=".75"/>
+  <circle cx="190" cy="84" r="7" fill="url(#gold)" stroke="none"/>
+  <path d="M6,18 q20,-26 48,-20 q-12,22 -34,26 Z" fill="url(#gold)" stroke="none" opacity=".9"/>
+  </g>`);
+}
+scroll(90,150,1,1); scroll(W-90,150,-1,1); scroll(90,H-150,1,-1); scroll(W-90,H-150,-1,-1);
+
+// ---------- laurel border around the oval ----------
+const NL = 120;
+for (let i=0;i<NL;i++){
+  const a = (i/NL)*2*Math.PI;
+  const ex = CX + Math.cos(a)*(RX+34), ey = CY + Math.sin(a)*(RY+30);
+  const ang = Math.atan2(Math.sin(a)*(RX+34), Math.cos(a)*(RY+30)) * 180/Math.PI + (i%2? 28:-28);
+  const g = i%2 ? '#9db183' : '#7f9a6b';
+  P(`<ellipse cx="${ex}" cy="${ey}" rx="17" ry="6.5" fill="${g}" opacity="0.95" transform="rotate(${ang} ${ex} ${ey})"/>`);
+}
+P(`<ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="none" stroke="url(#gold)" stroke-width="26"/>
+<ellipse cx="${CX}" cy="${CY}" rx="${RX-26}" ry="${RY-26}" fill="none" stroke="#6e5222" stroke-width="5"/>
+<ellipse cx="${CX}" cy="${CY}" rx="${RX-42}" ry="${RY-42}" fill="none" stroke="#e9c97c" stroke-width="2.5" opacity=".7"/>
+<ellipse cx="${CX}" cy="${CY}" rx="${RX+52}" ry="${RY+48}" fill="none" stroke="url(#gold)" stroke-width="7"/>`);
+
+// ---------- guilloche ring (interlaced circles) ----------
+const NG = 64;
+for (let i=0;i<NG;i++){
+  const a=(i/NG)*2*Math.PI;
+  const gx=CX+Math.cos(a)*(RX-70), gy=CY+Math.sin(a)*(RY-66);
+  P(`<circle cx="${gx}" cy="${gy}" r="20" fill="none" stroke="#dcc084" stroke-width="2.4" opacity="0.6"/>`);
+}
+
+// ---------- clouds ----------
+function cloud(cx,cy,s,o){
+  P(`<g transform="translate(${cx},${cy}) scale(${s})" opacity="${o}">
+  <ellipse cx="0" cy="8" rx="120" ry="34" fill="#d8c9b8" opacity=".5"/>
+  <ellipse cx="-48" cy="-6" rx="62" ry="36" fill="#fdf8ee"/>
+  <ellipse cx="22" cy="-18" rx="74" ry="44" fill="#f7efe0"/>
+  <ellipse cx="70" cy="2" rx="52" ry="30" fill="#fdf8ee"/>
+  <ellipse cx="-8" cy="12" rx="92" ry="30" fill="#ffffff" opacity=".82"/></g>`);
+}
+const clouds=[[CX-560,CY-290,1.1,.92],[CX+560,CY-240,.85,.85],[CX-540,CY+280,.95,.88],
+  [CX+540,CY+290,1.15,.9],[CX,CY-400,.7,.8],[CX-220,CY+405,.7,.78],[CX+240,CY+400,.6,.72]];
+for (const c of clouds) cloud(...c);
+
+// ---------- centerpiece ----------
+if (bay===1){
+  // Sun of Knowledge: triple ray crown
+  let rays='';
+  for (let i=0;i<36;i++){
+    const a=i*10, L=(i%3===0)?430:(i%3===1)?340:290, wdt=(i%3===0)?20:11;
+    rays+=`<polygon points="0,-86 ${wdt},-${L} -${wdt},-${L}" transform="rotate(${a})" fill="url(#ray)" opacity="${i%3===0?0.98:0.7}"/>`;
+  }
+  P(`<g transform="translate(${CX},${CY})">
+  <circle r="380" fill="#f3e3b4" opacity=".15"/>${rays}
+  <circle r="104" fill="url(#burst)"/><circle r="104" fill="none" stroke="url(#gold)" stroke-width="8"/>
+  <circle r="78" fill="none" stroke="#fffbe9" stroke-width="2" opacity=".8"/>
+  <circle r="42" fill="#fffbe9" opacity=".95"/></g>`);
+  // open book at the sun's heart
+  P(`<g transform="translate(${CX},${CY})" stroke="${GOLD3}" stroke-width="4" fill="#fdf8ee">
+  <path d="M-34,-6 Q-17,-16 0,-8 Q17,-16 34,-6 L34,16 Q17,8 0,16 Q-17,8 -34,16 Z"/>
+  <line x1="0" y1="-8" x2="0" y2="16"/></g>`);
+} else if (bay===0){
+  // Dawn: rising sun at oval edge + lark silhouettes
+  P(`<g transform="translate(${CX},${CY+RY-170})">
+  <circle r="150" fill="url(#burst)" opacity=".9"/>
+  <circle r="150" fill="none" stroke="url(#gold)" stroke-width="7"/>`);
+  for (let i=0;i<13;i++){
+    const a=-90+ (i-6)*13;
+    P(`<polygon points="0,-160 8,-290 -8,-290" transform="rotate(${a})" fill="url(#ray)" opacity=".7"/>`);
+  }
+  P(`</g>`);
+  // morning star in the upper sky instead of lark squiggles
+  P(`<g transform="translate(${CX+150},${CY-250})" fill="#f6e3ae" opacity=".9">
+  <path d="M0,-26 L5,-5 L26,0 L5,5 L0,26 L-5,5 L-26,0 L-5,-5 Z"/>
+  <circle r="5" fill="#fffbe9"/></g>`);
+} else {
+  // Dusk: crescent moon + gold stars
+  P(`<g transform="translate(${CX+60},${CY-40})">
+  <circle r="130" fill="url(#moon)"/>
+  <circle cx="58" cy="-20" r="118" fill="url(#sky)"/>
+  <circle r="130" fill="none" stroke="url(#gold)" stroke-width="6" opacity=".8"/></g>`);
+  let seed=7;
+  const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+  for (let i=0;i<60;i++){
+    const a=rnd()*2*Math.PI, rr=Math.sqrt(rnd());
+    const sx2=CX+Math.cos(a)*rr*(RX-120), sy2=CY+Math.sin(a)*rr*(RY-110);
+    const s=1.5+rnd()*3.5;
+    P(`<path d="M0,-${3*s} L${s*0.9},-${s*0.9} L${3*s},0 L${s*0.9},${s*0.9} L0,${3*s} L-${s*0.9},${s*0.9} L-${3*s},0 L-${s*0.9},-${s*0.9} Z" transform="translate(${sx2},${sy2})" fill="#f4ddA2" opacity="${0.5+rnd()*0.5}"/>`);
+  }
+}
+
+// ---------- ring of knowledge emblems (gold line art medallions) ----------
+const emblems = [
+  g=>`<path d="M-16,-4 Q-8,-10 0,-5 Q8,-10 16,-4 L16,8 Q8,3 0,8 Q-8,3 -16,8 Z M0,-5 L0,8" ${g}/>`,                     // book
+  g=>`<g ${g}><circle cx="0" cy="-4" r="9"/><circle cx="-3.5" cy="-6" r="1.8" fill="currentColor"/><circle cx="3.5" cy="-6" r="1.8" fill="currentColor"/><path d="M-7,4 Q0,14 7,4 M-2,-13 L0,-9 L2,-13"/></g>`, // owl
+  g=>`<path d="M-10,12 Q-2,-14 12,-12 Q4,-10 0,-2 Q6,-4 8,-2 Q0,2 -4,12 Z M-10,12 L-13,15" ${g}/>`,                  // quill
+  g=>`<g ${g}><path d="M-6,8 h12 M-4,8 V0 a4,6 0 0 1 8,0 V8 M0,-6 V-10 M-3,-8 h6"/><circle cx="0" cy="-3" r="2"/></g>`, // lamp
+  g=>`<g ${g}><circle cx="0" cy="-6" r="6"/><path d="M0,0 V12 M0,5 h6 M0,9 h6"/></g>`,                               // key
+  g=>`<g ${g}><path d="M0,12 V-2 M0,-2 Q-10,-4 -12,-14 Q-2,-13 0,-2 Q2,-13 12,-14 Q10,-4 0,-2"/></g>`,              // tree
+  g=>`<g ${g}><path d="M0,-12 L8,10 M0,-12 L-8,10 M-5,3 h10"/><circle cx="0" cy="-12" r="2.5"/></g>`,               // compass
+  g=>`<g ${g}><path d="M-7,-11 h14 M-7,11 h14 M-6,-10 Q-6,0 0,0 Q6,0 6,-10 M-6,10 Q-6,0 0,0 Q6,0 6,10"/></g>`,      // hourglass
+  g=>`<g ${g}><circle r="9"/><path d="M-9,0 h18 M0,-9 Q6,0 0,9 Q-6,0 0,-9"/></g>`,                                  // globe
+  g=>`<g ${g}><path d="M-8,10 L-8,-6 L0,-12 L8,-6 L8,10 Z M-3,10 V2 h6 V10"/></g>`,                                 // temple
+  g=>`<g ${g}><path d="M0,-11 V11 M-7,-7 Q0,-2 7,-7 M-7,0 Q0,5 7,0 M-7,7 Q0,12 7,7"/></g>`,                        // scroll of staves
+  g=>`<g ${g}><circle cx="-4" cy="0" r="7"/><circle cx="4" cy="0" r="7"/></g>`,                                     // linked rings
+];
+const NE = 12;
+for (let i=0;i<NE;i++){
+  const a=(i/NE)*2*Math.PI - Math.PI/2;
+  const ex=CX+Math.cos(a)*(RX*0.62), ey=CY+Math.sin(a)*(RY*0.60);
+  P(`<g transform="translate(${ex},${ey})">
+  <circle r="34" fill="#f6ecd2" opacity="0.92"/>
+  <circle r="34" fill="none" stroke="url(#gold)" stroke-width="4"/>
+  <circle r="28" fill="none" stroke="#c9a85c" stroke-width="1.5" opacity=".7"/>
+  <g transform="scale(1.45)" color="${GOLD3}">${emblems[i%emblems.length](`stroke="${GOLD3}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"`)}</g>
+  </g>`);
+}
+
+// ---------- fine radial filigree between emblems ----------
+for (let i=0;i<NE;i++){
+  const a=((i+0.5)/NE)*2*Math.PI - Math.PI/2;
+  const x1=CX+Math.cos(a)*(RX*0.47), y1=CY+Math.sin(a)*(RY*0.45);
+  const x2=CX+Math.cos(a)*(RX*0.78), y2=CY+Math.sin(a)*(RY*0.76);
+  P(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d9bd7e" stroke-width="2" opacity="0.5" stroke-dasharray="2 7"/>
+  <circle cx="${x2}" cy="${y2}" r="4" fill="#d9bd7e" opacity="0.7"/>`);
+}
+
+// ---------- corner motto cartouches ----------
+const mottos = bay===0 ? ['LVX','ORIENS'] : bay===1 ? ['CRESCAT','SCIENTIA'] : ['VITA','EXCOLATVR'];
+for (const [k,mx] of [[0,W*0.18],[1,W*0.82]].entries ? [[0,W*0.18],[1,W*0.82]] : []){}
+[[W*0.165,mottos[0]],[W*0.835,mottos[1]]].forEach(([mx,txt])=>{
+  P(`<g transform="translate(${mx},${H-74})">
+  <rect x="-130" y="-34" width="260" height="62" rx="28" fill="#f2e7cb" stroke="url(#gold)" stroke-width="5"/>
+  <text x="0" y="10" text-anchor="middle" font-family="Georgia,serif" font-size="34" letter-spacing="10" fill="${GOLD3}">${txt}</text></g>`);
+});
+
+document.body.innerHTML = `<svg id="art" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${out.join('')}</svg>`;
+</script>
+</body></html>

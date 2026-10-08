@@ -1,0 +1,57 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>
+  body { margin:0; background:#fff; }
+  #art { width: 1100px; height: 1380px; position: relative;
+         background:
+           repeating-linear-gradient(0deg, rgba(120,100,70,.025) 0 1px, transparent 1px 3px),
+           radial-gradient(ellipse at 50% 32%, #fdfaf1 0%, #f6f0de 55%, #ece3cb 100%);
+         font-family: Georgia, 'Iowan Old Style', Palatino, serif; color:#2a2114; }
+  .rule { height:2px; background:linear-gradient(90deg,transparent,#8a6527,transparent); }
+  .thin { height:1px; background:#c3b490; }
+  h1 { font-size:34px; letter-spacing:.17em; text-align:center; margin:0; font-weight:normal; }
+  h2 { font-size:19px; letter-spacing:.3em; text-align:center; margin:6px 0 0; font-weight:normal; color:#6d5a33; }
+  table { width:84%; margin:0 auto; border-collapse:collapse; font-size:19px; }
+  td { padding:19px 6px; border-bottom:1px solid rgba(138,101,39,.22); }
+  .code { font-variant:small-caps; letter-spacing:.07em; color:#6d3328; white-space:nowrap; }
+  .term { text-align:right; color:#6b5c3c; font-style:italic; white-space:nowrap; }
+  .grade { text-align:right; width:52px; color:#8a6527; }
+  .seal { position:absolute; left:50%; transform:translateX(-50%); }
+</style></head>
+<body>
+<div id="art">
+  <div style="padding:84px 0 0">
+    <div class="seal" style="top:64px">
+      <svg width="92" height="92" viewBox="0 0 92 92">
+        <circle cx="46" cy="46" r="43" fill="none" stroke="#8a6527" stroke-width="2.4"/>
+        <circle cx="46" cy="46" r="36" fill="none" stroke="#c3a85f" stroke-width="1.2"/>
+        <path d="M30 34 h32 v26 a16 16 0 0 1 -32 0 Z" fill="none" stroke="#6d3328" stroke-width="2"/>
+        <path d="M30 40 h32 M46 34 v36" stroke="#6d3328" stroke-width="1.4"/>
+        <path d="M38 24 q8 -9 16 0" fill="none" stroke="#8a6527" stroke-width="2"/>
+      </svg>
+    </div>
+    <div style="height:142px"></div>
+    <h1>THE UNIVERSITY OF CHICAGO</h1>
+    <h2>OFFICE OF THE REGISTRAR</h2>
+    <div style="width:70%; margin:16px auto 4px" class="rule"></div>
+    <div style="text-align:center; font-size:17px; letter-spacing:.22em; color:#6b5c3c; margin-bottom:34px">
+      ACADEMIC RECORD &middot; UNOFFICIAL
+    </div>
+    <div style="width:84%; margin:0 auto 10px; display:flex; justify-content:space-between; font-size:18px; color:#4a3c24">
+      <span><b style="font-weight:normal; font-variant:small-caps; letter-spacing:.08em">Matthew Geiling</b></span>
+      <span style="font-style:italic">The College</span>
+    </div>
+    <table id="rows"></table>
+    <div style="width:84%; margin:46px auto 0" class="thin"></div>
+    <div style="width:84%; margin:20px auto 0; display:flex; justify-content:space-between; font-size:16px; color:#6b5c3c; font-style:italic">
+      <span>Crescat scientia; vita excolatur</span>
+      <span>Registrar &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;</span>
+    </div>
+  </div>
+</div>
+<script>
+const ROWS = JSON.parse(`__ROWS__`);
+document.getElementById('rows').innerHTML = ROWS.map(r =>
+  `<tr><td class="code">${r.code}</td><td>${r.name}</td><td class="term">${r.term}</td><td class="grade">${r.grade}</td></tr>`
+).join('');
+</script>
+</body></html>
