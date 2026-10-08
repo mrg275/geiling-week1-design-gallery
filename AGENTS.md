@@ -83,6 +83,8 @@ Phases 0–5 of the migration are **done** (Oct 2026): the hall is modeled in `b
 - **Vertex-colored (vista/fx) meshes:** author colors **linear** (glTF COLOR_0 is linear; the scene flag `vista_colors_linear` marks the conversion done); export needs `export_vertex_color='ACTIVE'` (the exporter's material scan misses Color Attribute nodes and silently writes white); and **never run `gltf-transform quantize`** on this scene — it scrambles COLOR_0. Compression is WebP-only.
 - `blender/bake_export.py --resume` reuses the existing baked PNGs and re-exports in ~30 s — use it for any scene tweak that doesn't change lighting.
 - Blender 5 compositor: `scene.node_tree` is gone; denoising runs through `scene.compositing_node_group` (the script falls back to a plain save if that API shifts again).
+- **Never compare bpy structs with `is`.** Blender rebuilds the Python wrapper on every access, so `for p in mesh.polygons: if p is saved_face` is *always* False and `l.to_node is node` silently reports "no links". Compare `p.index`, `.name`, or use `==`. This has produced two different silent no-op bugs (a UV remap that hit every face, and a bogus "material is unwired" diagnosis).
+- Wall-hung frames follow a single hanging line: bottoms at **z 2.48**, clear of the wainscot chair rail (2.30). Anything hung on a wall that also carries the blind arcade (N-wall piers x ±9.17–12.23, S wall x ±1.95–12.63, and the bookcase runs) must keep its top under the stringcourse at **4.60**; elsewhere the plaster is clear up to the picture rail at 10.16.
 
 ## Verification norms
 

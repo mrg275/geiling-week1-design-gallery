@@ -8,6 +8,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { buildFountain } from './fountain.js';
 import { buildFlag } from './flag.js';
+import { buildWindowViews } from './windowviews.js';
 import { EYE, RM } from './core.js';
 import { approach, wasDrag } from './nav.js';
 
@@ -166,11 +167,13 @@ export async function initScene(canvas, onProgress) {
     camera.rotation.x = cam.pitch;
     fountain.update(ts);
     flag.update(ts);
+    views.update(ts);
     renderer.render(scene, camera);
   };
 
   const fountain = buildFountain(THREE, scene, gltf.scene);
   const flag = buildFlag(THREE, scene);
+  const views = buildWindowViews(THREE, scene);
 
   window.__scene3d = { renderer, scene, camera, gltf, THREE, ray };
   return { renderer, scene, camera };

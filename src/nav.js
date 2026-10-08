@@ -65,6 +65,12 @@ GO['transcript'] = { stand:{x:1155,z:2350,yaw:-Math.PI/2}, open:function(){ show
 GO['writing']    = { stand:{x:-800,z:2810,yaw:Math.PI},    open:function(){ showWriting(); },    label:'Writing Collection',  kind:'Exhibit' };
 GO['trophies']   = { stand:{x:800,z:2790,yaw:Math.PI},     open:function(){ showTrophies(); },   label:'Trophy Case',     kind:'Exhibit' };
 
+/* the four living windows — walking you to the sill, nothing to open */
+GO['view-pool-dusk']   = { stand:standFor(-1700,  180, 90, 620),  open:null, label:'The pool at dusk',   kind:'View' };
+GO['view-pool-golden'] = { stand:standFor(-1700, 3020, 90, 620),  open:null, label:'The pool, golden hour', kind:'View' };
+GO['view-ocean-dusk']  = { stand:standFor( 1700, -450, -90, 620), open:null, label:'The Atlantic at sunset', kind:'View' };
+GO['view-hawaii-dawn'] = { stand:standFor( 1700, 2950, -90, 620), open:null, label:'Waimanalo at dawn',  kind:'View' };
+
 function workStand(w){
   for (var i=0;i<SECTIONS.length;i++){
     var sec=SECTIONS[i];

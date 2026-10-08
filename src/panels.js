@@ -558,6 +558,11 @@ function buildMenu(){
       ['plinth:1',FUTURE_EXHIBITS[1].title,'mock statue · north-east plinth'],
       ['plinth:2',FUTURE_EXHIBITS[2].title,'mock statue · south-west plinth'],
       ['plinth:3',FUTURE_EXHIBITS[3].title,'mock statue · south-east plinth']]},
+    { h:'The Views', items:[
+      ['go:view-pool-dusk','The pool at dusk','west wall \u00b7 mid-hall'],
+      ['go:view-pool-golden','The pool, golden hour','west wall \u00b7 south end'],
+      ['go:view-ocean-dusk','The Atlantic at sunset','east wall \u00b7 mid-hall'],
+      ['go:view-hawaii-dawn','Waimanalo at dawn','east wall \u00b7 south end']]},
     { h:'The Study', items:[
       ['open:flash','Flashcards','flip &amp; grade'],
       ['open:recall','Active Recall','typed answers, self-judged'],

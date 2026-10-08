@@ -68,7 +68,7 @@ export function buildFlag(THREE, scene) {
 
   // placement: north wall (z = -34, room is +z), centered over the map frame
   const FW = 3.42, FH = 1.8;                 // 1.9 : 1
-  const CXF = 0, TOP = 7.15, WALL_Z = -33.80;
+  const CXF = 0, TOP = 8.52, WALL_Z = -33.80;   // clears the Collection Map (top 6.22)
 
   // ---------- brass rod + finials + brackets ----------
   const brass = new THREE.MeshStandardMaterial({ color: 0xb08d4a, metalness: 1.0, roughness: 0.32, envMapIntensity: 1.1 });
