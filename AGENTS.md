@@ -12,6 +12,16 @@ The original homework phase (a 25-version design gallery) is **complete**. v25 w
 
 1. **3D scene** — authored in **Blender** (the master file is `blender/library.blend`), lighting **baked** with Cycles, exported as **glTF** to `assets/library.glb`, rendered in the browser with **three.js/WebGL**. Nobody needs Blender to *use* the app; Blender is the design tool, the browser is the delivery medium.
 2. **UI layer** — the frosted-glass DOM panels from v25, overlaid on the WebGL canvas. The glass panel system, HUD dock, command-palette menu, toast, SVG knowledge graph, and floor plan are reused **verbatim** from `legacy/index.html`. Design tokens are the CSS variables at `legacy/index.html` lines ~9–28: parchment `#f8f2e3`, ink `#2a2114`, oak `#7a5a38`/`#4c3820`, brass `#b08d4a`/`#ddbc78`, banker's-lamp green `#2e4634`, oxblood `#6d3328`. Typeface: Georgia / Iowan Old Style / Palatino (serif only). Aesthetic: collegiate-gothic Harper Library + visionOS liquid glass.
+**Runtime overlays** (not baked, not in the glTF — pure three.js, added each frame):
+`src/fountain.js` (flowing water), `src/flag.js` (cloth simulation),
+`src/windowviews.js` + `src/views/*` (Matthew's four favourite places hung
+outside four windows as animated photo dioramas — see `src/views/README.md`).
+Because nothing here is baked, these can be changed without re-running Blender.
+Two gotchas live here: a custom `ShaderMaterial` sampling an sRGB texture gets
+*linear* values, so it must encode sRGB on output or the result displays as
+`photo^2.2`; and the library's own vista trees/bushes sit at real depths, so a
+view plane must be placed in front of them rather than merely made larger.
+
 3. **Data & logic layer** — the `WORKS` data model and SRS scheduler, ported unchanged from v25 (see Data model below).
 
 ### Repo map

@@ -31,5 +31,5 @@ export default {
   // Lib_Glass tint plus the Fx_Beam light shafts crossing in front), measured
   // by hiding both at runtime. exposure/saturate claw a little of that back;
   // the engine's own colour path is exact at 1.0/1.0.
-  exposure: 0.92, saturate: 1.12,
+  exposure: 1.0, saturate: 1.0,
 };

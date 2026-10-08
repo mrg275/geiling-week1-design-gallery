@@ -47,5 +47,5 @@ export default {
   // being undone: the pane adds about +16/255 flat, which lifts the blacks and
   // washes the gold band. 0.95/1.05 cancels that (mean error against the
   // original over the visible crop: 6.5 -> 4.9 of 255).
-  exposure: 0.95, saturate: 1.05,
+  exposure: 1.0, saturate: 1.0,
 };

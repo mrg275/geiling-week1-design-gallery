@@ -77,7 +77,7 @@ export async function initScene(canvas, onProgress) {
     if (n.startsWith('Vista_SunGlow')) return { mult: 1.3, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
     if (n.startsWith('Vista_Cloud')) return { mult: 1.1, transparent: true, depthWrite: false };
     if (n.startsWith('Vista_Glint')) return { mult: 1.4 };
-    if (n.startsWith('Fx_Beam')) return { mult: 1.0, opacity: 0.4, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide };
+    if (n.startsWith('Fx_Beam')) return { mult: 1.0, opacity: 0.24, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide };
     return { mult: 1.0 };
   };
   gltf.scene.traverse((o) => {
@@ -101,7 +101,7 @@ export async function initScene(canvas, onProgress) {
     }
     if (name.startsWith('Lib_Glass')) {
       o.material = new THREE.MeshBasicMaterial({
-        color: 0xdfeef5, transparent: true, opacity: 0.07, depthWrite: false,
+        color: 0xeaf1f4, transparent: true, opacity: 0.025, depthWrite: false,
       });
       return;
     }
