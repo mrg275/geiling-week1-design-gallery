@@ -55,7 +55,7 @@ function dueStr(c){
   if (diff<DAY) return 'in '+Math.max(1,Math.round(diff/3600e3))+' h';
   return 'in '+Math.round(diff/DAY)+' d';
 }
-function updateBadge(){ $('#badge-n').textContent = dueCards().length+' due'; }
+function updateBadge(){ var el=$('#badge-n'); if (el) el.textContent = dueCards().length+' due'; }
 
 /* ---- hall layout (CSS units; the Blender scene uses the same values / 100) ---- */
 var HW=1700, HD=3400, EYE=186;

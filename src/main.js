@@ -1,6 +1,6 @@
-// App entry: boots the WebGL hall, wires the badge, and falls back to the
+// App entry: boots the WebGL hall and falls back to the
 // CSS-3D build at /legacy/ when WebGL is unavailable or loading fails.
-import { updateBadge, $ } from './core.js';
+import { $ } from './core.js';
 import { restoreState, autosaveOn } from './store.js';
 import './panels.js';   // panels, menu, serendipity (self-wiring)
 import './nav.js';      // camera state, input, click router, HUD buttons
@@ -41,4 +41,3 @@ if (!ok) {
     });
 }
 
-updateBadge();

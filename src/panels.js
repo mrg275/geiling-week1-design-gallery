@@ -77,8 +77,7 @@ function detailHTML(w){
 
   h+='<div class="sect"><h3>Flashcards from this work ('+w.cards.length+')</h3>'+
     w.cards.map(function(c){
-      return '<div class="note"><div class="note-meta"><span>'+dueStr(c)+' · ease '+c.ease.toFixed(2)+'</span></div>'+
-        '<div class="note-text"><b style="font-weight:normal;font-style:italic">'+esc(c.q)+'</b></div></div>';
+      return '<div class="note"><div class="note-text"><b style="font-weight:normal;font-style:italic">'+esc(c.q)+'</b></div></div>';
     }).join('')+
     '<div class="row" style="margin-top:4px"><button class="btn ghost" id="d-flash">Study these in Flashcards</button></div></div>';
   return h;
@@ -296,11 +295,8 @@ function showStatue(i){
 var fcState=null;
 function showFlash(workId){
   var queue;
-  if (workId){ var w=byId(workId); queue=w.cards.slice().sort(function(a,b){ return a.due-b.due; }); }
-  else {
-    queue=dueCards();
-    if (!queue.length) queue=allCards.slice().sort(function(){ return Math.random()-0.5; }).slice(0,10);
-  }
+  if (workId){ var w=byId(workId); queue=w.cards.slice(); }
+  else { queue=allCards.slice().sort(function(){ return Math.random()-0.5; }).slice(0,12); }
   fcState={ queue:queue, i:0, flipped:false, done:0, scope:workId?byId(workId).short:'whole library' };
   renderFlash();
 }
@@ -308,16 +304,13 @@ function renderFlash(){
   var st=fcState;
   if (st.i>=st.queue.length){
     openPanel('Flashcards','session complete',
-      '<div class="fq"><div class="qmark">&#10003;</div><p style="font-style:normal">'+st.done+' card'+(st.done===1?'':'s')+' reviewed. '+
-      dueCards().length+' still due in the library.</p><cite>'+esc(st.scope)+'</cite></div>'+
-      '<div class="row" style="justify-content:center"><button class="btn" id="fc-more">Study more</button>'+
-      '<button class="btn ghost" id="fc-srs">SRS status</button></div>');
+      '<div class="fq"><div class="qmark">&#10003;</div><p style="font-style:normal">'+st.done+' card'+(st.done===1?'':'s')+' reviewed.</p><cite>'+esc(st.scope)+'</cite></div>'+
+      '<div class="row" style="justify-content:center"><button class="btn" id="fc-more">Study more</button></div>');
     $('#fc-more').addEventListener('click', function(){ showFlash(); });
-    $('#fc-srs').addEventListener('click', function(){ showSRS(); });
     return;
   }
   var c=st.queue[st.i];
-  var h='<div class="muted" style="text-align:center">'+(st.i+1)+' of '+st.queue.length+' · '+esc(st.scope)+' · '+dueCards().length+' due</div>'+
+  var h='<div class="muted" style="text-align:center">'+(st.i+1)+' of '+st.queue.length+' · '+esc(st.scope)+'</div>'+
     '<div class="fc'+(st.flipped?' flip':'')+'" id="fc"><div class="fc-inner">'+
       '<div class="fc-face"><span class="fc-k">'+esc(c.work.short)+' · question</span>'+
         '<div class="fc-q">'+esc(c.q)+'</div><span class="muted">click to flip</span></div>'+
@@ -327,7 +320,7 @@ function renderFlash(){
   if (st.flipped){
     h+='<div class="grade-row">'+[0,1,2,3].map(function(g){
       var names=['Again','Hard','Good','Easy'];
-      return '<button class="grade g'+g+'" data-g="'+g+'">'+names[g]+'<small>'+previewLabel(c,g)+'</small></button>';
+      return '<button class="grade g'+g+'" data-g="'+g+'">'+names[g]+'</button>';
     }).join('')+'</div>';
   } else {
     h+='<div class="row" style="justify-content:center"><button class="btn" id="fc-flip">Show answer</button></div>';
@@ -393,7 +386,7 @@ function renderRecall(){
       '<div class="muted" style="text-align:center;margin-top:6px">How close were you?</div>'+
       '<div class="grade-row">'+[0,1,2,3].map(function(g){
         var names=['Missed it','Rough','Close','Nailed it'];
-        return '<button class="grade g'+g+'" data-g="'+g+'">'+names[g]+'<small>'+previewLabel(c,g)+'</small></button>';
+        return '<button class="grade g'+g+'" data-g="'+g+'">'+names[g]+'</button>';
       }).join('')+'</div>';
   }
   h+='</div>';
@@ -522,7 +515,7 @@ function showPlan(){
     ['plinth:0',FUTURE_EXHIBITS[0].title,'mock statue'],['plinth:1',FUTURE_EXHIBITS[1].title,'mock statue'],
     ['plinth:2',FUTURE_EXHIBITS[2].title,'mock statue'],['plinth:3',FUTURE_EXHIBITS[3].title,'mock statue'],
     ['open:flash','Flashcards','study'],['open:recall','Active Recall','study'],
-    ['open:reflect','Reflection Engine','study'],['open:srs','SRS Status','study'],
+    ['open:reflect','Reflection Engine','study'],
     ['open:seren','Serendipity','study']
   ];
   var h='<p class="muted" style="margin-bottom:10px">Everything in the room, without the walk. Click the plan or the index — the camera glides there and the placard opens.</p>'+
@@ -542,13 +535,19 @@ var OPENERS={
   seren:function(){ showToast(randomMemory()); },
   plan:function(){ showPlan(); }
 };
+var NUMWORD=['no','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve'];
+function stackSub(type, noun, where){
+  var n=WORKS.filter(function(w){ return w.type===type; }).length;
+  var num=n<NUMWORD.length?NUMWORD[n]:String(n);
+  return num+' '+noun+(n===1?'':'s')+' · '+where;
+}
 function buildMenu(){
   var cols=[
     { h:'The Stacks', items:[
-      ['go:sec-books','Books','six volumes · three bays · west wall'],
-      ['go:sec-essays','Essays','three arguments · three bays · west wall'],
-      ['go:sec-articles','Articles','two pieces · three bays · east wall'],
-      ['go:sec-podcasts','Podcasts','two episodes · three bays · east wall']]},
+      ['go:sec-books','Books',stackSub('book','volume','west wall')],
+      ['go:sec-essays','Essays',stackSub('essay','essay','west wall')],
+      ['go:sec-articles','Articles',stackSub('article','article','east wall')],
+      ['go:sec-podcasts','Podcasts',stackSub('podcast','episode','east wall')]]},
     { h:'Exhibits', items:[
       ['go:graph','Knowledge Graph','the collection map · north wall'],
       ['go:fountain','Quote Fountain','heart of the hall'],
@@ -560,10 +559,9 @@ function buildMenu(){
       ['plinth:2',FUTURE_EXHIBITS[2].title,'mock statue · south-west plinth'],
       ['plinth:3',FUTURE_EXHIBITS[3].title,'mock statue · south-east plinth']]},
     { h:'The Study', items:[
-      ['open:flash','Flashcards','flip &amp; grade · feeds the scheduler'],
+      ['open:flash','Flashcards','flip &amp; grade'],
       ['open:recall','Active Recall','typed answers, self-judged'],
       ['open:reflect','Reflection Engine','a line, a blank page'],
-      ['open:srs','SRS Status','due counts per work'],
       ['open:seren','Serendipity','resurface something forgotten'],
       ['open:plan','Floor Plan','2D index of the room']]}
   ];

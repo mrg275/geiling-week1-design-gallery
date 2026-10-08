@@ -169,16 +169,9 @@ document.addEventListener('click', function(e){
   approach(t.dataset.act.slice(0,i), t.dataset.act.slice(i+1));
 });
 
-$('#badge').addEventListener('click', function(){ showFlash(); });
 $('#fp-open').addEventListener('click', function(){ showPlan(); });
 $('#menu-btn').addEventListener('click', function(){ toggleMenu(); });
-$('#lookup').addEventListener('click', function(){
-  lookingUp=!lookingUp;
-  cancelGlide();
-  tgt.pitch=lookingUp?0.72:0.02;
-  syncLookBtn();
-});
-function syncLookBtn(){ $('#lookup').textContent = lookingUp ? 'Look down' : 'Look up'; }
+function syncLookBtn(){}
 /* main loop */
 function step(dt,ts){
   var uiUp = !$('#overlay').hidden || !$('#menu').hidden;
