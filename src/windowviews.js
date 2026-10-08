@@ -57,6 +57,11 @@ vec3 lin2srgb(vec3 c) {
   return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(vec3(0.0031308), c));
 }
 
+// Reflects any coordinate back into 0..1 with a triangle wave. A mirror join
+// is C0-continuous, so the photo continues seamlessly past its own edges
+// instead of smearing the edge pixel (which is what clamping did).
+float mirror1(float x) { return 1.0 - abs(fract(x * 0.5) * 2.0 - 1.0); }
+
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -68,7 +73,13 @@ float vnoise(vec2 p) {
 void main() {
   // map the plane into photo space; the texture clamps, so the margins
   // continue the photo's edge pixels instead of showing a seam
-  vec2 puv = (vUv - 0.5) / uFit + 0.5 + uShift;   // stable photo-space uv
+  vec2 raw = (vUv - 0.5) / uFit + 0.5 + uShift;    // photo-space uv, may exit 0..1
+  // how far outside the photograph this fragment falls (0 inside)
+  float periph = max(max(-raw.x, raw.x - 1.0), max(-raw.y, raw.y - 1.0));
+  periph = clamp(periph, 0.0, 1.0);
+  // mirror so the scene continues past the frame; masks and sampling share
+  // these coordinates, so the water/sky/foliage bands mirror with the content
+  vec2 puv = vec2(mirror1(raw.x), mirror1(raw.y));
   vec2 uv = puv;                                   // animated copy
   float t = uTime;
 
@@ -101,7 +112,21 @@ void main() {
     uv.y += sin(t * 0.91 + uv.x * 26.0) * uSway * 0.4 * fmask * gust;
   }
 
-  vec3 c = texture2D(uMap, uv).rgb;
+  vec3 c;
+  if (periph < 0.002) {
+    c = texture2D(uMap, uv).rgb;
+  } else {
+    // progressive 5-tap defocus: the further outside, the softer
+    float r = 0.004 + periph * 0.05;
+    c  = texture2D(uMap, uv).rgb * 0.36;
+    c += texture2D(uMap, vec2(mirror1(uv.x + r), uv.y)).rgb * 0.16;
+    c += texture2D(uMap, vec2(mirror1(uv.x - r), uv.y)).rgb * 0.16;
+    c += texture2D(uMap, vec2(uv.x, mirror1(uv.y + r))).rgb * 0.16;
+    c += texture2D(uMap, vec2(uv.x, mirror1(uv.y - r))).rgb * 0.16;
+    // and settle it back a touch so the eye reads depth, not a repeat
+    float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+    c = mix(c, vec3(l), min(periph * 0.5, 0.3)) * (1.0 - min(periph * 0.22, 0.14));
+  }
 
   // ---- sun-glitter path on the water ----
   if (uGlitter > 0.0001) {
@@ -145,16 +170,22 @@ const WALLS = {
 
 export function buildWindowViews(THREE, scene) {
   const loader = new THREE.TextureLoader();
+  const texCache = new Map();        // twelve windows share four photographs
   const group = new THREE.Group();
   group.name = 'Fx_WindowViews';
   const mats = [];
 
   for (const v of VIEWS) {
-    const tex = loader.load(v.texture);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;   // margins extend the photo
-    tex.minFilter = THREE.LinearMipmapLinearFilter;
-    tex.anisotropy = 8;
+    let tex = texCache.get(v.texture);
+    if (!tex) {
+      tex = loader.load(v.texture);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      // the shader mirrors coordinates itself, so clamping never shows
+      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+      tex.minFilter = THREE.LinearMipmapLinearFilter;
+      tex.anisotropy = 8;
+      texCache.set(v.texture, tex);
+    }
 
     const mat = new THREE.ShaderMaterial({
       vertexShader: VERT,
@@ -204,7 +235,7 @@ export function buildWindowViews(THREE, scene) {
       v.centerY ?? 7.0,
       (v.wall === 'W' || v.wall === 'E') ? b : b);
     mesh.rotation.y = wall.rotY;
-    mesh.frustumCulled = false;
+    mesh.frustumCulled = true;   // finite quads: cull the eleven you aren't facing
     mesh.name = 'Fx_View_' + v.id;
     group.add(mesh);
     mats.push(mat);
