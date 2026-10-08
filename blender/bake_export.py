@@ -311,7 +311,7 @@ def export_mat(name, image, uv_layer, roughness, src_mat=None):
             nt.links.new(nm.outputs['Normal'], bsdf.inputs['Normal'])
     return mat
 
-ROUGH = {'Lib_Floor': 0.45, 'Lib_Plaster': 0.92, 'Lib_Rug': 1.0, 'Lib_Oak': 0.5}
+ROUGH = {'Lib_Floor': 0.45, 'Lib_Plaster': 0.92, 'Lib_Rug': 1.0, 'Lib_Oak': 0.62}  # oak 0.62: wainscot read as frosted glass at 0.5
 tile_export = {m: export_mat('Tiled_' + m, tile_imgs[m], 'Tile', ROUGH.get(m, 0.7), src_mat=m)
                for m in TILE_MATS}
 atlas_export = export_mat('Baked_cont', alb_cont, 'Atlas', 0.6)

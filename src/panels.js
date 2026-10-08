@@ -592,15 +592,21 @@ function randomMemory(){
   do { i=Math.floor(Math.random()*pool.length); } while (pool.length>1 && i===lastMem);
   lastMem=i; return pool[i];
 }
-var toastItem=null;
+var toastItem=null, toastTimer=null;
 function showToast(item){
   toastItem=item;
   var t=item.text.length>220 ? item.text.slice(0,217)+'…' : item.text;
   $('#toast-tx').textContent=t;
   $('#toast-ts').textContent=(item.kind==='note'?'Your note on ':'Your reflection on ')+item.src+' · '+fmtMonth(item.date);
   $('#toast').hidden=false;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer=setTimeout(hideToast, 14000);   // auto-fade; any interaction below re-arms or clears
 }
-function hideToast(){ $('#toast').hidden=true; }
+function hideToast(){
+  $('#toast').hidden=true;
+  if (toastTimer){ clearTimeout(toastTimer); toastTimer=null; }
+}
+$('#toast').addEventListener('pointerenter', function(){ if (toastTimer){ clearTimeout(toastTimer); toastTimer=null; } });
 $('#toast-x').addEventListener('click', hideToast);
 $('#toast-again').addEventListener('click', function(){ showToast(randomMemory()); });
 $('#toast-open').addEventListener('click', function(){

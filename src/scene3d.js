@@ -102,6 +102,12 @@ export async function initScene(canvas, onProgress) {
       });
       return;
     }
+    if (name.startsWith('Lib_Water')) {        // fountain sheet + arcs: read as water, not stone
+      o.material.transparent = true;
+      o.material.opacity = 0.82;
+      o.material.depthWrite = false;
+      return;
+    }
     for (const slot of ['map', 'roughnessMap', 'normalMap']) {
       if (o.material[slot]) {
         o.material[slot].anisotropy = maxAniso;
